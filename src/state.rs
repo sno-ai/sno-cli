@@ -711,7 +711,7 @@ fn with_file_lock<T>(
         match lock_file.try_lock_exclusive() {
             Ok(()) => break,
             Err(error) if is_lock_contended(&error) => {
-                if started.elapsed() > Duration::from_secs(5) {
+                if started.elapsed() > Duration::from_secs(30) {
                     return Err(error.into());
                 }
                 thread::sleep(Duration::from_millis(25));

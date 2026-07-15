@@ -340,7 +340,13 @@ fn concurrent_consent_commands_leave_file_at_latest_committed_value() {
         .collect::<Vec<_>>();
     for handle in handles {
         let output = handle.join().expect("consent command");
-        assert_eq!(output.status.code(), Some(0), "{}", stderr(&output));
+        assert_eq!(
+            output.status.code(),
+            Some(0),
+            "stdout: {}\nstderr: {}",
+            stdout(&output),
+            stderr(&output)
+        );
     }
 
     let consent: Value = serde_json::from_str(
