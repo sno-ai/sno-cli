@@ -57,7 +57,7 @@ for path in "${!disposition[@]}"; do
   is_candidate "$path" || fail "manifest path is not a release-surface candidate: $path"
   printf '%s\n' "${candidates[@]}" | rg -Fxq -- "$path" || fail "manifest path is not tracked or present: $path"
   if [[ "$path" = .github/workflows/*.yml || "$path" = .github/workflows/*.yaml ]]; then
-    if rg -n -i --pcre2 \
+    if rg -n -i \
       '(npm\s+publish|twine\s+upload|maturin\s+publish|python\s+-m\s+build|pypa/gh-action-pypi-publish|installers\s*=\s*\[[^]]*"npm"|"npm:[^"]+")' \
       "$repo_root/$path"; then
       fail "prohibited npm or Python release definition detected in $path"
@@ -73,7 +73,7 @@ for path in "${!disposition[@]}"; do
       ;;
   esac
 
-  if [[ "$path" != .github/workflows/*.yml && "$path" != .github/workflows/*.yaml ]] && rg -n -i --pcre2 \
+  if [[ "$path" != .github/workflows/*.yml && "$path" != .github/workflows/*.yaml ]] && rg -n -i \
     '(npm\s+publish|twine\s+upload|maturin\s+publish|python\s+-m\s+build|pypa/gh-action-pypi-publish|installers\s*=\s*\[[^]]*"npm"|"npm:[^"]+")' \
     "$repo_root/$path"; then
     fail "prohibited npm or Python release definition detected in $path"
