@@ -51,5 +51,19 @@ printf 'include\tCargo.toml\nexclude\t.github/workflows/ci.yml\tHistorical workf
 git -C "$tmp_dir/excluded-publisher" add .
 expect_failure "$tmp_dir/excluded-publisher"
 
+make_repo "$tmp_dir/composite-action"
+mkdir -p "$tmp_dir/composite-action/.github/actions/publish"
+printf 'name: publish\nruns:\n  using: composite\n  steps:\n    - shell: bash\n      run: npm %s\n' "publish" >"$tmp_dir/composite-action/.github/actions/publish/action.yml"
+printf 'include\tCargo.toml\ninclude\t.github/workflows/ci.yml\ninclude\tpolicy/release-surfaces.tsv\n' >"$tmp_dir/composite-action/policy/release-surfaces.tsv"
+git -C "$tmp_dir/composite-action" add .
+expect_failure "$tmp_dir/composite-action"
+
+make_repo "$tmp_dir/helper-script"
+mkdir -p "$tmp_dir/helper-script/scripts"
+printf '#!/usr/bin/env bash\nnpm %s\n' "publish" >"$tmp_dir/helper-script/scripts/publish.sh"
+printf 'include\tCargo.toml\ninclude\t.github/workflows/ci.yml\ninclude\tpolicy/release-surfaces.tsv\n' >"$tmp_dir/helper-script/policy/release-surfaces.tsv"
+git -C "$tmp_dir/helper-script" add .
+expect_failure "$tmp_dir/helper-script"
+
 "$checker" "$repo_root" "$repo_root/policy/release-surfaces.tsv" >/dev/null
-printf 'release-surface policy self-test passed: 5 forbidden mutations rejected and repository accepted\n'
+printf 'release-surface policy self-test passed: 7 forbidden mutations rejected and repository accepted\n'

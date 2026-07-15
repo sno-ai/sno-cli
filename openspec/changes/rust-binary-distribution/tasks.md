@@ -12,7 +12,7 @@
 - [x] 2.2 Increment the crate to `0.1.1`, generate and commit the GitHub Release workflow, and require semantic version tags matching `Cargo.toml` plus locked Cargo builds.
 - [x] 2.3 Expand CI to execute tests on Linux x64/ARM64, macOS Intel/Apple Silicon, and Windows x64; pin native runner labels, assert observed host architecture against the declared target, and validate release configuration drift.
 - [x] 2.4 Delete the superseded hand-written release dry-run workflow; keep one generated-then-security-hardened workflow as the sole GitHub artifact authority.
-- [ ] 2.5 Push the non-publishing runner probe first and retain successful architecture plus real-binary outputs for every final runner label before freezing the release matrix.
+- [x] 2.5 Push the non-publishing runner probe first and retain successful architecture plus real-binary outputs for every final runner label before freezing the release matrix.
 
 ## 3. Real Artifact Verification
 
@@ -24,7 +24,7 @@
 ## 4. Quality and Publication
 
 - [ ] 4.1 Run format, clippy, all tests, legacy baseline, substitute policy, package inspection, crates.io dry-run, and OpenSpec validation.
-- [ ] 4.2 Run final test-quality, agentic-debt, and Codex adversarial reviews; fix all material findings and rerun affected gates.
+- [x] 4.2 Run final test-quality, agentic-debt, and Codex adversarial reviews; fix all material findings and rerun affected gates.
 - [ ] 4.3 Push `main`, wait for every native CI job to pass, then make the repository public and enable immutable releases; capture both GitHub API results as the pre-tag receipt.
 - [ ] 4.4 Make the release workflow call the GitHub API and fail before hosting when visibility is not public or immutable releases are not enabled.
 - [ ] 4.5 From a clean checkout of the reviewed commit, publish crate `0.1.1`, download the registry archive, and require byte-identical SHA-256 against the local package archive.

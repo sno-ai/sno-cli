@@ -49,6 +49,24 @@ mapfile -t candidates < <(
     done | LC_ALL=C sort -u
 )
 
+publisher_pattern='(npm\s+publish|twine\s+upload|maturin\s+publish|python\s+-m\s+build|py''pa/gh-action-pypi-publish|installers\s*=\s*\[[^]]*"npm"|"n''pm:[^"]+")'
+mapfile -t publisher_surfaces < <(
+  git -C "$repo_root" ls-files --cached --others --exclude-standard |
+    while IFS= read -r path; do
+      case "$path" in
+        .github/workflows/*.yml|.github/workflows/*.yaml|.github/actions/*/action.yml|.github/actions/*/action.yaml|scripts/*.sh)
+          [[ -f "$repo_root/$path" ]] && printf '%s\n' "$path"
+          ;;
+      esac
+    done | LC_ALL=C sort -u
+)
+
+for path in "${publisher_surfaces[@]}"; do
+  if rg -n -i "$publisher_pattern" "$repo_root/$path"; then
+    fail "prohibited npm or Python release definition detected in $path"
+  fi
+done
+
 for path in "${candidates[@]}"; do
   [[ -n "${disposition[$path]+present}" ]] || fail "candidate is absent from manifest: $path"
 done
@@ -56,14 +74,6 @@ done
 for path in "${!disposition[@]}"; do
   is_candidate "$path" || fail "manifest path is not a release-surface candidate: $path"
   printf '%s\n' "${candidates[@]}" | rg -Fxq -- "$path" || fail "manifest path is not tracked or present: $path"
-  if [[ "$path" = .github/workflows/*.yml || "$path" = .github/workflows/*.yaml ]]; then
-    if rg -n -i \
-      '(npm\s+publish|twine\s+upload|maturin\s+publish|python\s+-m\s+build|pypa/gh-action-pypi-publish|installers\s*=\s*\[[^]]*"npm"|"npm:[^"]+")' \
-      "$repo_root/$path"; then
-      fail "prohibited npm or Python release definition detected in $path"
-    fi
-  fi
-
   [[ "${disposition[$path]}" = "exclude" ]] && continue
   [[ -f "$repo_root/$path" ]] || fail "included path does not exist: $path"
 
@@ -73,9 +83,8 @@ for path in "${!disposition[@]}"; do
       ;;
   esac
 
-  if [[ "$path" != .github/workflows/*.yml && "$path" != .github/workflows/*.yaml ]] && rg -n -i \
-    '(npm\s+publish|twine\s+upload|maturin\s+publish|python\s+-m\s+build|pypa/gh-action-pypi-publish|installers\s*=\s*\[[^]]*"npm"|"npm:[^"]+")' \
-    "$repo_root/$path"; then
+  if [[ "$path" != .github/workflows/*.yml && "$path" != .github/workflows/*.yaml ]] &&
+    rg -n -i "$publisher_pattern" "$repo_root/$path"; then
     fail "prohibited npm or Python release definition detected in $path"
   fi
 done

@@ -20,11 +20,15 @@ include	openspec/changes/rust-binary-distribution/.openspec.yaml
 include	openspec/changes/rust-binary-distribution/design.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/agentic-debt-plan-review.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/agentic-debt-code-review.md
+exclude	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-final-ci.md	Authoritative review evidence must preserve prohibited publisher examples verbatim.
+include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-final-ci-round2.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-final-ci-round3.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-resolution.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-round2.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/plan-review-round2.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/plan-review.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/test-writer-final.md
 include	openspec/changes/rust-binary-distribution/proposal.md
 include	openspec/changes/rust-binary-distribution/specs/rust-binary-distribution/spec.md
 include	openspec/changes/rust-binary-distribution/tasks.md

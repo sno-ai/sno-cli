@@ -89,8 +89,18 @@ impl SnoServiceServer {
 
 impl Drop for SnoServiceServer {
     fn drop(&mut self) {
-        if self.thread.as_ref().is_some_and(JoinHandle::is_finished) {
-            let _ = self.thread.take().expect("checked above").join();
+        let Some(thread) = self.thread.take() else {
+            return;
+        };
+        if thread::panicking() {
+            if thread.is_finished() {
+                let _ = thread.join();
+            }
+            return;
+        }
+        match thread.join() {
+            Ok(()) => panic!("SnoServiceServer dropped without finish()"),
+            Err(payload) => std::panic::resume_unwind(payload),
         }
     }
 }
@@ -153,4 +163,27 @@ fn write_response(stream: &mut TcpStream, response: ServiceResponse) {
     )
     .expect("write response");
     stream.flush().expect("flush response");
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn dropped_server_propagates_handler_panic() {
+        let result = std::panic::catch_unwind(|| {
+            let server = SnoServiceServer::start(vec![Box::new(|_| {
+                panic!("handler assertion failed");
+            })]);
+            let address = server.base_url().strip_prefix("http://").unwrap();
+            let mut stream = TcpStream::connect(address).unwrap();
+            stream
+                .write_all(b"GET / HTTP/1.1\r\nHost: localhost\r\n\r\n")
+                .unwrap();
+            stream.flush().unwrap();
+            drop(server);
+        });
+
+        assert!(result.is_err());
+    }
 }
