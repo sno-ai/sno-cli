@@ -16,7 +16,7 @@
 | Concurrent consent and account operations preserve state | `tests/cli.rs` and `src/state.rs` tests | Integration | Real processes, operating-system locks, files, and SQLite transactions | Latest committed value persists, rollback is atomic, and duplicate ownership is rejected | PASS |
 | Handler and protocol assertion failures cannot produce a green test | `sno_service_server::tests::dropped_server_propagates_handler_panic` | Regression | Real worker thread and TCP connection | The enclosing test observes the worker panic even without explicit fixture finalization | PASS |
 | Unsupported release paths and test substitutes fail closed | Release and substitute policy self-tests | Mutation | Real Git repositories, tracked files, shell scripts, and policy checkers | 36 forbidden mutations are rejected and the repository is accepted | PASS |
-| All supported target families execute real binaries | CI run 29407013123 | End-to-end | Five native runners and two architecture-matched pinned Alpine containers | Each job builds and executes version, help, and fresh-profile Station consent | PASS |
+| All supported target families execute real binaries | CI run 29415885098 | End-to-end | Five native runners and two architecture-matched pinned Alpine containers | Each job builds and executes version, help, and fresh-profile Station consent | PASS |
 
 ### Mock Inventory
 | Mock Target | Why All 4 Conditions Are Met | Human Approval / Follow-up |
@@ -29,4 +29,4 @@
 - `scripts/test-test-substitute-policy.sh` -> proves 9 forbidden substitute mutations fail and the repository remains substitute-free.
 - `scripts/test-release-surface-policy.sh` -> proves 7 forbidden release-surface mutations fail, including local actions and ordinary helper scripts.
 - `scripts/test-release-workflow-policy.sh` -> proves 20 release-workflow security mutations fail.
-- `gh run view 29407013123 --repo sno-ai/sno-cli` -> proves the quality job and all seven target-family jobs passed on GitHub-hosted runners.
+- `gh run view 29415885098 --repo sno-ai/sno-cli` -> proves the quality job and all seven target-family jobs passed on GitHub-hosted runners.

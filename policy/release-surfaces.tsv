@@ -19,6 +19,7 @@ include	ai-doc/ACTIVE/PRD/sno-cli-initial-release.md
 include	dist-workspace.toml
 include	openspec/changes/rust-binary-distribution/.openspec.yaml
 include	openspec/changes/rust-binary-distribution/design.md
+include	openspec/changes/rust-binary-distribution/evidence/release-identity-v0.1.7.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/agentic-debt-plan-review.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/agentic-debt-code-review.md
 exclude	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-final-ci.md	Authoritative review evidence must preserve prohibited publisher examples verbatim.
