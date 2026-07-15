@@ -106,6 +106,10 @@ rg -q 'fb8dbee9f182173e062a64a387b21a0badc6fab8b2abf9294973f012972bf6d8' "$sbom"
 [[ "$(rg -c 'expected="[0-9a-f]{64}"' "$bootstrap")" -eq 5 ]] || fail "cargo-dist host hashes are incomplete"
 rg -q 'shasum -a 256' "$bootstrap" || fail "macOS-compatible cargo-dist hash verification is missing"
 rg -q 'unzip -q' "$bootstrap" || fail "Windows-compatible cargo-dist ZIP extraction is missing"
+if rg -q 'sha256sum --check.*matrix\.archive|shasum -a 256 --check.*matrix\.archive' "$repo_root/.github/workflows/release-archive-smoke.yml"; then
+  fail "archive smoke depends on platform-specific checksum-file parsing"
+fi
+[[ "$(rg -c 'recorded="\$\{recorded#\\\*\}"' "$repo_root/.github/workflows/release-archive-smoke.yml")" -eq 2 ]] || fail "archive smoke does not validate checksum filenames on both Unix paths"
 rg -q 'vars\.SNO_RELEASE_AUTHORIZED_SHA' "$preflight" || fail "preflight does not consume the commit-bound administrator authorization receipt"
 rg -Fq 'test "${RELEASE_AUTHORIZED_SHA}" = "${GITHUB_SHA}"' "$preflight" || fail "preflight does not bind administrator authorization to the release commit"
 if rg -q 'repos/.*immutable-releases' "$preflight"; then

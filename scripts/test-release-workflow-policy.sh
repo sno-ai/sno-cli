@@ -47,6 +47,10 @@ root="$(make_fixture zip-extraction-bypass)"
 sed -i '/unzip -q/d' "$root/scripts/install-cargo-dist.sh"
 expect_failure "$root"
 
+root="$(make_fixture archive-checksum-bypass)"
+sed -i '0,/recorded="${recorded#\\\*}"/d' "$root/.github/workflows/release-archive-smoke.yml"
+expect_failure "$root"
+
 root="$(make_fixture host-bypass)"
 sed -i '0,/^      - custom-release-installer-smoke$/d' "$root/.github/workflows/release.yml"
 expect_failure "$root"
@@ -84,4 +88,4 @@ sed -i '/needs.custom-release-public-installer-smoke.result == '\''failure'\''/s
 expect_failure "$root"
 
 "$checker" "$repo_root" >/dev/null
-printf 'release-workflow policy self-test passed: 15 security mutations rejected and repository accepted\n'
+printf 'release-workflow policy self-test passed: 16 security mutations rejected and repository accepted\n'

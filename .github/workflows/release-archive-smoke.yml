@@ -76,13 +76,25 @@ jobs:
           set -euo pipefail
           test "$(uname -m)" = "${{ matrix.arch }}"
           cd artifacts
-          if command -v sha256sum >/dev/null 2>&1; then
-            sha256sum --check --strict "${{ matrix.archive }}.sha256"
-          else
-            shasum -a 256 --check "${{ matrix.archive }}.sha256"
+          archive='${{ matrix.archive }}'
+          checksum="${archive}.sha256"
+          IFS=' ' read -r expected recorded extra < "$checksum"
+          recorded="${recorded#\*}"
+          test -z "${extra:-}"
+          test "$recorded" = "$archive"
+          [[ "$expected" =~ ^[0-9a-f]{64}$ ]]
+          if tail -n +2 "$checksum" | grep -q '[^[:space:]]'; then
+            echo 'checksum file contains unexpected non-empty lines' >&2
+            exit 1
           fi
+          if command -v shasum >/dev/null 2>&1; then
+            actual="$(shasum -a 256 "$archive" | awk '{print $1}')"
+          else
+            actual="$(sha256sum "$archive" | awk '{print $1}')"
+          fi
+          test "$actual" = "$expected"
           extract="$(mktemp -d)"
-          tar -xzf "${{ matrix.archive }}" -C "$extract"
+          tar -xzf "$archive" -C "$extract"
           binary="$(find "$extract" -type f -name sno -perm -u+x -print -quit)"
           test -n "$binary"
           "$binary" --version | grep -Eq '^sno [0-9]+\.[0-9]+\.[0-9]+'
@@ -100,9 +112,25 @@ jobs:
           set -euo pipefail
           test "$(uname -m)" = "${{ matrix.arch }}"
           cd artifacts
-          sha256sum --check --strict "${{ matrix.archive }}.sha256"
+          archive='${{ matrix.archive }}'
+          checksum="${archive}.sha256"
+          IFS=' ' read -r expected recorded extra < "$checksum"
+          recorded="${recorded#\*}"
+          test -z "${extra:-}"
+          test "$recorded" = "$archive"
+          [[ "$expected" =~ ^[0-9a-f]{64}$ ]]
+          if tail -n +2 "$checksum" | grep -q '[^[:space:]]'; then
+            echo 'checksum file contains unexpected non-empty lines' >&2
+            exit 1
+          fi
+          if command -v shasum >/dev/null 2>&1; then
+            actual="$(shasum -a 256 "$archive" | awk '{print $1}')"
+          else
+            actual="$(sha256sum "$archive" | awk '{print $1}')"
+          fi
+          test "$actual" = "$expected"
           extract="$(mktemp -d)"
-          tar -xzf "${{ matrix.archive }}" -C "$extract"
+          tar -xzf "$archive" -C "$extract"
           binary="$(find "$extract" -type f -name sno -perm -u+x -print -quit)"
           test -n "$binary"
           profile="$(mktemp -d)"
