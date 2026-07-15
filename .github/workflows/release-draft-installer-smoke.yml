@@ -17,6 +17,8 @@ permissions:
 
 jobs:
   verify:
+    permissions:
+      contents: write
     uses: ./.github/workflows/release-installer-verify.yml
     with:
       mode: draft

@@ -340,6 +340,8 @@ jobs:
     needs:
       - plan
       - host
+    permissions:
+      contents: write
     uses: ./.github/workflows/release-draft-installer-smoke.yml
     with:
       plan: ${{ needs.plan.outputs.val }}

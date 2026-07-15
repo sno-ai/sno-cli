@@ -18,9 +18,6 @@ on:
         default: ""
         type: string
 
-permissions:
-  contents: read
-
 jobs:
   installer:
     name: ${{ inputs.mode }} installer (${{ matrix.name }})

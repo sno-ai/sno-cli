@@ -37,7 +37,7 @@ Every release archive SHALL be extracted into a clean directory and the extracte
 - **THEN** the release workflow fails before creating a GitHub Release
 
 ### Requirement: Version and tag integrity
-The production binary release SHALL use forward-only version `0.1.5` after the `0.1.1` workflow failed closed before artifact creation, `0.1.2` failed during cross-platform bootstrap, `0.1.3` failed during checksum-file parsing, and `0.1.4` deleted its draft after tag-based draft download failed. The release workflow SHALL accept only semantic version tags matching the crate version and SHALL use the committed lockfile for all builds. The crates.io package and GitHub tag SHALL identify the same reviewed source version. The existing `v0.1.1` through `v0.1.4` tags MUST NOT be moved.
+The production binary release SHALL use forward-only version `0.1.6` after versions `0.1.1` through `0.1.5` failed closed at successive release gates. The release workflow SHALL accept only semantic version tags matching the crate version and SHALL use the committed lockfile for all builds. The crates.io package and GitHub tag SHALL identify the same reviewed source version. Only the nested draft-asset verification chain SHALL receive `contents: write`; staged, candidate, and public verification SHALL remain read-only. The existing `v0.1.1` through `v0.1.5` tags MUST NOT be moved.
 
 #### Scenario: Tag and crate version differ
 - **WHEN** a release tag does not select the exact version in `Cargo.toml`

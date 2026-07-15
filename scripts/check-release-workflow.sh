@@ -63,6 +63,7 @@ rg -q 'test "\$resolved_commit" = "\$GITHUB_SHA"' <<<"$host" || fail "host does 
 rg -q 'gh release create .* --draft ' <<<"$host" || fail "host does not create a draft release"
 rg -q 'draft_id:.*steps\.create_release\.outputs\.release_id' <<<"$host" || fail "host does not export the numeric draft release ID"
 rg -q '^      - host$' <<<"$draft_smoke" || fail "draft download smoke does not depend on uploaded draft assets"
+rg -Uq '^    permissions:\n      contents: write$' <<<"$draft_smoke" || fail "draft download smoke does not receive push access for unpublished assets"
 rg -q 'release_id:.*needs\.host\.outputs\.draft_id' <<<"$draft_smoke" || fail "draft download smoke does not receive the exact draft release ID"
 rg -q '^      - custom-release-draft-installer-smoke$' <<<"$publish" || fail "release publication does not depend on draft download smoke"
 rg -q '^      - custom-release-draft-installer-smoke$' <<<"$candidate_host" || fail "public candidate does not depend on draft installer smoke"
@@ -95,9 +96,16 @@ installer_verify="$repo_root/.github/workflows/release-installer-verify.yml"
 sbom="$repo_root/.github/workflows/release-sbom.yml"
 bootstrap="$repo_root/scripts/install-cargo-dist.sh"
 
+for wrapper in "$staged_wrapper" "$draft_wrapper" "$public_wrapper" "$candidate_wrapper"; do
+  rg -Uq '^permissions:\n  contents: read$' "$wrapper" || fail "installer wrapper root token is not read-only: $wrapper"
+done
 rg -Uq 'release-installer-verify\.yml\n    with:\n      mode: staged' "$staged_wrapper" || fail "staged wrapper does not use the shared verifier"
 rg -Uq 'release-installer-verify\.yml\n    with:\n      mode: draft' "$draft_wrapper" || fail "draft wrapper does not use the shared verifier"
 rg -q 'release_id:.*inputs\.release_id' "$draft_wrapper" || fail "draft wrapper does not forward the numeric release ID"
+rg -Uq '^  verify:\n    permissions:\n      contents: write\n    uses:' "$draft_wrapper" || fail "draft wrapper does not preserve push access for unpublished assets"
+if rg -q '^permissions:' "$installer_verify"; then
+  fail "shared installer verifier overrides least-privilege permissions from its caller"
+fi
 rg -Uq 'release-installer-verify\.yml\n    with:\n      mode: public' "$public_wrapper" || fail "public wrapper does not use the shared verifier"
 rg -Uq 'release-installer-verify\.yml\n    with:\n      mode: candidate' "$candidate_wrapper" || fail "candidate wrapper does not use the shared verifier"
 rg -q 'SNO_DOWNLOAD_URL="file://' "$installer_verify" || fail "staged Unix installer does not consume local artifacts"

@@ -76,6 +76,10 @@ fn allowed_writes() -> BTreeMap<&'static str, BTreeSet<&'static str>> {
             "host",
             BTreeSet::from(["attestations", "contents", "id-token"]),
         ),
+        (
+            "custom-release-draft-installer-smoke",
+            BTreeSet::from(["contents"]),
+        ),
         ("publish-release", BTreeSet::from(["contents"])),
         ("cleanup-failed-draft", BTreeSet::from(["contents"])),
         ("host-public-candidate", BTreeSet::from(["contents"])),
