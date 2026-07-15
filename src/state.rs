@@ -4,11 +4,12 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::thread;
-use std::time::{Duration, Instant, SystemTime};
+use std::time::{Duration, Instant};
 
 use chrono::{SecondsFormat, Utc};
+use fs2::FileExt;
 use rand::RngCore;
-use rusqlite::{Connection, OptionalExtension, params};
+use rusqlite::{Connection, OptionalExtension, TransactionBehavior, params};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -80,6 +81,16 @@ struct PauseState {
     paused_at: String,
 }
 
+#[derive(Debug, Deserialize, Serialize)]
+struct ConsentTransition {
+    version: u8,
+    transition_id: String,
+    from: ConsentValue,
+    to: ConsentValue,
+    reason: String,
+    prepared_at: String,
+}
+
 #[derive(Clone, Debug)]
 pub struct SnoPaths {
     pub identity_path: PathBuf,
@@ -87,6 +98,8 @@ pub struct SnoPaths {
     pub buffer_path: PathBuf,
     pub consent_path: PathBuf,
     pub pause_path: PathBuf,
+    pub consent_transition_path: PathBuf,
+    pub consent_lock_path: PathBuf,
 }
 
 impl SnoPaths {
@@ -113,68 +126,102 @@ impl SnoPaths {
             .map(PathBuf::from)
             .unwrap_or_else(|| profile_dir.join("state").join("consent.json"));
         let pause_path = profile_dir.join("state").join("consent-prior.json");
+        let consent_transition_path = consent_path
+            .parent()
+            .unwrap_or(&profile_dir)
+            .join("consent-transition.json");
+        let consent_lock_path = consent_path
+            .parent()
+            .unwrap_or(&profile_dir)
+            .join("consent.lock");
         Ok(Self {
             identity_path,
             identity_lock_path,
             buffer_path,
             consent_path,
             pause_path,
+            consent_transition_path,
+            consent_lock_path,
         })
     }
 }
 
 pub fn read_consent() -> Result<ConsentValue, CliError> {
-    read_consent_from(&SnoPaths::from_environment()?)
+    let paths = SnoPaths::from_environment()?;
+    with_consent_lock(&paths, || read_consent_locked(&paths))
 }
 
 pub fn set_consent(next: ConsentValue, reason: &str) -> Result<(), CliError> {
     let paths = SnoPaths::from_environment()?;
-    let current = read_consent_from(&paths)?;
-    if current == next {
-        return Ok(());
-    }
-    apply_consent_transition(&paths, current, next, reason)
+    with_consent_lock(&paths, || {
+        let current = read_consent_locked(&paths)?;
+        if current == next {
+            clear_pause(&paths)?;
+            return Ok(());
+        }
+        apply_consent_transition(&paths, current, next, reason)?;
+        clear_pause(&paths)
+    })
 }
 
 pub fn pause_telemetry() -> Result<(ConsentValue, bool), CliError> {
     let paths = SnoPaths::from_environment()?;
-    let current = read_consent_from(&paths)?;
-    if current == ConsentValue::Off {
-        return Ok((current, true));
-    }
-    atomic_write_json(
-        &paths.pause_path,
-        &PauseState {
-            version: 1,
-            prior: current,
-            paused_at: now_iso(),
-        },
-    )?;
-    apply_consent_transition(&paths, current, ConsentValue::Off, "observe.pause")?;
-    Ok((ConsentValue::Off, false))
+    with_consent_lock(&paths, || {
+        let current = read_consent_locked(&paths)?;
+        if current == ConsentValue::Off {
+            return Ok((current, true));
+        }
+        atomic_write_json(
+            &paths.pause_path,
+            &PauseState {
+                version: 1,
+                prior: current,
+                paused_at: now_iso(),
+            },
+        )?;
+        apply_consent_transition(&paths, current, ConsentValue::Off, "observe.pause")?;
+        Ok((ConsentValue::Off, false))
+    })
 }
 
 pub fn resume_telemetry() -> Result<ConsentValue, CliError> {
     let paths = SnoPaths::from_environment()?;
-    let prior = match fs::read(&paths.pause_path) {
-        Ok(bytes) => serde_json::from_slice::<PauseState>(&bytes)
-            .ok()
-            .filter(|state| state.version == 1)
-            .map(|state| state.prior)
-            .unwrap_or(DEFAULT_CONSENT),
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => DEFAULT_CONSENT,
-        Err(error) => return Err(error.into()),
-    };
-    let current = read_consent_from(&paths)?;
-    if current != prior {
-        apply_consent_transition(&paths, current, prior, "observe.resume")?;
-    }
-    match fs::remove_file(&paths.pause_path) {
-        Ok(()) => {}
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-        Err(error) => return Err(error.into()),
-    }
-    Ok(prior)
+    with_consent_lock(&paths, || {
+        let current = read_consent_locked(&paths)?;
+        if current != ConsentValue::Off {
+            clear_pause(&paths)?;
+            return Ok(current);
+        }
+        let prior = match fs::read(&paths.pause_path) {
+            Ok(bytes) => {
+                let state = serde_json::from_slice::<PauseState>(&bytes).map_err(|_| {
+                    CliError::runtime(
+                        "invalid_pause_state",
+                        format!("pause state is malformed at {}", paths.pause_path.display()),
+                    )
+                })?;
+                if state.version != 1 || state.prior == ConsentValue::Off {
+                    return Err(CliError::runtime(
+                        "invalid_pause_state",
+                        format!("pause state is malformed at {}", paths.pause_path.display()),
+                    ));
+                }
+                state.prior
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
+                return Err(CliError::runtime(
+                    "telemetry_not_paused",
+                    "telemetry is off by explicit consent; no paused setting can be resumed",
+                ));
+            }
+            Err(error) => return Err(error.into()),
+        };
+        if current != prior {
+            apply_consent_transition(&paths, current, prior, "observe.resume")?;
+        }
+        clear_pause(&paths)?;
+        Ok(prior)
+    })
 }
 
 pub fn bootstrap_identity() -> Result<Identity, CliError> {
@@ -193,7 +240,15 @@ pub fn update_identity_account(
         ));
     }
     let paths = SnoPaths::from_environment()?;
-    with_identity_lock(&paths, || {
+    update_identity_account_at(&paths, expected, user_account_id)
+}
+
+fn update_identity_account_at(
+    paths: &SnoPaths,
+    expected: &Identity,
+    user_account_id: &str,
+) -> Result<Identity, CliError> {
+    with_identity_lock(paths, || {
         let mut current = read_valid_identity(&paths.identity_path)?.ok_or_else(|| {
             CliError::runtime(
                 "claim_identity_changed",
@@ -205,6 +260,15 @@ pub fn update_identity_account(
             return Err(CliError::runtime(
                 "claim_identity_changed",
                 "local identity changed before claim could be saved",
+            ));
+        }
+        if let Some(account_id) = &current.user_account_id {
+            if account_id == user_account_id {
+                return Ok(current);
+            }
+            return Err(CliError::runtime(
+                "claim_account_conflict",
+                "machine is already claimed by a different account",
             ));
         }
         current.user_account_id = Some(user_account_id.to_owned());
@@ -255,6 +319,11 @@ pub fn open_buffer(path: &Path) -> Result<Connection, CliError> {
             response_body TEXT NOT NULL,
             quarantined_at INTEGER NOT NULL
         );
+        CREATE TABLE IF NOT EXISTS consent_transitions (
+            transition_id TEXT PRIMARY KEY,
+            next_consent TEXT NOT NULL,
+            committed_at INTEGER NOT NULL
+        );
         ",
     )?;
     Ok(connection)
@@ -274,7 +343,22 @@ pub fn is_valid_identity(identity: &Identity) -> bool {
 }
 
 pub(crate) fn atomic_write(path: &Path, contents: &[u8]) -> Result<(), CliError> {
+    atomic_write_with(path, |file| {
+        file.write_all(contents)?;
+        Ok(())
+    })
+}
+
+pub(crate) fn atomic_write_with<T>(
+    path: &Path,
+    action: impl FnOnce(&mut fs::File) -> Result<T, CliError>,
+) -> Result<T, CliError> {
     let parent = path.parent().unwrap_or_else(|| Path::new("."));
+    let sync_stop = parent
+        .ancestors()
+        .find(|candidate| candidate.exists())
+        .unwrap_or(parent)
+        .to_path_buf();
     fs::create_dir_all(parent)?;
     let temporary = parent.join(format!(
         ".{}.{}.{}.tmp",
@@ -290,32 +374,31 @@ pub(crate) fn atomic_write(path: &Path, contents: &[u8]) -> Result<(), CliError>
         options.mode(0o600);
     }
     let mut file = options.open(&temporary)?;
-    file.write_all(contents)?;
-    file.sync_all()?;
+    let output = match action(&mut file) {
+        Ok(output) => output,
+        Err(error) => {
+            drop(file);
+            let _ = fs::remove_file(&temporary);
+            return Err(error);
+        }
+    };
+    if let Err(error) = file.sync_all() {
+        drop(file);
+        let _ = fs::remove_file(&temporary);
+        return Err(error.into());
+    }
     set_private_file_mode(&temporary)?;
-    if let Err(error) = fs::rename(&temporary, path) {
-        #[cfg(windows)]
-        if matches!(
-            error.kind(),
-            std::io::ErrorKind::AlreadyExists | std::io::ErrorKind::PermissionDenied
-        ) {
-            fs::remove_file(path)?;
-            fs::rename(&temporary, path)?;
-        } else {
-            let _ = fs::remove_file(&temporary);
-            return Err(error.into());
-        }
-        #[cfg(not(windows))]
-        {
-            let _ = fs::remove_file(&temporary);
-            return Err(error.into());
-        }
+    if let Err(error) = atomic_replace(&temporary, path) {
+        let _ = fs::remove_file(&temporary);
+        return Err(error.into());
     }
     set_private_file_mode(path)?;
-    Ok(())
+    sync_directory_tree(parent, &sync_stop)?;
+    Ok(output)
 }
 
-fn read_consent_from(paths: &SnoPaths) -> Result<ConsentValue, CliError> {
+fn read_consent_locked(paths: &SnoPaths) -> Result<ConsentValue, CliError> {
+    recover_consent_transition(paths)?;
     match fs::read(&paths.consent_path) {
         Ok(bytes) => {
             let state: ConsentState = serde_json::from_slice(&bytes).map_err(|_| {
@@ -355,56 +438,91 @@ fn apply_consent_transition(
     reason: &str,
 ) -> Result<(), CliError> {
     let identity = bootstrap_identity_at(paths)?;
-    let mut connection = open_buffer(&paths.buffer_path)?;
-    let agents = list_agents(&connection)?;
-    if current == ConsentValue::Off && next != ConsentValue::Off {
-        write_consent(paths, next)?;
-        for agent in agents {
-            let epoch = current_epoch(&connection, &identity.machine_uuid, &agent)? + 1;
-            append_agent_identify(&mut connection, &identity, &agent, epoch, next, false)?;
-            append_consent_change(
-                &mut connection,
-                &identity,
-                &agent,
-                epoch,
-                next,
-                current,
-                next,
-                reason,
-            )?;
+    let transition = ConsentTransition {
+        version: 1,
+        transition_id: Uuid::now_v7().to_string(),
+        from: current,
+        to: next,
+        reason: reason.to_owned(),
+        prepared_at: now_iso(),
+    };
+    atomic_write_json(&paths.consent_transition_path, &transition)?;
+    let database_result = (|| {
+        let mut connection = open_buffer(&paths.buffer_path)?;
+        let transaction = connection.transaction_with_behavior(TransactionBehavior::Immediate)?;
+        let agents = list_agents(&transaction, &identity.machine_uuid)?;
+        if current == ConsentValue::Off && next != ConsentValue::Off {
+            for agent in &agents {
+                let epoch = current_epoch(&transaction, &identity.machine_uuid, agent)? + 1;
+                append_agent_identify(&transaction, &identity, agent, epoch, next, false)?;
+                append_consent_change(
+                    &transaction,
+                    &identity,
+                    agent,
+                    epoch,
+                    next,
+                    current,
+                    next,
+                    reason,
+                )?;
+            }
+        } else {
+            for agent in &agents {
+                let epoch = current_epoch(&transaction, &identity.machine_uuid, agent)?;
+                if !has_tail(&transaction, &identity.machine_uuid, agent, epoch)? {
+                    append_agent_identify(
+                        &transaction,
+                        &identity,
+                        agent,
+                        epoch,
+                        current,
+                        current == ConsentValue::Off,
+                    )?;
+                }
+                append_consent_change(
+                    &transaction,
+                    &identity,
+                    agent,
+                    epoch,
+                    current,
+                    current,
+                    next,
+                    reason,
+                )?;
+            }
+            append_post_transition_identities(&transaction, &identity, &agents, next)?;
         }
-        return Ok(());
-    }
-    for agent in &agents {
-        let epoch = current_epoch(&connection, &identity.machine_uuid, agent)?;
-        if !has_tail(&connection, &identity.machine_uuid, agent, epoch)? {
-            append_agent_identify(
-                &mut connection,
-                &identity,
-                agent,
-                epoch,
-                current,
-                current == ConsentValue::Off,
-            )?;
-        }
-        append_consent_change(
-            &mut connection,
-            &identity,
-            agent,
-            epoch,
-            current,
-            current,
-            next,
-            reason,
+        transaction.execute(
+            "INSERT INTO consent_transitions (transition_id, next_consent, committed_at) VALUES (?1, ?2, ?3)",
+            params![
+                transition.transition_id,
+                transition.to.to_string(),
+                Utc::now().timestamp_millis()
+            ],
         )?;
+        transaction.commit()?;
+        Ok::<(), CliError>(())
+    })();
+    if let Err(error) = database_result {
+        let _ = clear_consent_transition(paths);
+        return Err(error);
     }
     write_consent(paths, next)?;
+    clear_consent_transition(paths)
+}
+
+fn append_post_transition_identities(
+    connection: &Connection,
+    identity: &Identity,
+    agents: &[String],
+    next: ConsentValue,
+) -> Result<(), CliError> {
     for agent in agents {
-        let epoch = current_epoch(&connection, &identity.machine_uuid, &agent)? + 1;
+        let epoch = current_epoch(connection, &identity.machine_uuid, agent)? + 1;
         append_agent_identify(
-            &mut connection,
-            &identity,
-            &agent,
+            connection,
+            identity,
+            agent,
             epoch,
             next,
             next == ConsentValue::Off,
@@ -413,10 +531,80 @@ fn apply_consent_transition(
     Ok(())
 }
 
+fn clear_pause(paths: &SnoPaths) -> Result<(), CliError> {
+    remove_state_file(&paths.pause_path)
+}
+
+fn recover_consent_transition(paths: &SnoPaths) -> Result<(), CliError> {
+    let bytes = match fs::read(&paths.consent_transition_path) {
+        Ok(bytes) => bytes,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(()),
+        Err(error) => return Err(error.into()),
+    };
+    let pending = serde_json::from_slice::<ConsentTransition>(&bytes).map_err(|_| {
+        CliError::runtime(
+            "invalid_consent_transition",
+            format!(
+                "consent transition is malformed at {}",
+                paths.consent_transition_path.display()
+            ),
+        )
+    })?;
+    if pending.version != 1 {
+        return Err(CliError::runtime(
+            "invalid_consent_transition",
+            format!(
+                "consent transition is malformed at {}",
+                paths.consent_transition_path.display()
+            ),
+        ));
+    }
+    let connection = open_buffer(&paths.buffer_path)?;
+    let committed = connection
+        .query_row(
+            "SELECT next_consent FROM consent_transitions WHERE transition_id = ?1",
+            params![pending.transition_id],
+            |row| row.get::<_, String>(0),
+        )
+        .optional()?;
+    match committed {
+        Some(next) if next == pending.to.to_string() => write_consent(paths, pending.to)?,
+        Some(_) => {
+            return Err(CliError::runtime(
+                "invalid_consent_transition",
+                "consent transition does not match its committed database record",
+            ));
+        }
+        None => {}
+    }
+    clear_consent_transition(paths)
+}
+
+fn clear_consent_transition(paths: &SnoPaths) -> Result<(), CliError> {
+    remove_state_file(&paths.consent_transition_path)
+}
+
+fn remove_state_file(path: &Path) -> Result<(), CliError> {
+    match fs::remove_file(path) {
+        Ok(()) => {
+            sync_directory_tree(
+                path.parent().unwrap_or_else(|| Path::new(".")),
+                path.parent().unwrap_or_else(|| Path::new(".")),
+            )?;
+            Ok(())
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(()),
+        Err(error) => Err(error.into()),
+    }
+}
+
 fn bootstrap_identity_at(paths: &SnoPaths) -> Result<Identity, CliError> {
     if let Some(parent) = paths.identity_path.parent() {
+        let parent_existed = parent.exists();
         fs::create_dir_all(parent)?;
-        set_private_directory_mode(parent)?;
+        if !parent_existed {
+            set_private_directory_mode(parent)?;
+        }
     }
     with_identity_lock(paths, || {
         if let Some(identity) = read_valid_identity(&paths.identity_path)? {
@@ -434,18 +622,19 @@ fn read_valid_identity(path: &Path) -> Result<Option<Identity>, CliError> {
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
         Err(error) => return Err(error.into()),
     };
-    let mut identity = match serde_json::from_slice::<Identity>(&bytes) {
-        Ok(identity) => identity,
-        Err(_) => return Ok(None),
-    };
-    if identity
-        .user_account_id
-        .as_deref()
-        .is_some_and(|account| !is_cuid2(account))
-    {
-        identity.user_account_id = None;
+    let identity = serde_json::from_slice::<Identity>(&bytes).map_err(|_| {
+        CliError::runtime(
+            "invalid_identity",
+            format!("identity is malformed at {}", path.display()),
+        )
+    })?;
+    if !is_valid_identity(&identity) {
+        return Err(CliError::runtime(
+            "invalid_identity",
+            format!("identity is malformed at {}", path.display()),
+        ));
     }
-    Ok(is_valid_identity(&identity).then_some(identity))
+    Ok(Some(identity))
 }
 
 fn create_identity() -> Identity {
@@ -495,51 +684,60 @@ fn with_identity_lock<T>(
     paths: &SnoPaths,
     action: impl FnOnce() -> Result<T, CliError>,
 ) -> Result<T, CliError> {
-    let parent = paths
-        .identity_lock_path
-        .parent()
-        .unwrap_or_else(|| Path::new("."));
+    with_file_lock(&paths.identity_lock_path, action)
+}
+
+fn with_consent_lock<T>(
+    paths: &SnoPaths,
+    action: impl FnOnce() -> Result<T, CliError>,
+) -> Result<T, CliError> {
+    with_file_lock(&paths.consent_lock_path, action)
+}
+
+fn with_file_lock<T>(
+    lock_path: &Path,
+    action: impl FnOnce() -> Result<T, CliError>,
+) -> Result<T, CliError> {
+    let parent = lock_path.parent().unwrap_or_else(|| Path::new("."));
     fs::create_dir_all(parent)?;
     let started = Instant::now();
-    let mut stale_break_attempted = false;
-    let mut lock_file = loop {
-        let result = OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&paths.identity_lock_path);
-        match result {
-            Ok(file) => break file,
-            Err(error) if error.kind() == std::io::ErrorKind::AlreadyExists => {
-                if started.elapsed() <= Duration::from_secs(5) {
-                    thread::sleep(Duration::from_millis(25));
-                    continue;
+    let mut lock_file = OpenOptions::new()
+        .read(true)
+        .write(true)
+        .create(true)
+        .truncate(false)
+        .open(lock_path)?;
+    loop {
+        match lock_file.try_lock_exclusive() {
+            Ok(()) => break,
+            Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+                if started.elapsed() > Duration::from_secs(5) {
+                    return Err(error.into());
                 }
-                let stale = fs::metadata(&paths.identity_lock_path)
-                    .and_then(|metadata| metadata.modified())
-                    .ok()
-                    .and_then(|modified| SystemTime::now().duration_since(modified).ok())
-                    .is_none_or(|age| age > Duration::from_secs(60));
-                if !stale_break_attempted && stale {
-                    stale_break_attempted = true;
-                    let _ = fs::remove_file(&paths.identity_lock_path);
-                    continue;
-                }
-                return Err(error.into());
+                thread::sleep(Duration::from_millis(25));
             }
             Err(error) => return Err(error.into()),
         }
-    };
+    }
+    lock_file.set_len(0)?;
     writeln!(lock_file, "{}", std::process::id())?;
     let result = action();
-    drop(lock_file);
-    let _ = fs::remove_file(&paths.identity_lock_path);
-    result
+    let _ = lock_file.set_len(0);
+    let unlock_result = FileExt::unlock(&lock_file);
+    match result {
+        Err(error) => Err(error),
+        Ok(value) => {
+            unlock_result?;
+            Ok(value)
+        }
+    }
 }
 
-fn list_agents(connection: &Connection) -> Result<Vec<String>, CliError> {
-    let mut statement = connection.prepare("SELECT DISTINCT agent_id FROM chain_tail")?;
+fn list_agents(connection: &Connection, machine_id: &str) -> Result<Vec<String>, CliError> {
+    let mut statement =
+        connection.prepare("SELECT DISTINCT agent_id FROM chain_tail WHERE machine_id = ?1")?;
     let values = statement
-        .query_map([], |row| row.get::<_, String>(0))?
+        .query_map(params![machine_id], |row| row.get::<_, String>(0))?
         .collect::<Result<Vec<_>, _>>()?;
     Ok(if values.is_empty() {
         vec!["codex".to_owned()]
@@ -577,7 +775,7 @@ fn has_tail(
 }
 
 fn append_agent_identify(
-    connection: &mut Connection,
+    connection: &Connection,
     identity: &Identity,
     agent_id: &str,
     chain_epoch: i64,
@@ -602,7 +800,7 @@ fn append_agent_identify(
 
 #[allow(clippy::too_many_arguments)]
 fn append_consent_change(
-    connection: &mut Connection,
+    connection: &Connection,
     identity: &Identity,
     agent_id: &str,
     chain_epoch: i64,
@@ -625,7 +823,7 @@ fn append_consent_change(
 
 #[allow(clippy::too_many_arguments)]
 fn append_event(
-    connection: &mut Connection,
+    connection: &Connection,
     identity: &Identity,
     agent_id: &str,
     chain_epoch: i64,
@@ -634,8 +832,7 @@ fn append_event(
     payload: Value,
     terminal: bool,
 ) -> Result<(), CliError> {
-    let transaction = connection.transaction()?;
-    let tail = transaction
+    let tail = connection
         .query_row(
             "SELECT last_seq, last_self_hash FROM chain_tail WHERE machine_id = ?1 AND agent_id = ?2 AND chain_epoch = ?3",
             params![identity.machine_uuid, agent_id, chain_epoch],
@@ -673,7 +870,7 @@ fn append_event(
         &self_hash,
         &payload,
     )?;
-    transaction.execute(
+    connection.execute(
         "INSERT INTO events (event_id, machine_id, agent_id, chain_epoch, seq, self_hash, prev, payload, shipped, terminal, created_at, attempts) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 0, ?9, ?10, 0)",
         params![
             event_id,
@@ -684,15 +881,14 @@ fn append_event(
             self_hash,
             previous,
             serialized.as_bytes(),
-            i64::from(terminal),
+            if terminal { 1_i64 } else { 0_i64 },
             timestamp,
         ],
     )?;
-    transaction.execute(
+    connection.execute(
         "INSERT INTO chain_tail (machine_id, agent_id, chain_epoch, last_seq, last_self_hash, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6) ON CONFLICT(machine_id, agent_id, chain_epoch) DO UPDATE SET last_seq = excluded.last_seq, last_self_hash = excluded.last_self_hash, updated_at = excluded.updated_at",
         params![identity.machine_uuid, agent_id, chain_epoch, seq, self_hash, timestamp],
     )?;
-    transaction.commit()?;
     Ok(())
 }
 
@@ -777,4 +973,317 @@ fn set_private_directory_mode(path: &Path) -> Result<(), CliError> {
         fs::set_permissions(path, fs::Permissions::from_mode(0o700))?;
     }
     Ok(())
+}
+
+#[cfg(unix)]
+fn sync_directory_tree(path: &Path, stop: &Path) -> Result<(), CliError> {
+    let mut current = path;
+    loop {
+        let directory = current;
+        fs::File::open(directory)?.sync_all()?;
+        if directory == stop {
+            break;
+        }
+        current = directory.parent().ok_or_else(|| {
+            CliError::runtime("runtime_error", "directory durability boundary is invalid")
+        })?;
+    }
+    Ok(())
+}
+
+#[cfg(not(unix))]
+fn sync_directory_tree(_path: &Path, _stop: &Path) -> Result<(), CliError> {
+    Ok(())
+}
+
+#[cfg(not(windows))]
+fn atomic_replace(source: &Path, destination: &Path) -> std::io::Result<()> {
+    fs::rename(source, destination)
+}
+
+#[cfg(windows)]
+fn atomic_replace(source: &Path, destination: &Path) -> std::io::Result<()> {
+    use std::os::windows::ffi::OsStrExt;
+    use windows_sys::Win32::Storage::FileSystem::{
+        MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH, MoveFileExW,
+    };
+
+    let source = source
+        .as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect::<Vec<_>>();
+    let destination = destination
+        .as_os_str()
+        .encode_wide()
+        .chain(std::iter::once(0))
+        .collect::<Vec<_>>();
+    let result = unsafe {
+        MoveFileExW(
+            source.as_ptr(),
+            destination.as_ptr(),
+            MOVEFILE_REPLACE_EXISTING | MOVEFILE_WRITE_THROUGH,
+        )
+    };
+    if result == 0 {
+        Err(std::io::Error::last_os_error())
+    } else {
+        Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::fs;
+    use std::sync::{Arc, Barrier, mpsc};
+    use std::thread;
+    use std::time::Duration;
+
+    use rusqlite::params;
+    use serde_json::json;
+    use tempfile::TempDir;
+
+    use super::{
+        ConsentTransition, ConsentValue, SnoPaths, apply_consent_transition, atomic_write_json,
+        bootstrap_identity_at, canonical_json, open_buffer, read_consent_locked,
+        read_valid_identity, update_identity_account_at, with_file_lock, write_consent,
+    };
+
+    fn test_paths(profile: &TempDir) -> SnoPaths {
+        SnoPaths {
+            identity_path: profile.path().join("identity.json"),
+            identity_lock_path: profile.path().join("identity.lock"),
+            buffer_path: profile.path().join("buffer.db"),
+            consent_path: profile.path().join("state/consent.json"),
+            pause_path: profile.path().join("state/consent-prior.json"),
+            consent_transition_path: profile.path().join("state/consent-transition.json"),
+            consent_lock_path: profile.path().join("state/consent.lock"),
+        }
+    }
+
+    #[test]
+    fn canonical_json_sorts_nested_object_keys() {
+        let value = json!({
+            "z": 1,
+            "a": {"two": 2, "one": 1},
+            "m": [true, {"b": 2, "a": 1}],
+        });
+        assert_eq!(
+            canonical_json(&value).unwrap(),
+            r#"{"a":{"one":1,"two":2},"m":[true,{"a":1,"b":2}],"z":1}"#
+        );
+    }
+
+    #[test]
+    fn consent_events_roll_back_together_on_database_failure() {
+        let profile = TempDir::new().unwrap();
+        let paths = test_paths(&profile);
+        let identity = bootstrap_identity_at(&paths).unwrap();
+        let connection = open_buffer(&paths.buffer_path).unwrap();
+        for agent in ["alpha", "beta"] {
+            connection
+                .execute(
+                    "INSERT INTO chain_tail (machine_id, agent_id, chain_epoch, last_seq, last_self_hash, updated_at) VALUES (?1, ?2, 0, 0, 'hash', 0)",
+                    params![identity.machine_uuid, agent],
+                )
+                .unwrap();
+        }
+        connection
+            .execute_batch(
+                "CREATE TRIGGER fail_beta BEFORE INSERT ON events WHEN NEW.agent_id = 'beta' BEGIN SELECT RAISE(ABORT, 'forced failure'); END;",
+            )
+            .unwrap();
+        drop(connection);
+
+        let result = apply_consent_transition(
+            &paths,
+            ConsentValue::MetadataOnly,
+            ConsentValue::Full,
+            "test",
+        );
+        assert_eq!(result.unwrap_err().code, "runtime_error");
+        let connection = open_buffer(&paths.buffer_path).unwrap();
+        assert_eq!(
+            connection
+                .query_row("SELECT COUNT(*) FROM events", [], |row| row
+                    .get::<_, i64>(0))
+                .unwrap(),
+            0
+        );
+        assert!(!paths.consent_path.exists());
+        assert!(!paths.consent_transition_path.exists());
+    }
+
+    #[test]
+    fn consent_change_ignores_agents_from_a_previous_machine() {
+        let profile = TempDir::new().unwrap();
+        let paths = test_paths(&profile);
+        let identity = bootstrap_identity_at(&paths).unwrap();
+        let connection = open_buffer(&paths.buffer_path).unwrap();
+        connection
+            .execute(
+                "INSERT INTO chain_tail (machine_id, agent_id, chain_epoch, last_seq, last_self_hash, updated_at) VALUES ('previous-machine', 'legacy-agent', 0, 0, 'hash', 0)",
+                [],
+            )
+            .unwrap();
+        drop(connection);
+
+        apply_consent_transition(
+            &paths,
+            ConsentValue::MetadataOnly,
+            ConsentValue::Full,
+            "test",
+        )
+        .unwrap();
+        let connection = open_buffer(&paths.buffer_path).unwrap();
+        let agents = connection
+            .prepare("SELECT DISTINCT agent_id FROM events WHERE machine_id = ?1")
+            .unwrap()
+            .query_map(params![identity.machine_uuid], |row| {
+                row.get::<_, String>(0)
+            })
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+        assert_eq!(agents, ["codex"]);
+        assert_eq!(
+            connection
+                .query_row(
+                    "SELECT COUNT(*) FROM events WHERE agent_id = 'legacy-agent'",
+                    [],
+                    |row| row.get::<_, i64>(0),
+                )
+                .unwrap(),
+            0
+        );
+    }
+
+    #[test]
+    fn committed_consent_transition_recovers_before_reading_state() {
+        let profile = TempDir::new().unwrap();
+        let paths = test_paths(&profile);
+        write_consent(&paths, ConsentValue::Full).unwrap();
+        let pending = ConsentTransition {
+            version: 1,
+            transition_id: "transition-1".to_owned(),
+            from: ConsentValue::Full,
+            to: ConsentValue::Off,
+            reason: "test".to_owned(),
+            prepared_at: "2026-07-15T00:00:00.000Z".to_owned(),
+        };
+        atomic_write_json(&paths.consent_transition_path, &pending).unwrap();
+        let connection = open_buffer(&paths.buffer_path).unwrap();
+        connection
+            .execute(
+                "INSERT INTO consent_transitions (transition_id, next_consent, committed_at) VALUES (?1, ?2, 0)",
+                params![pending.transition_id, pending.to.to_string()],
+            )
+            .unwrap();
+        drop(connection);
+
+        assert_eq!(read_consent_locked(&paths).unwrap(), ConsentValue::Off);
+        assert!(!paths.consent_transition_path.exists());
+        let saved = fs::read_to_string(&paths.consent_path).unwrap();
+        assert_eq!(
+            serde_json::from_str::<serde_json::Value>(&saved).unwrap()["value"],
+            "off"
+        );
+    }
+
+    #[test]
+    fn concurrent_account_claims_cannot_overwrite_each_other() {
+        let profile = TempDir::new().unwrap();
+        let paths = test_paths(&profile);
+        let identity = bootstrap_identity_at(&paths).unwrap();
+        let barrier = Arc::new(Barrier::new(2));
+        let handles = ["a11111111111111111111111", "b22222222222222222222222"].map(|account_id| {
+            let paths = paths.clone();
+            let identity = identity.clone();
+            let barrier = Arc::clone(&barrier);
+            thread::spawn(move || {
+                barrier.wait();
+                update_identity_account_at(&paths, &identity, account_id)
+            })
+        });
+        let results = handles.map(|handle| handle.join().unwrap());
+        assert_eq!(results.iter().filter(|result| result.is_ok()).count(), 1);
+        assert_eq!(
+            results
+                .iter()
+                .filter_map(|result| result.as_ref().err())
+                .next()
+                .unwrap()
+                .code,
+            "claim_account_conflict"
+        );
+        let saved = read_valid_identity(&paths.identity_path).unwrap().unwrap();
+        let winner = results
+            .iter()
+            .find_map(|result| result.as_ref().ok())
+            .unwrap();
+        assert_eq!(saved.user_account_id, winner.user_account_id);
+    }
+
+    #[test]
+    fn operating_system_lock_serializes_forced_overlap() {
+        let profile = TempDir::new().unwrap();
+        let lock_path = profile.path().join("state.lock");
+        let (first_entered_tx, first_entered_rx) = mpsc::channel();
+        let (release_tx, release_rx) = mpsc::channel();
+        let first_path = lock_path.clone();
+        let first = thread::spawn(move || {
+            with_file_lock(&first_path, || {
+                first_entered_tx.send(()).unwrap();
+                release_rx.recv().unwrap();
+                Ok(())
+            })
+        });
+        first_entered_rx.recv().unwrap();
+
+        let (second_entered_tx, second_entered_rx) = mpsc::channel();
+        let second = thread::spawn(move || {
+            with_file_lock(&lock_path, || {
+                second_entered_tx.send(()).unwrap();
+                Ok(())
+            })
+        });
+        assert!(
+            second_entered_rx
+                .recv_timeout(Duration::from_millis(100))
+                .is_err()
+        );
+        release_tx.send(()).unwrap();
+        first.join().unwrap().unwrap();
+        second_entered_rx
+            .recv_timeout(Duration::from_secs(1))
+            .unwrap();
+        second.join().unwrap().unwrap();
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn identity_bootstrap_preserves_existing_parent_permissions() {
+        use std::os::unix::fs::PermissionsExt;
+
+        let profile = TempDir::new().unwrap();
+        let shared = profile.path().join("shared");
+        fs::create_dir(&shared).unwrap();
+        fs::set_permissions(&shared, fs::Permissions::from_mode(0o777)).unwrap();
+        let mut paths = test_paths(&profile);
+        paths.identity_path = shared.join("identity.json");
+        paths.identity_lock_path = shared.join("identity.lock");
+        bootstrap_identity_at(&paths).unwrap();
+        assert_eq!(
+            fs::metadata(&shared).unwrap().permissions().mode() & 0o777,
+            0o777
+        );
+        assert_eq!(
+            fs::metadata(&paths.identity_path)
+                .unwrap()
+                .permissions()
+                .mode()
+                & 0o777,
+            0o600
+        );
+    }
 }

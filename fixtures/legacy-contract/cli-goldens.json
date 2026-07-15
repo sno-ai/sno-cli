@@ -156,9 +156,10 @@
     },
     {
       "name": "observe_resume_without_prior_json",
-      "exit": 0,
+      "exit": 1,
       "stdout_json": {
-        "consent": "metadata-only"
+        "error": "telemetry_not_paused",
+        "message": "telemetry is off by explicit consent; no paused setting can be resumed"
       },
       "stderr": "",
       "scope": "station_telemetry",
@@ -320,17 +321,21 @@
     {
       "name": "claim_success_json",
       "exit": 0,
-      "stdout_json": {
-        "claimed": true,
-        "user_account_id": "<ACCOUNT_CUID>",
-        "user_cuid": "<USER_CUID>",
-        "machine_uuid": "<MACHINE_UUID>",
-        "code": {
+      "stdout_json_lines": [
+        {
+          "type": "authorization",
           "user_code": "SNO-CODE",
           "verification_uri": "https://www.sno.ai/cli/connect",
           "verification_uri_complete": "https://www.sno.ai/cli/connect?code=SNO-CODE"
+        },
+        {
+          "type": "result",
+          "claimed": true,
+          "user_account_id": "<ACCOUNT_CUID>",
+          "user_cuid": "<USER_CUID>",
+          "machine_uuid": "<MACHINE_UUID>"
         }
-      },
+      ],
       "stderr": "",
       "scope": "account_machine",
       "legacy_argv": [
@@ -453,7 +458,7 @@
         "identity not bootstrapped",
         "buffer not initialized",
         "consent metadata-only (default)",
-        "last successful POST to https://www.sno.ai: never",
+        "shipped event rows: 0 (destination and last-success time are not recorded)",
         "no identity lockfile present"
       ],
       "stderr": "",
@@ -855,9 +860,10 @@
       ],
       "fixture": "device token connection fails four consecutive times",
       "exit": 1,
-      "stdout_json_subset": {
-        "error": "claim_poll_network_error"
-      },
+      "stdout_json_lines": [
+        { "type": "authorization" },
+        { "type": "error", "error": "claim_poll_network_error" }
+      ],
       "expected": "three retries with capped doubling delay, then failure"
     },
     {
@@ -875,10 +881,14 @@
       ],
       "fixture": "authorization remains pending until injected deadline",
       "exit": 1,
-      "stdout_json": {
-        "error": "claim_timeout",
-        "message": "device authorization timed out"
-      },
+      "stdout_json_lines": [
+        { "type": "authorization" },
+        {
+          "type": "error",
+          "error": "claim_timeout",
+          "message": "device authorization timed out"
+        }
+      ],
       "default_timeout_ms": 1800000
     },
     {
@@ -981,7 +991,7 @@
       "state_invariant": "diagnostics do not modify files"
     },
     {
-      "name": "doctor_stale_lock",
+      "name": "doctor_idle_lock",
       "scope": "station",
       "legacy_argv": [
         "doctor"
@@ -990,10 +1000,10 @@
         "station",
         "doctor"
       ],
-      "fixture": "identity.lock contains a non-running positive PID",
-      "exit": 1,
+      "fixture": "identity.lock exists but no process holds its operating-system lock",
+      "exit": 0,
       "stdout_contains": [
-        "stale lockfile detected"
+        "identity lockfile idle"
       ]
     },
     {

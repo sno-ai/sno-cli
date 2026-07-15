@@ -95,7 +95,7 @@
       "id": "STN-009",
       "source_files": ["apps/nodix-cli/src/commands/doctor.ts", "packages/sno-observe/src/internal/doctor.ts", "packages/sno-observe/src/internal/paths.ts"],
       "legacy_tests": ["tests/apps/nodix-cli/integration/doctor.test.mjs"],
-      "golden_cases": ["doctor_missing_state_human", "doctor_json_key_order", "doctor_malformed_identity", "doctor_stale_lock"]
+      "golden_cases": ["doctor_missing_state_human", "doctor_json_key_order", "doctor_malformed_identity", "doctor_idle_lock"]
     },
     {
       "id": "DATA-001",

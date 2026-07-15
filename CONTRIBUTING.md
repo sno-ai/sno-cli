@@ -29,7 +29,7 @@ Tests use real files, real SQLite databases, real child processes, and the allow
 
 - Human success output goes to stdout.
 - Human errors go to stderr.
-- JSON mode emits exactly one JSON value on stdout and no prose on stderr.
+- JSON mode emits exactly one JSON value on stdout and no prose on stderr, except machine claim, which emits the documented newline-delimited authorization and result/error records.
 - Exit codes are `0` for success, `1` for runtime failure, and `2` for invalid usage.
 - External subcommands execute directly without a shell.
 - Production HTTP requires HTTPS.

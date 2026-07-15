@@ -64,7 +64,17 @@ pub fn run_claim(json_enabled: bool) -> Result<i32, CliError> {
     let identity = state::bootstrap_identity()?;
     register_machine(&identity)?;
     let code = request_claim_code(&identity)?;
-    if !json_enabled {
+    if json_enabled {
+        let mut authorization = json!({
+            "type": "authorization",
+            "user_code": code.user_code,
+            "verification_uri": code.verification_uri,
+        });
+        if let Some(complete) = &code.verification_uri_complete {
+            authorization["verification_uri_complete"] = Value::String(complete.clone());
+        }
+        print_json(&authorization)?;
+    } else {
         println!("verification_uri={}", code.verification_uri);
         if let Some(complete) = &code.verification_uri_complete {
             println!("verification_uri_complete={complete}");
@@ -72,22 +82,29 @@ pub fn run_claim(json_enabled: bool) -> Result<i32, CliError> {
         println!("user_code={}", code.user_code);
         println!("waiting_for_approval=true");
     }
-    let account_id = poll_claim(&code)?;
-    state::update_identity_account(&identity, &account_id)?;
-    if json_enabled {
-        let mut code_json = json!({
-            "user_code": code.user_code,
-            "verification_uri": code.verification_uri,
-        });
-        if let Some(complete) = code.verification_uri_complete {
-            code_json["verification_uri_complete"] = Value::String(complete);
+    let completion = poll_claim(&code).and_then(|account_id| {
+        state::update_identity_account(&identity, &account_id)?;
+        Ok(account_id)
+    });
+    let account_id = match completion {
+        Ok(account_id) => account_id,
+        Err(error) if json_enabled => {
+            print_json(&json!({
+                "type": "error",
+                "error": error.code,
+                "message": error.message,
+            }))?;
+            return Ok(error.exit_code);
         }
+        Err(error) => return Err(error),
+    };
+    if json_enabled {
         print_json(&json!({
+            "type": "result",
             "claimed": true,
             "user_account_id": account_id,
             "user_cuid": identity.user_cuid,
             "machine_uuid": identity.machine_uuid,
-            "code": code_json,
         }))?;
     } else {
         println!("claimed");
@@ -101,9 +118,7 @@ pub fn run_claim(json_enabled: bool) -> Result<i32, CliError> {
 pub fn run_audit_verify(event_id: &str, json_enabled: bool) -> Result<i32, CliError> {
     let identity = state::bootstrap_identity()?;
     register_machine(&identity)?;
-    let mut url = base_url()?.join("api/v1/audit/verify").map_err(|error| {
-        CliError::runtime("transport_error", format!("invalid audit URL: {error}"))
-    })?;
+    let mut url = endpoint("/api/v1/audit/verify")?;
     url.query_pairs_mut().append_pair("event_id", event_id);
     let response = send(
         client()?
@@ -149,14 +164,7 @@ pub fn run_audit_verify(event_id: &str, json_enabled: bool) -> Result<i32, CliEr
 }
 
 fn register_machine(identity: &Identity) -> Result<RegisterResult, CliError> {
-    let url = base_url()?
-        .join("api/v1/identity/register-machine")
-        .map_err(|error| {
-            CliError::runtime(
-                "transport_error",
-                format!("invalid registration URL: {error}"),
-            )
-        })?;
+    let url = endpoint("/api/v1/identity/register-machine")?;
     let secret_hash = hex::encode(Sha256::digest(identity.machine_secret.as_bytes()));
     let response = send(
         client()?
@@ -197,8 +205,14 @@ fn register_machine(identity: &Identity) -> Result<RegisterResult, CliError> {
             "machine registration returned a different identity",
         ));
     }
-    if let Some(account_id) = value.get("user_account_id").and_then(Value::as_str) {
-        state::update_identity_account(identity, account_id)?;
+    if let Some(account_value) = value.get("user_account_id") {
+        if !account_value.is_null() {
+            let account_id = account_value
+                .as_str()
+                .filter(|value| is_cuid2(value))
+                .ok_or_else(|| malformed_registration(response.status))?;
+            state::update_identity_account(identity, account_id)?;
+        }
     }
     Ok(RegisterResult {
         claimed,
@@ -208,9 +222,7 @@ fn register_machine(identity: &Identity) -> Result<RegisterResult, CliError> {
 }
 
 fn request_claim_code(identity: &Identity) -> Result<ClaimCode, CliError> {
-    let url = base_url()?.join("api/v1/device/code").map_err(|error| {
-        CliError::runtime("transport_error", format!("invalid claim URL: {error}"))
-    })?;
+    let url = endpoint("/api/v1/device/code")?;
     let response = send(
         client()?
             .post(url)
@@ -271,11 +283,7 @@ fn poll_claim(code: &ClaimCode) -> Result<String, CliError> {
         }
         let response = request_claim_token(&code.device_code);
         let response = match response {
-            Ok(response) => {
-                transient_errors = 0;
-                network_delay = delay;
-                response
-            }
+            Ok(response) => response,
             Err(error) if error.code == "network_error" => {
                 transient_errors += 1;
                 if transient_errors > MAX_TRANSIENT_POLL_ERRORS {
@@ -293,6 +301,29 @@ fn poll_claim(code: &ClaimCode) -> Result<String, CliError> {
             }
             Err(error) => return Err(error),
         };
+        if is_transient_claim_status(response.status) {
+            transient_errors += 1;
+            if transient_errors > MAX_TRANSIENT_POLL_ERRORS {
+                let error = claim_http_error(
+                    "device token request",
+                    response.status,
+                    response.value.as_ref(),
+                    &response.body,
+                );
+                return Err(CliError::runtime(
+                    "claim_poll_http_error",
+                    format!(
+                        "device token request failed after {MAX_TRANSIENT_POLL_ERRORS} retries: {}",
+                        error.message
+                    ),
+                ));
+            }
+            sleep_claim(network_delay, started)?;
+            network_delay = normalize_poll_delay(network_delay.saturating_mul(2));
+            continue;
+        }
+        transient_errors = 0;
+        network_delay = delay;
         if response.status == 200 {
             if let Some(account_id) = response
                 .value
@@ -331,9 +362,7 @@ fn poll_claim(code: &ClaimCode) -> Result<String, CliError> {
 }
 
 fn request_claim_token(device_code: &str) -> Result<HttpResponse, CliError> {
-    let url = base_url()?.join("api/v1/device/token").map_err(|error| {
-        CliError::runtime("transport_error", format!("invalid claim URL: {error}"))
-    })?;
+    let url = endpoint("/api/v1/device/token")?;
     send(
         client()?
             .post(url)
@@ -357,14 +386,9 @@ fn send(request: RequestBuilder) -> Result<HttpResponse, CliError> {
     let response = request.send().map_err(network_error)?;
     let status = response.status().as_u16();
     let body = response.text().map_err(network_error)?;
-    let value =
-        if body.is_empty() {
-            None
-        } else {
-            Some(serde_json::from_str(&body).map_err(|_| {
-                CliError::runtime("transport_error", "server returned invalid JSON")
-            })?)
-        };
+    let value = (!body.is_empty())
+        .then(|| serde_json::from_str(&body).ok())
+        .flatten();
     Ok(HttpResponse {
         status,
         value,
@@ -378,6 +402,13 @@ fn base_url() -> Result<Url, CliError> {
     )
 }
 
+fn endpoint(path: &str) -> Result<Url, CliError> {
+    let base = base_url()?;
+    Url::parse(&format!("{}{path}", base.as_str().trim_end_matches('/'))).map_err(|error| {
+        CliError::runtime("transport_error", format!("invalid service URL: {error}"))
+    })
+}
+
 pub(crate) fn normalize_base_url(input: &str) -> Result<Url, CliError> {
     let trimmed = input.trim_end_matches('/');
     let parsed = Url::parse(trimmed).map_err(|_| {
@@ -388,7 +419,8 @@ pub(crate) fn normalize_base_url(input: &str) -> Result<Url, CliError> {
     })?;
     let host = parsed.host_str().unwrap_or_default();
     if parsed.scheme() == "https"
-        || (parsed.scheme() == "http" && matches!(host, "localhost" | "127.0.0.1" | "::1"))
+        || (parsed.scheme() == "http"
+            && matches!(host, "localhost" | "127.0.0.1" | "::1" | "[::1]"))
     {
         return Ok(parsed);
     }
@@ -477,6 +509,10 @@ fn normalize_poll_delay(delay: Duration) -> Duration {
     delay.clamp(Duration::from_secs(1), MAX_POLL_INTERVAL)
 }
 
+fn is_transient_claim_status(status: u16) -> bool {
+    matches!(status, 408 | 425 | 429 | 500 | 502 | 503 | 504)
+}
+
 fn sleep_claim(delay: Duration, started: Instant) -> Result<(), CliError> {
     let remaining = CLAIM_TIMEOUT.saturating_sub(started.elapsed());
     if remaining.is_zero() {
@@ -503,4 +539,24 @@ fn is_cuid2(value: &str) -> bool {
 fn is_uuid_v7(value: &str) -> bool {
     value == value.to_ascii_lowercase()
         && Uuid::parse_str(value).is_ok_and(|uuid| uuid.get_version_num() == 7)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::normalize_base_url;
+
+    #[test]
+    fn transport_accepts_https_and_loopback_only() {
+        for accepted in [
+            "https://www.sno.ai",
+            "http://localhost",
+            "http://127.0.0.1",
+            "http://[::1]",
+        ] {
+            assert!(normalize_base_url(accepted).is_ok(), "{accepted}");
+        }
+        for rejected in ["http://www.sno.ai", "ftp://localhost", "not-a-url"] {
+            assert!(normalize_base_url(rejected).is_err(), "{rejected}");
+        }
+    }
 }

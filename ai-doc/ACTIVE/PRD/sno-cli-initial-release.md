@@ -110,7 +110,7 @@ No crates.io publish occurs before the owner reviews the exact package contents 
 
 ### PRD-AUTH-2 — Local Identity Authority
 
-Machine registration, machine claim, and audit verification use the local machine identity. Environment variables must not substitute an account token or another auth path. Claim remains an optional user-initiated browser approval flow.
+Machine registration, machine claim, and audit verification use the local machine identity. Environment variables must not substitute an account token or another auth path. Claim remains an optional user-initiated browser approval flow. Claim persistence is non-overwriting: the first account binding wins, repeating the same binding is idempotent, and a different returned account fails with `claim_account_conflict`.
 
 ### PRD-AUTH-3 — Source Repository Protection
 
@@ -130,11 +130,11 @@ Production API requests require HTTPS. Plain HTTP is permitted only for loopback
 
 ### PRD-CONTRACT-1 — Output and Exit Stability
 
-Human mode uses stdout for successful output and stderr for errors. JSON mode writes one parseable JSON value to stdout and no human prose to stderr. Exit codes remain `0` success, `1` runtime failure, and `2` usage failure.
+Human mode uses stdout for successful output and stderr for errors. JSON mode writes one parseable JSON value to stdout and no human prose to stderr, except `sno account machine claim`: it writes one newline-delimited `authorization` JSON record before polling, then one `result` or `error` record. This exception is required because browser approval cannot begin until the caller receives the device code. Exit codes remain `0` success, `1` runtime failure, and `2` usage failure.
 
 ### PRD-CONTRACT-2 — Consent and Buffer Integrity
 
-Consent transitions, pause/resume, exports, chain epochs, off-period retention, and shipped/terminal flags must match the existing behavior. Export must never mutate event shipment state.
+Consent transitions, pause/resume, exports, chain epochs, off-period retention, and shipped/terminal flags must match the existing behavior except that resume fails closed when no saved pause exists; it must never reverse an explicit opt-out. A consent-specific operating-system lock covers recovery, state read, the immediate SQLite write transaction for all audit-chain events, the durable transition journal, consent-file replacement, and journal cleanup; lock files persist as inert coordination files and are never stolen by age. Agent discovery is scoped to the current machine identity so a retained buffer cannot import agents from a prior identity. Unix state replacement synchronizes the containing directory before success. Existing parent directories selected by environment overrides retain their permissions. Export uses a consistent SQLite read transaction and streams data without retaining the full event buffer or spooling it to temporary storage; tarball export makes two passes over the same snapshot. JSONL contains exactly one compact JSON value per line and export never mutates shipment state. JSON metadata mode requires an output path for JSONL and CSV so successful status output can never replace the requested data.
 
 ### PRD-CONTRACT-3 — Cross-Language Contract Ownership
 

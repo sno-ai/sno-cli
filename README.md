@@ -36,7 +36,7 @@ sno station audit verify <EVENT_ID>
 sno station doctor
 ```
 
-Every built-in command accepts `--json`. Success is exit code `0`, runtime failure is `1`, and invalid usage is `2`.
+Every built-in command accepts `--json`. Commands emit one JSON value except `sno account machine claim`, which emits newline-delimited JSON: an `authorization` record before waiting and a final `result` or `error` record. This lets users and automation receive the browser verification code before approval. Success is exit code `0`, runtime failure is `1`, and invalid usage is `2`.
 
 ### External subcommands
 

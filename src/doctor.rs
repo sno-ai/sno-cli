@@ -1,13 +1,12 @@
-use std::env;
-use std::fs;
+use std::fs::{self, OpenOptions};
 use std::path::{Path, PathBuf};
 
+use fs2::FileExt;
 use rusqlite::{Connection, OpenFlags};
 use serde::Serialize;
 
 use crate::cli::print_json;
 use crate::error::CliError;
-use crate::service::normalize_base_url;
 use crate::state::{ConsentValue, Identity, SnoPaths, is_valid_identity};
 
 #[derive(Serialize)]
@@ -236,27 +235,19 @@ fn check_consent(path: &Path) -> DoctorCheck {
 }
 
 fn check_last_ship(shipped_count: i64) -> DoctorCheck {
-    let configured =
-        env::var("SNO_OBSERVE_BASE_URL").unwrap_or_else(|_| "https://www.sno.ai".to_owned());
-    let base_url = normalize_base_url(&configured)
-        .map(|url| url.as_str().trim_end_matches('/').to_owned())
-        .unwrap_or_else(|_| configured.trim_end_matches('/').to_owned());
-    let suffix = if shipped_count > 0 {
-        "shipped events present"
-    } else {
-        "never"
-    };
     DoctorCheck {
         name: "last_ship",
         status: CheckStatus::Ok,
-        detail: format!("last successful POST to {base_url}: {suffix}"),
+        detail: format!(
+            "shipped event rows: {shipped_count} (destination and last-success time are not recorded)"
+        ),
         path: None,
     }
 }
 
 fn check_lockfile(path: &Path) -> DoctorCheck {
-    let contents = match fs::read_to_string(path) {
-        Ok(contents) => contents,
+    let file = match OpenOptions::new().read(true).write(true).open(path) {
+        Ok(file) => file,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             return DoctorCheck {
                 name: "lockfile",
@@ -265,8 +256,22 @@ fn check_lockfile(path: &Path) -> DoctorCheck {
                 path: Some(path.display().to_string()),
             };
         }
-        Err(_) => String::new(),
+        Err(error) => return failed_path("lockfile", path, error.to_string()),
     };
+    match file.try_lock_exclusive() {
+        Ok(()) => {
+            let _ = FileExt::unlock(&file);
+            return DoctorCheck {
+                name: "lockfile",
+                status: CheckStatus::Ok,
+                detail: "identity lockfile idle".to_owned(),
+                path: Some(path.display().to_string()),
+            };
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {}
+        Err(error) => return failed_path("lockfile", path, error.to_string()),
+    }
+    let contents = fs::read_to_string(path).unwrap_or_default();
     let pid = contents
         .split(|character: char| !character.is_ascii_digit())
         .find(|part| !part.is_empty())
@@ -283,34 +288,12 @@ fn check_lockfile(path: &Path) -> DoctorCheck {
             path: Some(path.display().to_string()),
         };
     };
-    if pid_is_running(pid) {
-        return DoctorCheck {
-            name: "lockfile",
-            status: CheckStatus::Ok,
-            detail: format!("identity lockfile held by pid {pid}"),
-            path: Some(path.display().to_string()),
-        };
-    }
     DoctorCheck {
         name: "lockfile",
-        status: CheckStatus::Warn,
-        detail: format!(
-            "stale lockfile detected at {} - safe to remove if no `sno` process is running",
-            path.display()
-        ),
+        status: CheckStatus::Ok,
+        detail: format!("identity lockfile held by pid {pid}"),
         path: Some(path.display().to_string()),
     }
-}
-
-#[cfg(unix)]
-fn pid_is_running(pid: u32) -> bool {
-    let result = unsafe { libc::kill(pid as libc::pid_t, 0) };
-    result == 0 || std::io::Error::last_os_error().raw_os_error() != Some(libc::ESRCH)
-}
-
-#[cfg(not(unix))]
-fn pid_is_running(_pid: u32) -> bool {
-    true
 }
 
 fn sidecar_path(path: &Path, suffix: &str) -> PathBuf {

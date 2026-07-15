@@ -229,11 +229,17 @@ fn dispatch_telemetry(command: TelemetryCommand, json_enabled: bool) -> Result<i
                     "provide either a positional path or --out, not both",
                 ));
             }
-            export::run(
-                path.or(out),
-                format.as_deref().map(parse_export_format).transpose()?,
-                json_enabled,
-            )
+            let output_path = path.or(out);
+            let export_format = format.as_deref().map(parse_export_format).transpose()?;
+            if json_enabled
+                && output_path.is_none()
+                && matches!(export_format, Some(ExportFormat::Jsonl | ExportFormat::Csv))
+            {
+                return Err(CliError::usage(
+                    "JSON mode requires an output path for jsonl or csv export",
+                ));
+            }
+            export::run(output_path, export_format, json_enabled)
         }
     }
 }
@@ -349,5 +355,6 @@ pub(crate) fn print_json(value: &Value) -> Result<(), CliError> {
     let mut stdout = io::stdout().lock();
     serde_json::to_writer(&mut stdout, value)?;
     stdout.write_all(b"\n")?;
+    stdout.flush()?;
     Ok(())
 }
