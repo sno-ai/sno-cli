@@ -1,0 +1,167 @@
+{
+  "schema_version": 1,
+  "obligations": [
+    {
+      "id": "CLI-001",
+      "source_files": ["apps/nodix-cli/src/index.ts", "apps/nodix-cli/package.json"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/smoke-and-help.test.mjs"],
+      "golden_cases": ["version_root"]
+    },
+    {
+      "id": "CLI-002",
+      "source_files": ["apps/nodix-cli/src/index.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/smoke-and-help.test.mjs"],
+      "golden_cases": ["help_root"]
+    },
+    {
+      "id": "CLI-003",
+      "source_files": ["apps/nodix-cli/src/index.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/smoke-and-help.test.mjs"],
+      "golden_cases": ["missing_command_human"]
+    },
+    {
+      "id": "CLI-004",
+      "source_files": ["apps/nodix-cli/src/index.ts", "apps/nodix-cli/src/output.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/smoke-and-help.test.mjs"],
+      "golden_cases": ["missing_command_json"]
+    },
+    {
+      "id": "CLI-005",
+      "source_files": ["apps/nodix-cli/src/dispatcher.ts", "apps/nodix-cli/src/output.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/json-output.test.mjs", "tests/apps/nodix-cli/unit/dispatcher.test.mjs"],
+      "golden_cases": ["consent_get_default_json", "register_conflict_json", "audit_tampered_json"]
+    },
+    {
+      "id": "CLI-006",
+      "source_files": ["apps/nodix-cli/src/index.ts", "apps/nodix-cli/src/errors.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/smoke-and-help.test.mjs"],
+      "golden_cases": ["parser_unknown_option_human", "audit_missing_argument_json"]
+    },
+    {
+      "id": "CLI-007",
+      "source_files": ["apps/nodix-cli/src/dispatcher.ts", "apps/nodix-cli/src/exit-codes.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/json-output.test.mjs"],
+      "golden_cases": ["consent_get_default_human", "register_network_error_json", "consent_set_metadata_typo_json"]
+    },
+    {
+      "id": "STN-001",
+      "source_files": ["apps/nodix-cli/src/commands/consent/get.ts", "packages/sno-observe/src/internal/consent.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/consent.test.mjs"],
+      "golden_cases": ["consent_get_default_human", "consent_get_default_json", "consent_state_bidirectional"]
+    },
+    {
+      "id": "STN-002",
+      "source_files": ["apps/nodix-cli/src/commands/consent/set.ts", "packages/sno-observe/src/internal/runtime.ts", "packages/sno-observe/src/internal/flush.ts", "packages/sno-observe/src/internal/canonical-hash.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/consent.test.mjs", "tests/packages/sno-observe/integration/consent-ships.test.mjs"],
+      "golden_cases": ["consent_set_full_json", "consent_set_same_value_json", "consent_set_metadata_typo_json"]
+    },
+    {
+      "id": "STN-003",
+      "source_files": ["apps/nodix-cli/src/commands/observe/pause.ts", "packages/sno-observe/src/internal/runtime.ts", "packages/sno-observe/src/internal/consent.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/observe.test.mjs"],
+      "golden_cases": ["observe_pause_from_full_human", "observe_pause_again_json"]
+    },
+    {
+      "id": "STN-004",
+      "source_files": ["apps/nodix-cli/src/commands/observe/resume.ts", "packages/sno-observe/src/internal/runtime.ts", "packages/sno-observe/src/internal/consent.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/observe.test.mjs"],
+      "golden_cases": ["observe_resume_without_prior_json", "observe_resume_saved_prior_human"]
+    },
+    {
+      "id": "STN-005",
+      "source_files": ["apps/nodix-cli/src/commands/observe/export.ts", "packages/sno-observe/src/internal/export.ts", "packages/sno-observe/src/internal/buffer-store.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/observe.test.mjs", "tests/packages/sno-observe/unit/api-routing-and-export.test.mjs"],
+      "golden_cases": ["export_empty_jsonl", "export_empty_csv", "export_path_conflict_json", "export_invalid_format_json", "export_default_timestamped_tarball", "export_tarball_metadata_json", "export_state_nonmutation", "export_bidirectional_sqlite"]
+    },
+    {
+      "id": "ACC-001",
+      "source_files": ["apps/nodix-cli/src/commands/register.ts", "packages/sno-observe/src/internal/machine-registration.ts", "packages/sno-observe/src/internal/http.ts", "packages/sno-observe/src/internal/identity.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/register.test.mjs", "tests/packages/sno-observe/integration/machine-registration-fixture.test.mjs"],
+      "golden_cases": ["register_success_json", "register_conflict_json", "register_network_error_json", "register_identity_mismatch_json", "register_request_security"]
+    },
+    {
+      "id": "ACC-002",
+      "source_files": ["apps/nodix-cli/src/commands/claim.ts", "packages/sno-observe/src/internal/device-claim.ts", "packages/sno-observe/src/internal/machine-registration.ts", "packages/sno-observe/src/internal/http.ts", "packages/sno-observe/src/internal/identity.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/claim.test.mjs", "tests/packages/sno-observe/integration/device-claim.test.mjs"],
+      "golden_cases": ["claim_success_json", "claim_request_authorization", "claim_pending_then_success", "claim_slow_down_then_success", "claim_transient_retry_exhaustion", "claim_timeout", "claim_malformed_code_response", "claim_persists_account_only"]
+    },
+    {
+      "id": "STN-008",
+      "source_files": ["apps/nodix-cli/src/commands/audit/verify.ts", "packages/sno-observe/src/internal/audit-verify.ts", "packages/sno-observe/src/internal/machine-registration.ts", "packages/sno-observe/src/internal/http.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/audit-verify.test.mjs", "tests/packages/sno-observe/integration/audit-verify-live-smoke.test.mjs"],
+      "golden_cases": ["audit_verified_json", "audit_tampered_json", "audit_missing_json", "audit_missing_argument_json", "audit_request_security", "audit_network_error_json"]
+    },
+    {
+      "id": "STN-009",
+      "source_files": ["apps/nodix-cli/src/commands/doctor.ts", "packages/sno-observe/src/internal/doctor.ts", "packages/sno-observe/src/internal/paths.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/doctor.test.mjs"],
+      "golden_cases": ["doctor_missing_state_human", "doctor_json_key_order", "doctor_malformed_identity", "doctor_stale_lock"]
+    },
+    {
+      "id": "DATA-001",
+      "source_files": ["packages/sno-observe/src/internal/paths.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/consent.test.mjs"],
+      "golden_cases": ["state_path_precedence"]
+    },
+    {
+      "id": "DATA-002",
+      "source_files": ["packages/sno-observe/src/internal/paths.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/doctor.test.mjs", "tests/apps/nodix-cli/helpers/cli-runner.mjs"],
+      "golden_cases": ["state_path_precedence"]
+    },
+    {
+      "id": "DATA-003",
+      "source_files": ["packages/sno-observe/src/internal/paths.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/helpers/cli-runner.mjs", "tests/apps/nodix-cli/integration/doctor.test.mjs"],
+      "golden_cases": ["state_path_precedence"]
+    },
+    {
+      "id": "DATA-004",
+      "source_files": ["packages/sno-observe/src/internal/identity.ts", "packages/common-core/src/id-utils.ts", "packages/sno-observe/src/internal/fs-utils.ts"],
+      "legacy_tests": ["tests/packages/sno-observe/integration/identity-regen.test.mjs", "tests/apps/nodix-cli/integration/register.test.mjs"],
+      "golden_cases": ["identity_bidirectional_and_permissions"]
+    },
+    {
+      "id": "DATA-005",
+      "source_files": ["packages/sno-observe/src/internal/consent.ts", "packages/sno-observe/src/internal/fs-utils.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/consent.test.mjs", "tests/apps/nodix-cli/integration/observe.test.mjs"],
+      "golden_cases": ["consent_state_bidirectional", "observe_resume_saved_prior_human"]
+    },
+    {
+      "id": "DATA-006",
+      "source_files": ["packages/sno-observe/src/internal/buffer-store.ts", "packages/sno-observe/src/internal/canonical-hash.ts", "packages/sno-observe/src/internal/canonical-json.ts", "packages/sno-observe/src/internal/wire-envelope.ts"],
+      "legacy_tests": ["tests/packages/sno-observe/integration/concurrency-chain.test.mjs", "tests/packages/sno-observe/unit/buffer-store-retention.test.mjs"],
+      "golden_cases": ["export_bidirectional_sqlite", "export_state_nonmutation"]
+    },
+    {
+      "id": "DATA-007",
+      "source_files": ["packages/sno-observe/src/internal/export.ts", "packages/sno-observe/src/internal/buffer-store.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/observe.test.mjs"],
+      "golden_cases": ["export_empty_jsonl", "export_empty_csv", "export_tarball_metadata_json", "export_bidirectional_sqlite"]
+    },
+    {
+      "id": "SEC-001",
+      "source_files": ["apps/nodix-cli/src/output.ts", "packages/sno-observe/src/internal/redact.ts", "packages/sno-observe/src/internal/identity.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/register.test.mjs", "tests/packages/sno-observe/unit/redact-guardrails.test.mjs"],
+      "golden_cases": ["secret_absence_all_outputs"]
+    },
+    {
+      "id": "SEC-002",
+      "source_files": ["packages/sno-observe/src/internal/http.ts"],
+      "legacy_tests": ["tests/packages/sno-observe/unit/http.test.mjs"],
+      "golden_cases": ["transport_url_matrix"]
+    },
+    {
+      "id": "SEC-003",
+      "source_files": ["packages/sno-observe/src/internal/machine-registration.ts", "packages/sno-observe/src/internal/device-claim.ts", "packages/sno-observe/src/internal/audit-verify.ts", "packages/sno-observe/src/internal/runtime.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/integration/register.test.mjs", "tests/apps/nodix-cli/integration/claim.test.mjs", "tests/apps/nodix-cli/integration/audit-verify.test.mjs"],
+      "golden_cases": ["register_request_security", "claim_request_authorization", "audit_request_security"]
+    },
+    {
+      "id": "SEC-004",
+      "source_files": ["apps/nodix-cli/src/dispatcher.ts"],
+      "legacy_tests": ["tests/apps/nodix-cli/unit/dispatcher.test.mjs"],
+      "golden_cases": ["external_subcommand_direct_exec"]
+    }
+  ]
+}

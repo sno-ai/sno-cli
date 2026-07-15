@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "scan_roots": ["Cargo.toml", "crates", "npm", "python", "src", "tests"],
+  "ignored_directories": [".git", "node_modules", "target", ".venv"],
+  "banned_dependencies": [
+    "double",
+    "httpmock",
+    "mock-require",
+    "mockall",
+    "mockito",
+    "nock",
+    "proxyquire",
+    "pytest-mock",
+    "responses",
+    "sinon",
+    "testdouble",
+    "wiremock"
+  ],
+  "banned_source_patterns": [
+    "#\\[automock",
+    "#\\[mock",
+    "mock!\\s*\\(",
+    "jest\\.mock\\s*\\(",
+    "vi\\.mock\\s*\\(",
+    "mockery\\.patch",
+    "monkeypatch\\.",
+    "(?<![A-Za-z0-9_])patch\\s*\\(",
+    "(struct|class)\\s+(Fake|Mock)(FileSystem|Filesystem|Database|Db|Process|Command|Service)",
+    "(Fake|Mock)(FileSystem|Filesystem|Database|Db|Process|Command|Service)\\s*[({]",
+    "InMemory(FileSystem|Filesystem|Database|Db|Process)"
+  ],
+  "service_server_patterns": [
+    "TcpListener::bind",
+    "axum::serve",
+    "hyper::Server",
+    "http\\.createServer\\s*\\(",
+    "create_server\\s*\\("
+  ],
+  "allowed_service_servers": [
+    {
+      "path": "tests/support/sno_service_server.rs",
+      "purpose": "Real loopback HTTP server for the external SNO service",
+      "required_bind_literals": ["127.0.0.1", "[::1]"],
+      "forbidden_bind_literals": ["0.0.0.0"]
+    }
+  ]
+}
