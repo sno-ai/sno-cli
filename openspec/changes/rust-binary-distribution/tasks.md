@@ -28,7 +28,7 @@
 - [x] 4.3 Push `main`, wait for every native CI job to pass, then make the repository public and enable immutable releases; capture both GitHub API results as the pre-tag receipt.
 - [ ] 4.4 Protect `refs/tags/v*` with an active organization-administrator-only creation/update/deletion ruleset; require a commit-bound `SNO_RELEASE_AUTHORIZED_SHA` receipt after live repository, immutability, ruleset, remote-main, and CI checks; verify anonymous installers against a one-use public candidate before final publication; and clean up failed candidate or final publication attempts.
 - [x] 4.5 From a clean checkout of the reviewed commit, publish crate `0.1.1`, download the registry archive, and require byte-identical SHA-256 against the local package archive.
-- [ ] 4.6 Preserve the failed `v0.1.1` through `v0.1.5` attempts without moving their tags, publish the forward-only `0.1.6` crate from the repaired reviewed commit, then verify all seven archives, installers, checksums, manifests, and available attestations from the immutable `v0.1.6` GitHub Release.
+- [ ] 4.6 Preserve the failed `v0.1.1` through `v0.1.6` attempts without moving their tags, publish the forward-only `0.1.7` crate from the repaired reviewed commit, then verify all seven archives, installers, checksums, manifests, and available attestations from the immutable `v0.1.7` GitHub Release.
 - [ ] 4.7 Record reviewed commit, tag commit, local and registry crate hashes, target archive hashes, and workflow run in one release-identity receipt.
 
 ## Test Design Gate

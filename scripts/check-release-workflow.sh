@@ -114,6 +114,10 @@ rg -q '& "artifacts/\$\{\{ matrix\.script \}\}"' "$installer_verify" || fail "st
 rg -q 'releases/\$\{DRAFT_ID\}/assets' "$installer_verify" || fail "draft smoke does not address the draft by numeric release ID"
 rg -q 'Accept: application/octet-stream' "$installer_verify" || fail "draft smoke does not download exact asset bytes"
 rg -q 'X-GitHub-Api-Version: 2026-03-10' "$installer_verify" || fail "draft asset download does not pin the GitHub API contract"
+if rg -q '\bmapfile\b' "$installer_verify"; then
+  fail "shared installer verifier uses mapfile, which is unavailable in macOS Bash 3.2"
+fi
+rg -Fq "tr -d '\\r'" "$installer_verify" || fail "draft asset ID is not normalized for Windows line endings"
 rg -q 'releases/download/\$\{TAG\}' "$installer_verify" || fail "public smoke does not use the public release path"
 rg -q 'inputs\.mode.*candidate' "$installer_verify" || fail "shared verifier does not support public candidate assets"
 rg -q 'fb8dbee9f182173e062a64a387b21a0badc6fab8b2abf9294973f012972bf6d8' "$sbom" || fail "SBOM generator hash is not repository-pinned"

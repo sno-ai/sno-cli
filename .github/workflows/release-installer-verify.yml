@@ -93,12 +93,15 @@ jobs:
           mkdir artifacts
           assets="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/releases/${DRAFT_ID}/assets?per_page=100")"
           for asset_name in '${{ matrix.archive }}' '${{ matrix.script }}'; do
-            mapfile -t asset_ids < <(jq -r --arg name "$asset_name" '.[] | select(.name == $name) | .id' <<<"$assets")
-            test "${#asset_ids[@]}" -eq 1
+            asset_id="$(jq -er --arg name "$asset_name" '
+              [.[] | select(.name == $name)]
+              | if length == 1 then .[0].id else error("expected exactly one matching asset") end
+            ' <<<"$assets" | tr -d '\r')"
+            [[ "$asset_id" =~ ^[0-9]+$ ]]
             gh api \
               -H 'Accept: application/octet-stream' \
               -H 'X-GitHub-Api-Version: 2026-03-10' \
-              "repos/${GITHUB_REPOSITORY}/releases/assets/${asset_ids[0]}" > "artifacts/${asset_name}"
+              "repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}" > "artifacts/${asset_name}"
             test -s "artifacts/${asset_name}"
           done
 

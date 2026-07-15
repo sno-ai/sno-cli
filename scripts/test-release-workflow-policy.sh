@@ -87,6 +87,10 @@ root="$(make_fixture draft-caller-permission-bypass)"
 sed -i '/^  custom-release-draft-installer-smoke:$/,/^  host-public-candidate:$/ { /^      contents: write$/d; }' "$root/.github/workflows/release.yml"
 expect_failure "$root"
 
+root="$(make_fixture draft-portability-bypass)"
+sed -i '/asset_id="\$(jq/i\            mapfile -t asset_ids < <(printf "1\\n")' "$root/.github/workflows/release-installer-verify.yml"
+expect_failure "$root"
+
 root="$(make_fixture publication-cleanup-bypass)"
 sed -i '0,/needs.verify-published-release.outputs.state == '\''mutable'\''/s//needs.verify-published-release.outputs.state == '\''unknown'\''/' "$root/.github/workflows/release.yml"
 expect_failure "$root"
@@ -100,4 +104,4 @@ sed -i '/needs.custom-release-public-installer-smoke.result == '\''failure'\''/s
 expect_failure "$root"
 
 "$checker" "$repo_root" >/dev/null
-printf 'release-workflow policy self-test passed: 19 security mutations rejected and repository accepted\n'
+printf 'release-workflow policy self-test passed: 20 security mutations rejected and repository accepted\n'
