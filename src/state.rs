@@ -7,7 +7,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use chrono::{SecondsFormat, Utc};
-use fs2::FileExt;
+use fs2::{FileExt, lock_contended_error};
 use rand::RngCore;
 use rusqlite::{Connection, OptionalExtension, TransactionBehavior, params};
 use serde::{Deserialize, Serialize};
@@ -710,7 +710,7 @@ fn with_file_lock<T>(
     loop {
         match lock_file.try_lock_exclusive() {
             Ok(()) => break,
-            Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {
+            Err(error) if is_lock_contended(&error) => {
                 if started.elapsed() > Duration::from_secs(5) {
                     return Err(error.into());
                 }
@@ -731,6 +731,10 @@ fn with_file_lock<T>(
             Ok(value)
         }
     }
+}
+
+fn is_lock_contended(error: &std::io::Error) -> bool {
+    error.raw_os_error() == lock_contended_error().raw_os_error()
 }
 
 fn list_agents(connection: &Connection, machine_id: &str) -> Result<Vec<String>, CliError> {
@@ -957,20 +961,20 @@ fn now_iso() -> String {
     Utc::now().to_rfc3339_opts(SecondsFormat::Millis, true)
 }
 
-fn set_private_file_mode(path: &Path) -> Result<(), CliError> {
+fn set_private_file_mode(_path: &Path) -> Result<(), CliError> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(path, fs::Permissions::from_mode(0o600))?;
+        fs::set_permissions(_path, fs::Permissions::from_mode(0o600))?;
     }
     Ok(())
 }
 
-fn set_private_directory_mode(path: &Path) -> Result<(), CliError> {
+fn set_private_directory_mode(_path: &Path) -> Result<(), CliError> {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        fs::set_permissions(path, fs::Permissions::from_mode(0o700))?;
+        fs::set_permissions(_path, fs::Permissions::from_mode(0o700))?;
     }
     Ok(())
 }

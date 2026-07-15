@@ -1,7 +1,7 @@
 use std::fs::{self, OpenOptions};
 use std::path::{Path, PathBuf};
 
-use fs2::FileExt;
+use fs2::{FileExt, lock_contended_error};
 use rusqlite::{Connection, OpenFlags};
 use serde::Serialize;
 
@@ -72,7 +72,7 @@ pub fn run(json_enabled: bool) -> Result<i32, CliError> {
 }
 
 fn check_identity(path: &Path) -> DoctorCheck {
-    let metadata = match fs::metadata(path) {
+    let _metadata = match fs::metadata(path) {
         Ok(metadata) => metadata,
         Err(error) if error.kind() == std::io::ErrorKind::NotFound => {
             return DoctorCheck {
@@ -121,7 +121,7 @@ fn check_identity(path: &Path) -> DoctorCheck {
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
-        let permissions = metadata.permissions().mode() & 0o777;
+        let permissions = _metadata.permissions().mode() & 0o777;
         if permissions & 0o077 != 0 {
             return DoctorCheck {
                 name: "identity",
@@ -268,7 +268,7 @@ fn check_lockfile(path: &Path) -> DoctorCheck {
                 path: Some(path.display().to_string()),
             };
         }
-        Err(error) if error.kind() == std::io::ErrorKind::WouldBlock => {}
+        Err(error) if error.raw_os_error() == lock_contended_error().raw_os_error() => {}
         Err(error) => return failed_path("lockfile", path, error.to_string()),
     }
     let contents = fs::read_to_string(path).unwrap_or_default();
