@@ -1,6 +1,7 @@
 # disposition<TAB>path<TAB>reason when excluded
 include	.github/workflows/ci.yml
 include	.github/workflows/release-archive-smoke.yml
+include	.github/workflows/release-candidate-installer-smoke.yml
 include	.github/workflows/release-draft-installer-smoke.yml
 include	.github/workflows/release-installer-smoke.yml
 include	.github/workflows/release-installer-verify.yml
@@ -25,6 +26,13 @@ include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-f
 include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-final-ci-round3.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-resolution.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-round2.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-release-recovery.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-release-recovery-round2.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-release-recovery-round3.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-release-recovery-round3-resolution.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-release-recovery-round4.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-release-recovery-round5.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-release-recovery-round5-resolution.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/plan-review-round2.md
 include	openspec/changes/rust-binary-distribution/evidence/reviews/plan-review.md
@@ -35,6 +43,10 @@ include	openspec/changes/rust-binary-distribution/tasks.md
 include	policy/release-surfaces.tsv
 exclude	scripts/check-release-surfaces.sh	Policy implementation must name the prohibited definitions it rejects.
 include	scripts/check-release-workflow.sh
+include	scripts/authorize-release.sh
+include	tools/release-policy/Cargo.lock
+include	tools/release-policy/Cargo.toml
+include	tools/release-policy/src/main.rs
 include	scripts/install-cargo-dist.sh
 exclude	scripts/test-release-surface-policy.sh	Policy self-test must construct prohibited fixtures.
 include	scripts/test-release-workflow-policy.sh

@@ -1,4 +1,5 @@
 /target/
+/tools/release-policy/target/
 /.env
 /.env.*
 /sno-export-*.tar.gz

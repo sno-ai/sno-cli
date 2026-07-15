@@ -310,15 +310,24 @@ jobs:
             artifacts/*
       - name: Create GitHub Release
         env:
+          RELEASE_TAG: "${{ needs.plan.outputs.tag }}"
           PRERELEASE_FLAG: "${{ fromJson(steps.host.outputs.manifest).announcement_is_prerelease && '--prerelease' || '' }}"
           ANNOUNCEMENT_TITLE: "${{ fromJson(steps.host.outputs.manifest).announcement_title }}"
           ANNOUNCEMENT_BODY: "${{ fromJson(steps.host.outputs.manifest).announcement_github_body }}"
           RELEASE_COMMIT: "${{ github.sha }}"
         run: |
+          set -euo pipefail
+          resolved_commit="$(gh api \
+            "repos/${GITHUB_REPOSITORY}/commits/${RELEASE_TAG}" \
+            --jq '.sha')"
+          test "$resolved_commit" = "$GITHUB_SHA" || {
+            echo "release tag moved: expected $GITHUB_SHA, found $resolved_commit" >&2
+            exit 1
+          }
           # Write and read notes from a file to avoid quoting breaking things
           echo "$ANNOUNCEMENT_BODY" > $RUNNER_TEMP/notes.txt
 
-          gh release create "${{ needs.plan.outputs.tag }}" --draft --target "$RELEASE_COMMIT" $PRERELEASE_FLAG --title "$ANNOUNCEMENT_TITLE" --notes-file "$RUNNER_TEMP/notes.txt" artifacts/*
+          gh release create "$RELEASE_TAG" --draft --target "$RELEASE_COMMIT" $PRERELEASE_FLAG --title "$ANNOUNCEMENT_TITLE" --notes-file "$RUNNER_TEMP/notes.txt" artifacts/*
 
   custom-release-draft-installer-smoke:
     needs:
@@ -329,7 +338,7 @@ jobs:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
 
-  publish-release:
+  host-public-candidate:
     needs:
       - plan
       - host
@@ -339,9 +348,142 @@ jobs:
       contents: write
     env:
       GH_TOKEN: ${{ github.token }}
+    outputs:
+      tag: ${{ steps.candidate.outputs.tag }}
+    steps:
+      - name: Publish one-use public candidate from verified draft assets
+        id: candidate
+        env:
+          FINAL_TAG: "${{ needs.plan.outputs.tag }}"
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate_tag="sno-release-candidate-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          echo "tag=$candidate_tag" >> "$GITHUB_OUTPUT"
+          mkdir artifacts
+          gh release download "$FINAL_TAG" --repo "$GITHUB_REPOSITORY" --dir artifacts
+          gh release create "$candidate_tag" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --prerelease \
+            --title "SNO public install candidate ${GITHUB_RUN_ID}" \
+            --notes "One-use public candidate for anonymous installer verification." \
+            artifacts/*
+          immutable="$(gh api \
+            -H 'X-GitHub-Api-Version: 2026-03-10' \
+            "repos/${GITHUB_REPOSITORY}/releases/tags/${candidate_tag}" \
+            --jq '.immutable')"
+          test "$immutable" = "true"
+
+  custom-release-candidate-installer-smoke:
+    needs:
+      - plan
+      - host-public-candidate
+    uses: ./.github/workflows/release-candidate-installer-smoke.yml
+    with:
+      plan: ${{ needs.plan.outputs.val }}
+      tag: ${{ needs.host-public-candidate.outputs.tag }}
+    secrets: inherit
+
+  cleanup-public-candidate:
+    needs:
+      - host-public-candidate
+      - custom-release-candidate-installer-smoke
+    if: ${{ always() && needs.host-public-candidate.outputs.tag != '' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      CANDIDATE_TAG: ${{ needs.host-public-candidate.outputs.tag }}
+    steps:
+      - name: Delete one-use public candidate and tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          # GitHub permits deleting an immutable release and then its tag. Candidate tags are unique and never reused.
+          gh release delete "$CANDIDATE_TAG" --repo "$GITHUB_REPOSITORY" --yes
+          gh api --method DELETE "repos/${GITHUB_REPOSITORY}/git/refs/tags/${CANDIDATE_TAG}"
+
+  publish-release:
+    needs:
+      - plan
+      - host
+      - custom-release-draft-installer-smoke
+      - custom-release-candidate-installer-smoke
+      - cleanup-public-candidate
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Publish verified draft as immutable release
-        run: gh release edit "${{ needs.plan.outputs.tag }}" --repo "$GITHUB_REPOSITORY" --draft=false
+        env:
+          RELEASE_TAG: "${{ needs.plan.outputs.tag }}"
+        shell: bash
+        run: |
+          set -euo pipefail
+          resolved_commit="$(gh api \
+            "repos/${GITHUB_REPOSITORY}/commits/${RELEASE_TAG}" \
+            --jq '.sha')"
+          test "$resolved_commit" = "$GITHUB_SHA" || {
+            echo "release tag moved: expected $GITHUB_SHA, found $resolved_commit" >&2
+            exit 1
+          }
+          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+
+  verify-published-release:
+    needs:
+      - plan
+      - publish-release
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+    env:
+      GH_TOKEN: ${{ github.token }}
+    outputs:
+      state: ${{ steps.verify.outputs.state }}
+    steps:
+      - name: Verify immutable publication with bounded retries
+        id: verify
+        shell: bash
+        run: |
+          set -euo pipefail
+          for attempt in 1 2 3 4 5; do
+            echo "immutable release verification attempt ${attempt}/5"
+            if immutable="$(gh api \
+              -H 'X-GitHub-Api-Version: 2026-03-10' \
+              "repos/${GITHUB_REPOSITORY}/releases/tags/${{ needs.plan.outputs.tag }}" \
+              --jq '.immutable')"; then
+              if [[ "$immutable" = true ]]; then
+                echo 'state=immutable' >> "$GITHUB_OUTPUT"
+                exit 0
+              fi
+              echo 'state=mutable' >> "$GITHUB_OUTPUT"
+              echo 'published release is confirmed mutable' >&2
+              exit 1
+            fi
+            sleep 5
+          done
+          echo 'state=unknown' >> "$GITHUB_OUTPUT"
+          echo 'immutable release state remains unknown; retaining release for operator inspection' >&2
+          exit 1
+
+  cleanup-confirmed-mutable-release:
+    needs:
+      - plan
+      - host
+      - verify-published-release
+    if: ${{ always() && needs.host.result == 'success' && needs.verify-published-release.result == 'failure' && needs.verify-published-release.outputs.state == 'mutable' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Delete confirmed mutable release
+        run: gh release delete "${{ needs.plan.outputs.tag }}" --repo "$GITHUB_REPOSITORY" --yes
 
   cleanup-failed-draft:
     needs:
@@ -362,11 +504,11 @@ jobs:
     needs:
       - plan
       - host
-      - publish-release
+      - verify-published-release
     # use "always() && ..." to allow us to wait for all publish jobs while
     # still allowing individual publish jobs to skip themselves (for prereleases).
     # "host" however must run to completion, no skipping allowed!
-    if: ${{ always() && needs.host.result == 'success' && needs.publish-release.result == 'success' }}
+    if: ${{ always() && needs.host.result == 'success' && needs.verify-published-release.result == 'success' }}
     runs-on: "ubuntu-22.04"
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -384,3 +526,18 @@ jobs:
     with:
       plan: ${{ needs.plan.outputs.val }}
     secrets: inherit
+
+  cleanup-failed-public-smoke:
+    needs:
+      - plan
+      - host
+      - custom-release-public-installer-smoke
+    if: ${{ always() && needs.host.result == 'success' && needs.custom-release-public-installer-smoke.result == 'failure' }}
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Delete release after confirmed public installer failure
+        run: gh release delete "${{ needs.plan.outputs.tag }}" --repo "$GITHUB_REPOSITORY" --yes

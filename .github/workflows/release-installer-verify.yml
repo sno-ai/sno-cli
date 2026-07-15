@@ -4,8 +4,13 @@ on:
   workflow_call:
     inputs:
       mode:
-        description: "Artifact source: staged, draft, or public."
+        description: "Artifact source: staged, draft, candidate, or public."
         required: true
+        type: string
+      tag:
+        description: "Release tag override for public candidate verification."
+        required: false
+        default: ""
         type: string
 
 permissions:
@@ -51,13 +56,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       GH_TOKEN: ${{ github.token }}
-      TAG: ${{ github.ref_name }}
+      TAG: ${{ inputs.tag != '' && inputs.tag || github.ref_name }}
     steps:
       - name: Validate verification mode
         shell: bash
         run: |
           case '${{ inputs.mode }}' in
-            staged|draft|public) ;;
+            staged|draft|candidate|public) ;;
             *) echo 'unsupported installer verification mode' >&2; exit 1 ;;
           esac
 
@@ -94,7 +99,10 @@ jobs:
           set -euo pipefail
           test "$(uname -m)" = "${{ matrix.arch }}"
           export CARGO_HOME="$(mktemp -d)"
-          if [[ '${{ inputs.mode }}' = public ]]; then
+          if [[ '${{ inputs.mode }}' = public || '${{ inputs.mode }}' = candidate ]]; then
+            if [[ '${{ inputs.mode }}' = candidate ]]; then
+              export SNO_DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}"
+            fi
             installer="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${{ matrix.script }}"
             curl --proto '=https' --tlsv1.2 --fail --location --silent --show-error "$installer" | sh
           else
@@ -118,7 +126,10 @@ jobs:
           $observed = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
           if ($observed -ne '${{ matrix.arch }}') { throw "expected ${{ matrix.arch }}, observed $observed" }
           $env:CARGO_HOME = Join-Path $env:RUNNER_TEMP ([guid]::NewGuid().ToString())
-          if ('${{ inputs.mode }}' -eq 'public') {
+          if ('${{ inputs.mode }}' -eq 'public' -or '${{ inputs.mode }}' -eq 'candidate') {
+            if ('${{ inputs.mode }}' -eq 'candidate') {
+              $env:SNO_DOWNLOAD_URL = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:TAG"
+            }
             $installer = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$env:TAG/${{ matrix.script }}"
             Invoke-RestMethod $installer | Invoke-Expression
           } else {

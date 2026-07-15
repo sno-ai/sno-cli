@@ -37,7 +37,7 @@ Every release archive SHALL be extracted into a clean directory and the extracte
 - **THEN** the release workflow fails before creating a GitHub Release
 
 ### Requirement: Version and tag integrity
-The production binary release SHALL increment the already-published `0.1.0` crate to `0.1.1`. The release workflow SHALL accept only semantic version tags matching the crate version and SHALL use the committed lockfile for all builds. The crates.io package and GitHub tag SHALL identify the same reviewed source version.
+The production binary release SHALL use forward-only version `0.1.2` after the `0.1.1` workflow failed closed before artifact creation. The release workflow SHALL accept only semantic version tags matching the crate version and SHALL use the committed lockfile for all builds. The crates.io package and GitHub tag SHALL identify the same reviewed source version. The existing `v0.1.1` tag MUST NOT be moved.
 
 #### Scenario: Tag and crate version differ
 - **WHEN** a release tag does not select the exact version in `Cargo.toml`
@@ -71,14 +71,14 @@ The release SHALL include Shell and PowerShell installers that select only a mat
 
 #### Scenario: Candidate assets are uploaded
 - **WHEN** all local artifact checks pass
-- **THEN** the workflow creates a draft release, downloads the exact draft assets from GitHub on every native platform, repeats installer execution, and publishes the immutable release only after every draft check passes
+- **THEN** the workflow creates a draft release, downloads the exact draft assets from GitHub on every native platform, repeats installer execution, publishes the same bytes as a one-use public candidate, verifies anonymous installation on every native platform, deletes the candidate, and publishes the final immutable release only after every check passes
 
 #### Scenario: Immutable release assets become downloadable
 - **WHEN** the release transaction completes
 - **THEN** the workflow repeats installation from the real public release URL on every native platform and withholds the release-identity receipt until all checks pass
 
 ### Requirement: Immutable public releases
-The repository SHALL be public and GitHub release immutability SHALL be enabled before a GitHub binary release is represented as publicly available. Before hosting assets, the release workflow MUST call `GET /repos/{owner}/{repo}` and require `.visibility == "public"`, then call `GET /repos/{owner}/{repo}/immutable-releases` with GitHub API version `2026-03-10` and require `.enabled == true`. Any non-success response or false predicate MUST fail closed. Released tags and assets MUST NOT be moved, replaced, or deleted as an update mechanism.
+The repository SHALL be public and GitHub release immutability SHALL be enabled before a GitHub binary release is represented as publicly available. An active external ruleset MUST restrict creation, update, and deletion of `refs/tags/v*` to organization administrators. Before tagging, `scripts/authorize-release.sh` MUST verify public visibility, immutable releases, the active ruleset, the exact remote `main` commit, and successful CI before writing that commit to repository variable `SNO_RELEASE_AUTHORIZED_SHA`. Before hosting assets, the release workflow MUST require `.visibility == "public"` and require that variable to equal `GITHUB_SHA`. It MUST re-resolve the remote version tag immediately before draft creation and final publication. After publishing the verified draft, it MUST call the release-by-tag API with bounded retries and require `.immutable == true` before announcement. Confirmed mutable state or a confirmed final anonymous-installer failure MUST delete the release without deleting the final tag. An unavailable or ambiguous post-publication API result MUST retain the release, block the workflow, and require explicit operator inspection. A failed candidate MUST be deleted with its unique candidate tag. Administration credentials MUST NOT enter the workflow. Released tags and assets MUST NOT be moved, replaced, or deleted as an update mechanism.
 
 #### Scenario: A released binary needs correction
 - **WHEN** a defect is discovered after publication

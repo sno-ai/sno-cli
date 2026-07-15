@@ -17,7 +17,7 @@ command -v rg >/dev/null 2>&1 || fail "missing required command: rg"
 
 is_candidate() {
   case "$1" in
-    .github/workflows/*.yml|.github/workflows/*.yaml|Cargo.toml|Cargo.lock|dist-workspace.toml|README.md|CONTRIBUTING.md|policy/release-surfaces.tsv|scripts/*release*.sh|scripts/install-cargo-dist.sh|ai-doc/ACTIVE/PRD/*release*.md|ai-doc/ACTIVE/PRD/*RELEASE*.md|openspec/changes/rust-binary-distribution/*|openspec/changes/rust-binary-distribution/*/*|openspec/changes/rust-binary-distribution/*/*/*|package.json|pyproject.toml|setup.py|setup.cfg|*/package.json|*/pyproject.toml|*/setup.py|*/setup.cfg)
+    .github/workflows/*.yml|.github/workflows/*.yaml|Cargo.toml|Cargo.lock|dist-workspace.toml|README.md|CONTRIBUTING.md|policy/release-surfaces.tsv|scripts/*release*.sh|scripts/install-cargo-dist.sh|tools/release-policy/Cargo.toml|tools/release-policy/Cargo.lock|tools/release-policy/src/main.rs|ai-doc/ACTIVE/PRD/*release*.md|ai-doc/ACTIVE/PRD/*RELEASE*.md|openspec/changes/rust-binary-distribution/*|openspec/changes/rust-binary-distribution/*/*|openspec/changes/rust-binary-distribution/*/*/*|package.json|pyproject.toml|setup.py|setup.cfg|*/package.json|*/pyproject.toml|*/setup.py|*/setup.cfg)
       return 0
       ;;
     *)

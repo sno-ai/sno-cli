@@ -20,6 +20,7 @@ job_block() {
 }
 
 [[ -f "$workflow" ]] || fail "release workflow is missing"
+command -v cargo >/dev/null 2>&1 || fail "missing required command: cargo"
 rg -q '^# SECURITY HARDENED:' "$workflow" || fail "security-hardening marker is missing"
 rg -Uq '^permissions:\n  "contents": "read"$' "$workflow" || fail "root token is not read-only"
 
@@ -29,46 +30,64 @@ while IFS=: read -r line_number line; do
   [[ "$reference" =~ @([0-9a-f]{40})$ ]] || fail "mutable action reference at line $line_number: $reference"
 done < <(rg -n --no-heading '^[[:space:]]+(-[[:space:]]+)?uses:' "$workflow")
 
-permission_error="$(awk '
-  /^  [A-Za-z0-9_-]+:$/ { job = $1; sub(/:$/, "", job); in_permissions = 0 }
-  /^    permissions:[[:space:]]*write-all/ { print job ":write-all" }
-  /^    permissions:$/ { in_permissions = 1; next }
-  in_permissions && /^      [A-Za-z0-9_-]+:[[:space:]]*write/ {
-    permission = $1; sub(/:$/, "", permission)
-    allowed = (job == "host" && (permission == "attestations" || permission == "contents" || permission == "id-token")) ||
-              (job == "publish-release" && permission == "contents") ||
-              (job == "cleanup-failed-draft" && permission == "contents")
-    if (!allowed) print job ":" permission
-  }
-  in_permissions && $0 !~ /^      / && $0 !~ /^    permissions:/ { in_permissions = 0 }
-' "$workflow")"
-[[ -z "$permission_error" ]] || fail "unapproved write permission: $permission_error"
+cargo run --quiet --locked \
+  --manifest-path "$repo_root/tools/release-policy/Cargo.toml" \
+  -- "$workflow" || fail "workflow permission policy rejected the release workflow"
 
 plan="$(job_block plan)"
+preflight_job="$(job_block custom-release-preflight)"
 local_build="$(job_block build-local-artifacts)"
 host="$(job_block host)"
 draft_smoke="$(job_block custom-release-draft-installer-smoke)"
+candidate_host="$(job_block host-public-candidate)"
+candidate_smoke="$(job_block custom-release-candidate-installer-smoke)"
+candidate_cleanup="$(job_block cleanup-public-candidate)"
 publish="$(job_block publish-release)"
+verify_published="$(job_block verify-published-release)"
+mutable_cleanup="$(job_block cleanup-confirmed-mutable-release)"
 announce="$(job_block announce)"
 public_smoke="$(job_block custom-release-public-installer-smoke)"
+public_smoke_cleanup="$(job_block cleanup-failed-public-smoke)"
+preflight="$repo_root/.github/workflows/release-preflight.yml"
 
 [[ "$(rg -c 'run: scripts/install-cargo-dist\.sh' <<<"$plan")" -eq 1 ]] || fail "plan does not use the verified cargo-dist bootstrap exactly once"
+rg -q 'uses: ./\.github/workflows/release-preflight\.yml' <<<"$preflight_job" || fail "release workflow does not call the authorization preflight"
+rg -q '^      - custom-release-preflight$' <<<"$local_build" || fail "artifact builds do not depend on the authorization preflight"
 [[ "$(rg -c 'run: scripts/install-cargo-dist\.sh' <<<"$local_build")" -eq 1 ]] || fail "local builds do not use the verified cargo-dist bootstrap exactly once"
 if rg -q 'cargo-dist-installer\.(sh|ps1)|\|\s*(sh|iex)' "$workflow"; then
   fail "unverified remote bootstrap remains in release workflow"
 fi
 
 rg -q '^      - custom-release-installer-smoke$' <<<"$host" || fail "host does not depend on staged installer smoke"
+rg -q 'test "\$resolved_commit" = "\$GITHUB_SHA"' <<<"$host" || fail "host does not revalidate the remote tag commit"
 rg -q 'gh release create .* --draft ' <<<"$host" || fail "host does not create a draft release"
 rg -q '^      - host$' <<<"$draft_smoke" || fail "draft download smoke does not depend on uploaded draft assets"
 rg -q '^      - custom-release-draft-installer-smoke$' <<<"$publish" || fail "release publication does not depend on draft download smoke"
+rg -q '^      - custom-release-draft-installer-smoke$' <<<"$candidate_host" || fail "public candidate does not depend on draft installer smoke"
+rg -q 'gh release download "\$FINAL_TAG"' <<<"$candidate_host" || fail "public candidate does not reuse verified draft assets"
+rg -q 'gh release create "\$candidate_tag"' <<<"$candidate_host" || fail "public candidate release is not created"
+rg -q '^      - host-public-candidate$' <<<"$candidate_smoke" || fail "public candidate installer smoke does not depend on candidate hosting"
+rg -q '^      - custom-release-candidate-installer-smoke$' <<<"$candidate_cleanup" || fail "public candidate cleanup does not wait for installer smoke"
+rg -q 'gh release delete "\$CANDIDATE_TAG"' <<<"$candidate_cleanup" || fail "public candidate release is not cleaned up"
+rg -q 'git/refs/tags/\$\{CANDIDATE_TAG\}' <<<"$candidate_cleanup" || fail "public candidate tag is not cleaned up"
+rg -q '^      - custom-release-candidate-installer-smoke$' <<<"$publish" || fail "release publication does not depend on public candidate smoke"
+rg -q '^      - cleanup-public-candidate$' <<<"$publish" || fail "release publication does not depend on public candidate cleanup"
+rg -q 'test "\$resolved_commit" = "\$GITHUB_SHA"' <<<"$publish" || fail "publication does not revalidate the remote tag commit"
 rg -q 'gh release edit .* --draft=false' <<<"$publish" || fail "verified draft is not promoted to the immutable release"
-rg -q '^      - publish-release$' <<<"$announce" || fail "announcement does not depend on final publication"
+rg -q '^      - publish-release$' <<<"$verify_published" || fail "immutable verification does not depend on final publication"
+rg -q 'for attempt in 1 2 3 4 5' <<<"$verify_published" || fail "immutable verification retries are not bounded"
+rg -q "state=unknown" <<<"$verify_published" || fail "ambiguous immutable state is not preserved"
+rg -q "needs\.verify-published-release\.outputs\.state == 'mutable'" <<<"$mutable_cleanup" || fail "mutable release cleanup is not confirmation-gated"
+rg -q 'gh release delete' <<<"$mutable_cleanup" || fail "confirmed mutable release is not deleted"
+rg -q '^      - verify-published-release$' <<<"$announce" || fail "announcement does not depend on immutable verification"
 rg -q '^      - announce$' <<<"$public_smoke" || fail "public-path smoke does not run after publication"
+rg -q "needs\.custom-release-public-installer-smoke\.result == 'failure'" <<<"$public_smoke_cleanup" || fail "failed public smoke cleanup is not failure-gated"
+rg -q 'gh release delete' <<<"$public_smoke_cleanup" || fail "failed public smoke does not delete the release"
 
 staged_wrapper="$repo_root/.github/workflows/release-installer-smoke.yml"
 draft_wrapper="$repo_root/.github/workflows/release-draft-installer-smoke.yml"
 public_wrapper="$repo_root/.github/workflows/release-public-installer-smoke.yml"
+candidate_wrapper="$repo_root/.github/workflows/release-candidate-installer-smoke.yml"
 installer_verify="$repo_root/.github/workflows/release-installer-verify.yml"
 sbom="$repo_root/.github/workflows/release-sbom.yml"
 bootstrap="$repo_root/scripts/install-cargo-dist.sh"
@@ -76,13 +95,20 @@ bootstrap="$repo_root/scripts/install-cargo-dist.sh"
 rg -Uq 'release-installer-verify\.yml\n    with:\n      mode: staged' "$staged_wrapper" || fail "staged wrapper does not use the shared verifier"
 rg -Uq 'release-installer-verify\.yml\n    with:\n      mode: draft' "$draft_wrapper" || fail "draft wrapper does not use the shared verifier"
 rg -Uq 'release-installer-verify\.yml\n    with:\n      mode: public' "$public_wrapper" || fail "public wrapper does not use the shared verifier"
+rg -Uq 'release-installer-verify\.yml\n    with:\n      mode: candidate' "$candidate_wrapper" || fail "candidate wrapper does not use the shared verifier"
 rg -q 'SNO_DOWNLOAD_URL="file://' "$installer_verify" || fail "staged Unix installer does not consume local artifacts"
 rg -q 'sh "artifacts/\$\{\{ matrix\.script \}\}"' "$installer_verify" || fail "staged Unix installer is not executed"
 rg -q '& "artifacts/\$\{\{ matrix\.script \}\}"' "$installer_verify" || fail "staged PowerShell installer is not executed"
 rg -q 'gh release download' "$installer_verify" || fail "draft smoke does not download GitHub release assets"
 rg -q 'releases/download/\$\{TAG\}' "$installer_verify" || fail "public smoke does not use the public release path"
+rg -q 'inputs\.mode.*candidate' "$installer_verify" || fail "shared verifier does not support public candidate assets"
 rg -q 'fb8dbee9f182173e062a64a387b21a0badc6fab8b2abf9294973f012972bf6d8' "$sbom" || fail "SBOM generator hash is not repository-pinned"
 [[ "$(rg -c 'expected="[0-9a-f]{64}"' "$bootstrap")" -eq 5 ]] || fail "cargo-dist host hashes are incomplete"
 rg -q 'shasum -a 256' "$bootstrap" || fail "macOS-compatible cargo-dist hash verification is missing"
+rg -q 'vars\.SNO_RELEASE_AUTHORIZED_SHA' "$preflight" || fail "preflight does not consume the commit-bound administrator authorization receipt"
+rg -Fq 'test "${RELEASE_AUTHORIZED_SHA}" = "${GITHUB_SHA}"' "$preflight" || fail "preflight does not bind administrator authorization to the release commit"
+if rg -q 'repos/.*immutable-releases' "$preflight"; then
+  fail "preflight uses the administration-only immutable-release endpoint with a workflow token"
+fi
 
 printf 'release-workflow security invariants verified\n'

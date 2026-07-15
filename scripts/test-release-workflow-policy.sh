@@ -11,7 +11,7 @@ make_fixture() {
   local name="$1"
   local root="$tmp_dir/$name"
   mkdir -p "$root"
-  cp -R "$repo_root/.github" "$repo_root/scripts" "$root/"
+  cp -R "$repo_root/.github" "$repo_root/scripts" "$repo_root/tools" "$root/"
   printf '%s\n' "$root"
 }
 
@@ -31,6 +31,10 @@ root="$(make_fixture write-all)"
 sed -i '/^  plan:$/a\    permissions: write-all' "$root/.github/workflows/release.yml"
 expect_failure "$root"
 
+root="$(make_fixture flow-style-write)"
+sed -i '/^  plan:$/a\    permissions: { contents: write }' "$root/.github/workflows/release.yml"
+expect_failure "$root"
+
 root="$(make_fixture bootstrap-bypass)"
 sed -i '0,/run: scripts\/install-cargo-dist.sh/s//run: true/' "$root/.github/workflows/release.yml"
 expect_failure "$root"
@@ -43,5 +47,33 @@ root="$(make_fixture installer-bypass)"
 sed -i '/& "artifacts\/\${{ matrix.script }}"/d' "$root/.github/workflows/release-installer-verify.yml"
 expect_failure "$root"
 
+root="$(make_fixture receipt-bypass)"
+sed -i '/test "\${RELEASE_AUTHORIZED_SHA}" = "\${GITHUB_SHA}"/d' "$root/.github/workflows/release-preflight.yml"
+expect_failure "$root"
+
+root="$(make_fixture immutable-result-bypass)"
+sed -i '/state=unknown/d' "$root/.github/workflows/release.yml"
+expect_failure "$root"
+
+root="$(make_fixture tag-move-bypass)"
+sed -i '0,/test "\$resolved_commit" = "\$GITHUB_SHA"/d' "$root/.github/workflows/release.yml"
+expect_failure "$root"
+
+root="$(make_fixture candidate-bypass)"
+sed -i '0,/^      - custom-release-candidate-installer-smoke$/d' "$root/.github/workflows/release.yml"
+expect_failure "$root"
+
+root="$(make_fixture publication-cleanup-bypass)"
+sed -i '0,/needs.verify-published-release.outputs.state == '\''mutable'\''/s//needs.verify-published-release.outputs.state == '\''unknown'\''/' "$root/.github/workflows/release.yml"
+expect_failure "$root"
+
+root="$(make_fixture preflight-reachability-bypass)"
+sed -i '0,/^      - custom-release-preflight$/d' "$root/.github/workflows/release.yml"
+expect_failure "$root"
+
+root="$(make_fixture public-smoke-cleanup-bypass)"
+sed -i '/needs.custom-release-public-installer-smoke.result == '\''failure'\''/s/failure/success/' "$root/.github/workflows/release.yml"
+expect_failure "$root"
+
 "$checker" "$repo_root" >/dev/null
-printf 'release-workflow policy self-test passed: 5 security mutations rejected and repository accepted\n'
+printf 'release-workflow policy self-test passed: 13 security mutations rejected and repository accepted\n'

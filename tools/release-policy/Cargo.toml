@@ -1,0 +1,8 @@
+[package]
+name = "sno-release-policy"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+serde_yaml_ng = "0.10.0"

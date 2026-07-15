@@ -7,9 +7,9 @@ Scope: Create the unified Rust `sno` CLI, migrate the legacy Nodix operator comm
 
 ## Decision Summary
 
-SNO ships one Rust binary named `sno`. Version `0.1.0` established the functional crate rather than a placeholder: it includes the existing Nodix identity workflows under `sno account machine ...`, its local telemetry workflows under `sno station ...`, top-level help/version behavior, a `sno starport` noun scaffold, and Git-style external subcommand dispatch for executables named `sno-<name>` on `PATH`. Version `0.1.1` is the synchronized production-distribution release that adds verified native artifacts without changing the command contract.
+SNO ships one Rust binary named `sno`. Version `0.1.0` established the functional crate rather than a placeholder: it includes the existing Nodix identity workflows under `sno account machine ...`, its local telemetry workflows under `sno station ...`, top-level help/version behavior, a `sno starport` noun scaffold, and Git-style external subcommand dispatch for executables named `sno-<name>` on `PATH`. Version `0.1.1` preserved that implementation on crates.io, but its GitHub workflow failed closed before artifact creation. Version `0.1.2` is the forward-only synchronized production-distribution release that adds verified native artifacts without changing the command contract.
 
-The GitHub repository starts private and becomes public before downloadable binaries are released. Publishing to crates.io is allowed only after package inspection, dry-run success, and full review. The owner has already authorized the `0.1.1` publication after those gates pass. The Rust source included in the `.crate` archive is public regardless of GitHub repository visibility.
+The GitHub repository is public before downloadable binaries are released. Publishing to crates.io is allowed only after package inspection, dry-run success, and full review. The owner has authorized forward-only publication through `0.1.2` after those gates pass. The Rust source included in the `.crate` archive is public regardless of GitHub repository visibility.
 
 ## Problem
 
@@ -31,7 +31,7 @@ The source snapshot is `nodix-private` commit `4256aa66aae2dc95edc71f788b456874a
 - The user-visible command layer is about 800 source lines. The directly required SDK implementation spans identity, consent, buffer, export, diagnostics, registration, claim, and audit code; a correct port is not a parser-only translation.
 - The archived May 2026 CLI specification describes the existing behavior but is reference material only. Its old top-level naming and Node-only packaging decisions are superseded by this PRD.
 - The draft “Nodix CLI as the Unified Local AI Setup Entry” is not authoritative. Its memory/gateway/scale wizard remains future product work.
-- Current release state on 2026-07-15 PDT: crates.io package `sno` `0.1.0` is public under `SnoInfo`; GitHub repository `sno-ai/sno-cli` exists and remains private until the native binary release is ready.
+- Current release state on 2026-07-15 PDT: crates.io packages `sno` `0.1.0` and `0.1.1` are public under `SnoInfo`; GitHub repository `sno-ai/sno-cli` is public with immutable releases enabled; no GitHub binary release exists yet.
 
 Probe evidence is recorded in `ai-doc/ACTIVE/PRD/PROBE-RESULTS-sno-cli-initial-release.md`.
 
@@ -46,7 +46,7 @@ Probe evidence is recorded in `ai-doc/ACTIVE/PRD/PROBE-RESULTS-sno-cli-initial-r
 
 ### PRD-GOAL-1 — Canonical Rust CLI
 
-Maintain crate `sno` with binary `sno`, built with Rust and `clap`. `sno --version` and `sno --help` must work from a clean installation. Release `0.1.1` synchronizes crates.io source, the Git tag, and GitHub binary assets.
+Maintain crate `sno` with binary `sno`, built with Rust and `clap`. `sno --version` and `sno --help` must work from a clean installation. Release `0.1.2` synchronizes crates.io source, the Git tag, and GitHub binary assets.
 
 ### PRD-GOAL-2 — Functional Account and Station Namespaces
 
@@ -78,7 +78,7 @@ Expose built-in noun commands `sno account`, `sno station`, and `sno starport`. 
 
 Prepare and publish only the real Rust implementation:
 
-- crates.io: `sno` `0.1.1`, owned by company account `SnoInfo`; `0.1.0` remains the already-published baseline.
+- crates.io: `sno` `0.1.2`, owned by company account `SnoInfo`; `0.1.0` and the registry-only `0.1.1` remain valid published predecessors.
 - GitHub Releases: native archives, Shell and PowerShell installers, Cargo Binstall metadata, SHA-256 checksums, and available GitHub artifact attestations.
 
 The five formally supported operating-system and architecture families are Linux x64/ARM64, macOS Intel/Apple Silicon, and Windows x64. Linux additionally ships static musl variants for x64 and ARM64, producing seven target archives:
@@ -93,11 +93,11 @@ The five formally supported operating-system and architecture families are Linux
 | Native | macOS | Apple Silicon | `aarch64-apple-darwin` |
 | Native | Windows | x64 | `x86_64-pc-windows-msvc` |
 
-Each target becomes a release claim only after a matching-architecture build, real-binary execution, archive extraction, and help/version/local-Station smoke. Musl artifacts also execute inside a pinned Alpine image. Final Shell and PowerShell installers must install the exact local staged archives, repeat after the same bytes are downloaded from a GitHub draft, and repeat again from the immutable public URLs before the release is declared green. Windows ARM64 remains unsupported while its standard GitHub-hosted runner is public preview and outside the service-level guarantee; cross-compilation alone cannot promote a target.
+Each target becomes a release claim only after a matching-architecture build, real-binary execution, archive extraction, and help/version/local-Station smoke. Musl artifacts also execute inside a pinned Alpine image. Final Shell and PowerShell installers must install the exact local staged archives, repeat after the same bytes are downloaded from a GitHub draft, repeat anonymously through a one-use public candidate containing those same bytes, and repeat from the immutable final public URLs before the release is declared green. Windows ARM64 remains unsupported while its standard GitHub-hosted runner is public preview and outside the service-level guarantee; cross-compilation alone cannot promote a target.
 
 ### PRD-GOAL-6 — Repository and Public-Release Readiness
 
-Create repository `github.com/sno-ai/sno-cli`, Apache-2.0 license, English README and contributing guide, repository metadata, continuous integration, production release automation, and naming guardrails. The repository becomes public and release immutability is enabled before the first public GitHub binary release.
+Create repository `github.com/sno-ai/sno-cli`, Apache-2.0 license, English README and contributing guide, repository metadata, continuous integration, production release automation, and naming guardrails. The repository becomes public, release immutability is enabled, and organization-administrator-only version-tag protection is active before the first public GitHub binary release.
 
 ### PRD-GOAL-7 — Clean Migration
 
@@ -107,7 +107,7 @@ After the Rust implementation passes parity and production-shaped checks, retire
 
 ### PRD-AUTH-1 — Human Publish Authority
 
-No crates.io publish occurs before the exact package contents, review report, and required gates are inspected. The owner has explicitly authorized direct publication of `0.1.1` after those gates pass; a new approval is required only if the package scope or settled release contract changes. GitHub creates only a mutable draft after local archive and installer checks; it publishes and freezes that draft only after the GitHub-downloaded assets pass, and the release is not declared green until anonymous public Shell and PowerShell checks also pass.
+No crates.io publish occurs before the exact package contents, review report, and required gates are inspected. The owner has explicitly authorized forward-only publication through `0.1.2` after those gates pass; a new approval is required only if the package scope or settled release contract changes. GitHub creates only a mutable draft after local archive and installer checks; it publishes and freezes that draft only after the GitHub-downloaded assets pass, and the release is not declared green until anonymous public Shell and PowerShell checks also pass.
 
 ### PRD-AUTH-2 — Local Identity Authority
 
@@ -228,7 +228,7 @@ Always:
 
 Ask:
 
-- Before publishing if the reviewed package scope or settled release contract changes; `0.1.1` is already authorized after its gates pass.
+- Before publishing if the reviewed package scope or settled release contract changes; forward-only `0.1.2` is already authorized after its gates pass.
 - Before changing a settled command, state, auth, or JSON contract.
 - Before weakening or deferring any Release Green-Light criterion.
 
@@ -250,7 +250,7 @@ Every item is `risky: true` and requires recorded evidence.
 - `PRD-GL-4`: Security tests prove no secret output, HTTPS enforcement, direct external process execution, owner-only identity permissions, and package archive cleanliness.
 - `PRD-GL-5`: GitHub repository `sno-ai/sno-cli` is public before binary publication, CI is green, release immutability is enabled, Apache-2.0 and repository metadata are present, and the naming guardrail is documented.
 - `PRD-GL-6`: `cargo fmt --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-targets --all-features`, `cargo package --list`, and `cargo publish --dry-run` pass from a clean tree.
-- `PRD-GL-7`: The exact `.crate` contents and final source review are presented to the owner; the synchronized release publishes `sno` `0.1.1` under `SnoInfo` and tags the same reviewed source version.
+- `PRD-GL-7`: The exact `.crate` contents and final source review are presented to the owner; the synchronized release publishes `sno` `0.1.2` under `SnoInfo` and tags the same reviewed source version.
 - `PRD-GL-8`: Seven GitHub target archives are published only after native build, real-binary execution, clean extraction, and local-Station smoke; musl assets additionally pass pinned-Alpine execution.
 - `PRD-GL-9`: Shell and PowerShell installers, Cargo Binstall metadata, SHA-256 checksums, and available GitHub artifact attestations match the exact released version and assets.
 - `PRD-GL-10`: The old TypeScript CLI is retired and active callers/docs are updated after parity passes; immutable archives remain unchanged.

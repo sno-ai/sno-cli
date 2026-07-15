@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-22.04
     env:
       GH_TOKEN: ${{ github.token }}
+      RELEASE_AUTHORIZED_SHA: ${{ vars.SNO_RELEASE_AUTHORIZED_SHA }}
     steps:
       - name: Require a public repository
         shell: bash
@@ -41,15 +42,11 @@ jobs:
             exit 1
           }
 
-      - name: Require immutable releases
+      - name: Require commit-bound immutable-release receipt
         shell: bash
         run: |
           set -euo pipefail
-          enabled="$(gh api \
-            -H 'X-GitHub-Api-Version: 2026-03-10' \
-            "repos/${GITHUB_REPOSITORY}/immutable-releases" \
-            --jq '.enabled')"
-          test "$enabled" = "true" || {
-            echo "release requires immutable GitHub Releases" >&2
+          test "${RELEASE_AUTHORIZED_SHA}" = "${GITHUB_SHA}" || {
+            echo "release requires an administrator authorization receipt for ${GITHUB_SHA}" >&2
             exit 1
           }
