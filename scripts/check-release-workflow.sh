@@ -105,6 +105,7 @@ rg -q 'inputs\.mode.*candidate' "$installer_verify" || fail "shared verifier doe
 rg -q 'fb8dbee9f182173e062a64a387b21a0badc6fab8b2abf9294973f012972bf6d8' "$sbom" || fail "SBOM generator hash is not repository-pinned"
 [[ "$(rg -c 'expected="[0-9a-f]{64}"' "$bootstrap")" -eq 5 ]] || fail "cargo-dist host hashes are incomplete"
 rg -q 'shasum -a 256' "$bootstrap" || fail "macOS-compatible cargo-dist hash verification is missing"
+rg -q 'unzip -q' "$bootstrap" || fail "Windows-compatible cargo-dist ZIP extraction is missing"
 rg -q 'vars\.SNO_RELEASE_AUTHORIZED_SHA' "$preflight" || fail "preflight does not consume the commit-bound administrator authorization receipt"
 rg -Fq 'test "${RELEASE_AUTHORIZED_SHA}" = "${GITHUB_SHA}"' "$preflight" || fail "preflight does not bind administrator authorization to the release commit"
 if rg -q 'repos/.*immutable-releases' "$preflight"; then

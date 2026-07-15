@@ -39,18 +39,27 @@ archive="$tmp_dir/$asset"
 url="https://github.com/axodotdev/cargo-dist/releases/download/v${version}/${asset}"
 
 curl --proto '=https' --tlsv1.2 --fail --location --silent --show-error --output "$archive" "$url"
-if command -v sha256sum >/dev/null 2>&1; then
-  printf '%s  %s\n' "$expected" "$archive" | sha256sum --check --strict
-else
+if command -v shasum >/dev/null 2>&1; then
   actual="$(shasum -a 256 "$archive" | awk '{print $1}')"
-  [[ "$actual" = "$expected" ]] || {
-    printf 'cargo-dist checksum mismatch: expected %s, got %s\n' "$expected" "$actual" >&2
-    exit 1
-  }
+elif command -v sha256sum >/dev/null 2>&1; then
+  actual="$(sha256sum "$archive" | awk '{print $1}')"
+else
+  printf 'cargo-dist bootstrap requires shasum or sha256sum\n' >&2
+  exit 1
 fi
+[[ "$actual" = "$expected" ]] || {
+  printf 'cargo-dist checksum mismatch: expected %s, got %s\n' "$expected" "$actual" >&2
+  exit 1
+}
 
 case "$asset" in
-  *.zip) tar -xf "$archive" -C "$tmp_dir" ;;
+  *.zip)
+    command -v unzip >/dev/null 2>&1 || {
+      printf 'cargo-dist ZIP bootstrap requires unzip\n' >&2
+      exit 1
+    }
+    unzip -q "$archive" -d "$tmp_dir"
+    ;;
   *.tar.xz) tar -xJf "$archive" -C "$tmp_dir" ;;
 esac
 

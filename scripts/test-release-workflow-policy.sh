@@ -39,6 +39,14 @@ root="$(make_fixture bootstrap-bypass)"
 sed -i '0,/run: scripts\/install-cargo-dist.sh/s//run: true/' "$root/.github/workflows/release.yml"
 expect_failure "$root"
 
+root="$(make_fixture portable-checksum-bypass)"
+sed -i '/shasum -a 256/d' "$root/scripts/install-cargo-dist.sh"
+expect_failure "$root"
+
+root="$(make_fixture zip-extraction-bypass)"
+sed -i '/unzip -q/d' "$root/scripts/install-cargo-dist.sh"
+expect_failure "$root"
+
 root="$(make_fixture host-bypass)"
 sed -i '0,/^      - custom-release-installer-smoke$/d' "$root/.github/workflows/release.yml"
 expect_failure "$root"
@@ -76,4 +84,4 @@ sed -i '/needs.custom-release-public-installer-smoke.result == '\''failure'\''/s
 expect_failure "$root"
 
 "$checker" "$repo_root" >/dev/null
-printf 'release-workflow policy self-test passed: 13 security mutations rejected and repository accepted\n'
+printf 'release-workflow policy self-test passed: 15 security mutations rejected and repository accepted\n'
