@@ -37,11 +37,11 @@ source_pattern="$(jq -r '.banned_source_patterns | join("|")' "$policy")"
 server_pattern="$(jq -r '.service_server_patterns | join("|")' "$policy")"
 
 mapfile -t manifests < <(printf '%s\n' "${files[@]}" | rg '/(Cargo\.toml|package\.json|pyproject\.toml)$' || true)
-if [[ "${#manifests[@]}" -gt 0 ]] && rg -n -i --pcre2 "(^|[^A-Za-z0-9_-])($dependency_pattern)([^A-Za-z0-9_-]|$)" "${manifests[@]}"; then
+if [[ "${#manifests[@]}" -gt 0 ]] && rg -n -i "(^|[^A-Za-z0-9_-])($dependency_pattern)([^A-Za-z0-9_-]|$)" "${manifests[@]}"; then
   fail "forbidden mocking dependency detected"
 fi
 
-if rg -n --pcre2 "$source_pattern" "${files[@]}"; then
+if rg -n "$source_pattern" "${files[@]}"; then
   fail "forbidden internal mock or monkey-patch detected"
 fi
 
@@ -52,7 +52,7 @@ while IFS= read -r server_file; do
     printf '%s\n' "$relative" >&2
     fail "undeclared service replacement detected"
   }
-done < <(rg -l --pcre2 "$server_pattern" "${files[@]}" || true)
+done < <(rg -l "$server_pattern" "${files[@]}" || true)
 
 while IFS= read -r allowed_path; do
   [[ -n "$allowed_path" ]] || continue

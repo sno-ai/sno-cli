@@ -91,7 +91,7 @@ jobs:
           test "$("$binary" --version)" = "sno $version"
           help="$($binary --help)"
           for command in account station starport; do
-            rg -q "^[[:space:]]+$command" <<<"$help"
+            grep -Eq "^[[:space:]]+$command([[:space:]]|$)" <<<"$help"
           done
           profile="$(mktemp -d)"
           test "$(SNO_PROFILE_DIR="$profile" "$binary" station telemetry consent get --json)" = '{"consent":"metadata-only"}'
@@ -154,7 +154,7 @@ jobs:
           test "$(docker run --rm --pull=always -v "$binary:/sno:ro" "$image" /sno --version)" = "sno $version"
           help="$(docker run --rm -v "$binary:/sno:ro" "$image" /sno --help)"
           for command in account station starport; do
-            rg -q "^[[:space:]]+$command" <<<"$help"
+            grep -Eq "^[[:space:]]+$command([[:space:]]|$)" <<<"$help"
           done
           output="$(docker run --rm -v "$binary:/sno:ro" -v "$profile:/profile" -e SNO_PROFILE_DIR=/profile "$image" /sno station telemetry consent get --json)"
           test "$output" = '{"consent":"metadata-only"}'

@@ -58,6 +58,9 @@ impl SnoServiceServer {
                     }
                 };
                 stream
+                    .set_nonblocking(false)
+                    .expect("set request stream blocking");
+                stream
                     .set_read_timeout(Some(Duration::from_secs(2)))
                     .expect("set request timeout");
                 let request = read_request(&mut stream);

@@ -24,7 +24,7 @@
     "vi\\.mock\\s*\\(",
     "mockery\\.patch",
     "monkeypatch\\.",
-    "(?<![A-Za-z0-9_])patch\\s*\\(",
+    "(^|[^A-Za-z0-9_])patch\\s*\\(",
     "(struct|class)\\s+(Fake|Mock)(FileSystem|Filesystem|Database|Db|Process|Command|Service)",
     "(Fake|Mock)(FileSystem|Filesystem|Database|Db|Process|Command|Service)\\s*[({]",
     "InMemory(FileSystem|Filesystem|Database|Db|Process)"
