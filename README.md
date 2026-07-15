@@ -2,21 +2,23 @@
 
 `sno` is the unified command-line entry point for SNO. The first Rust release ports the working machine identity, local telemetry, export, audit verification, and diagnostics flows from the earlier Nodix CLI. It also supports Git-style external subcommands.
 
-The GitHub repository may be private while the crate is public. A crates.io release includes the source files listed in the crate archive and installs a public `sno` binary.
+The CLI is distributed only as Rust source through crates.io and as native binaries through GitHub Releases. It has no Node.js or Python runtime dependency.
 
 ## Install
 
-Before the first registry release, build from this repository:
+Build from this repository:
 
 ```sh
 cargo install --path .
 ```
 
-After publication:
+Install from crates.io when a Rust toolchain is available:
 
 ```sh
 cargo install sno
 ```
+
+GitHub Releases provide precompiled archives plus Shell and PowerShell installers for systems without a Rust toolchain. Each release includes SHA-256 checksums and verifiable GitHub build provenance when available.
 
 ## Commands
 
@@ -62,13 +64,13 @@ Production service endpoints must use HTTPS. Plain HTTP is accepted only for loo
 
 ## Platform scope
 
-Prebuilt release artifacts target:
+The five formally supported native platforms are:
 
 - Linux x64 and ARM64
 - macOS Intel and Apple Silicon
 - Windows x64
 
-Linux musl/Alpine and Windows ARM64 prebuilt artifacts are outside the first release.
+Linux additionally ships static musl x64 and ARM64 artifacts for Alpine and portable Linux use. Windows ARM64 remains unsupported until a generally available native runner passes the same build, extraction, installer, and Station smoke gates.
 
 ## Naming guardrail
 

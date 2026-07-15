@@ -35,7 +35,10 @@ fn root_help_version_and_missing_command_are_stable() {
     let profile = TempDir::new().expect("profile");
     let version = sno(profile.path(), &["--version"]);
     assert_eq!(version.status.code(), Some(0));
-    assert_eq!(stdout(&version), "sno 0.1.0\n");
+    assert_eq!(
+        stdout(&version),
+        format!("sno {}\n", env!("CARGO_PKG_VERSION"))
+    );
 
     let help = sno(profile.path(), &["--help"]);
     assert_eq!(help.status.code(), Some(0));

@@ -1,0 +1,50 @@
+[workspace]
+members = ["cargo:."]
+
+# Config for 'dist'
+[dist]
+# The preferred dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.32.0"
+# The generated workflow is security-hardened with repository-pinned tool hashes
+# and a pre-host installer gate that cargo-dist cannot currently express.
+allow-dirty = ["ci"]
+# CI backends to support
+ci = "github"
+# Build every release target independently and reject partial releases.
+fail-fast = false
+pr-run-mode = "plan"
+# The installers to generate for each app
+installers = ["shell", "powershell"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["aarch64-apple-darwin", "aarch64-unknown-linux-gnu", "aarch64-unknown-linux-musl", "x86_64-apple-darwin", "x86_64-unknown-linux-gnu", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
+# Path that installers should place binaries in
+install-path = "CARGO_HOME"
+# Whether to install an updater program
+install-updater = false
+# Keep release archives broadly consumable and independently verifiable.
+checksum = "sha256"
+unix-archive = ".tar.gz"
+# Bind release artifacts to the GitHub Actions workflow that produced them.
+github-attestations = true
+github-attestations-phase = "host"
+github-attestations-filters = ["*"]
+# Release publication must fail closed until repository policy is ready.
+plan-jobs = ["./release-preflight"]
+global-artifacts-jobs = ["./release-archive-smoke", "./release-sbom"]
+host-jobs = ["./release-installer-smoke"]
+post-announce-jobs = ["./release-public-installer-smoke"]
+
+[dist.github-custom-runners]
+aarch64-apple-darwin = "macos-15"
+aarch64-unknown-linux-gnu = "ubuntu-24.04-arm"
+aarch64-unknown-linux-musl = "ubuntu-24.04-arm"
+x86_64-apple-darwin = "macos-15-intel"
+x86_64-unknown-linux-gnu = "ubuntu-22.04"
+x86_64-unknown-linux-musl = "ubuntu-22.04"
+x86_64-pc-windows-msvc = "windows-2022"
+
+[dist.github-action-commits]
+"actions/attest" = "a1948c3f048ba23858d222213b7c278aabede763"
+"actions/checkout" = "df4cb1c069e1874edd31b4311f1884172cec0e10"
+"actions/download-artifact" = "3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c"
+"actions/upload-artifact" = "043fb46d1a93c77aae656e7c1c64a875d1fc6a0a"

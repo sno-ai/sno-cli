@@ -1,0 +1,55 @@
+name: Release preflight
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  repository-policy:
+    name: Repository policy
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-22.04
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Require a public repository
+        shell: bash
+        run: |
+          set -euo pipefail
+          visibility="$(gh api "repos/${GITHUB_REPOSITORY}" --jq '.visibility')"
+          test "$visibility" = "public" || {
+            echo "release requires public repository visibility; found: $visibility" >&2
+            exit 1
+          }
+
+      - name: Require tag and crate version identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_REF_TYPE}" = "tag" || {
+            echo "release must be triggered by a tag" >&2
+            exit 1
+          }
+          cargo_toml="$(gh api \
+            "repos/${GITHUB_REPOSITORY}/contents/Cargo.toml?ref=${GITHUB_SHA}" \
+            --jq '.content' | base64 --decode)"
+          version="$(sed -nE 's/^version = "([^"]+)"$/\1/p' <<<"$cargo_toml" | head -n 1)"
+          test "${GITHUB_REF_NAME}" = "v${version}" || {
+            echo "tag ${GITHUB_REF_NAME} does not match crate version ${version}" >&2
+            exit 1
+          }
+
+      - name: Require immutable releases
+        shell: bash
+        run: |
+          set -euo pipefail
+          enabled="$(gh api \
+            -H 'X-GitHub-Api-Version: 2026-03-10' \
+            "repos/${GITHUB_REPOSITORY}/immutable-releases" \
+            --jq '.enabled')"
+          test "$enabled" = "true" || {
+            echo "release requires immutable GitHub Releases" >&2
+            exit 1
+          }

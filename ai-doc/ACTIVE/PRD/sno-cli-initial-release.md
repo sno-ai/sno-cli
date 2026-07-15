@@ -1,15 +1,15 @@
 # PRD: SNO CLI Initial Release
 
-Status: Release Candidate
-Date: 2026-07-14 PDT
+Status: Implementing
+Date: 2026-07-15 PDT
 ADLC project ID: `sno-cli-initial-release`
 Scope: Create the unified Rust `sno` CLI, migrate the legacy Nodix operator commands into the approved Account and Station command groups, and release only real, usable packages.
 
 ## Decision Summary
 
-SNO ships one Rust binary named `sno`. Version `0.1.0` is a functional first release, not a placeholder: it includes the existing Nodix identity workflows under `sno account machine ...`, its local telemetry workflows under `sno station ...`, top-level help/version behavior, a `sno starport` noun scaffold, and Git-style external subcommand dispatch for executables named `sno-<name>` on `PATH`.
+SNO ships one Rust binary named `sno`. Version `0.1.0` established the functional crate rather than a placeholder: it includes the existing Nodix identity workflows under `sno account machine ...`, its local telemetry workflows under `sno station ...`, top-level help/version behavior, a `sno starport` noun scaffold, and Git-style external subcommand dispatch for executables named `sno-<name>` on `PATH`. Version `0.1.1` is the synchronized production-distribution release that adds verified native artifacts without changing the command contract.
 
-The GitHub repository starts private. Publishing to crates.io is allowed only after package inspection, dry-run success, full review, and explicit owner approval. Publishing makes the Rust source included in the `.crate` archive public even while GitHub remains private.
+The GitHub repository starts private and becomes public before downloadable binaries are released. Publishing to crates.io is allowed only after package inspection, dry-run success, and full review. The owner has already authorized the `0.1.1` publication after those gates pass. The Rust source included in the `.crate` archive is public regardless of GitHub repository visibility.
 
 ## Problem
 
@@ -19,7 +19,7 @@ The release must therefore solve three problems together:
 
 1. Establish the canonical `sno` binary and repository.
 2. Move the existing operator behavior into the new two-level command namespace.
-3. Publish only packages that install and run the real binary.
+3. Publish only Rust source or native artifacts that install and run the real binary.
 
 ## Source-Grounded Current State
 
@@ -31,7 +31,7 @@ The source snapshot is `nodix-private` commit `4256aa66aae2dc95edc71f788b456874a
 - The user-visible command layer is about 800 source lines. The directly required SDK implementation spans identity, consent, buffer, export, diagnostics, registration, claim, and audit code; a correct port is not a parser-only translation.
 - The archived May 2026 CLI specification describes the existing behavior but is reference material only. Its old top-level naming and Node-only packaging decisions are superseded by this PRD.
 - The draft “Nodix CLI as the Unified Local AI Setup Entry” is not authoritative. Its memory/gateway/scale wizard remains future product work.
-- Current name checks on 2026-07-14 PDT found no exact crates.io package `sno`, no public npm package `sno-ai`, no PyPI distribution `sno`, and no GitHub repository `sno-ai/sno-cli`. These checks must run again immediately before each irreversible publish.
+- Current release state on 2026-07-15 PDT: crates.io package `sno` `0.1.0` is public under `SnoInfo`; GitHub repository `sno-ai/sno-cli` exists and remains private until the native binary release is ready.
 
 Probe evidence is recorded in `ai-doc/ACTIVE/PRD/PROBE-RESULTS-sno-cli-initial-release.md`.
 
@@ -40,13 +40,13 @@ Probe evidence is recorded in `ai-doc/ACTIVE/PRD/PROBE-RESULTS-sno-cli-initial-r
 - End users who install one SNO CLI and need local account/observe operations.
 - Support and operations staff who need deterministic JSON output, diagnostics, exports, and audit verification.
 - Product teams that distribute additional `sno-<name>` executables without modifying the root CLI.
-- Release owners who publish GitHub, crates.io, npm, and optionally PyPI artifacts.
+- Release owners who publish crates.io source packages and immutable GitHub native-binary releases.
 
 ## Goals
 
 ### PRD-GOAL-1 — Canonical Rust CLI
 
-Create crate `sno` version `0.1.0` with binary `sno`, built with Rust and `clap`. `sno --version` and `sno --help` must work from a clean installation.
+Maintain crate `sno` with binary `sno`, built with Rust and `clap`. `sno --version` and `sno --help` must work from a clean installation. Release `0.1.1` synchronizes crates.io source, the Git tag, and GitHub binary assets.
 
 ### PRD-GOAL-2 — Functional Account and Station Namespaces
 
@@ -76,27 +76,28 @@ Expose built-in noun commands `sno account`, `sno station`, and `sno starport`. 
 
 ### PRD-GOAL-5 — Real Distribution
 
-Prepare and publish real packages only:
+Prepare and publish only the real Rust implementation:
 
-- crates.io: `sno` `0.1.0`, owned by the company account `SnoInfo`.
-- npm: `sno-ai` `0.1.0`, with `bin.sno` selecting an installed platform-specific package that contains the real compiled binary. Platform packages are allowed only when they contain a tested binary for their declared target.
-- PyPI: `sno` `0.1.0`, using platform wheels that contain or install the same tested binary. This item may be explicitly deferred if real wheels are not ready; an empty Python console script is forbidden.
+- crates.io: `sno` `0.1.1`, owned by company account `SnoInfo`; `0.1.0` remains the already-published baseline.
+- GitHub Releases: native archives, Shell and PowerShell installers, Cargo Binstall metadata, SHA-256 checksums, and available GitHub artifact attestations.
 
-The first-release prebuilt operating-system and architecture families are frozen to Linux x64/ARM64, macOS Intel/Apple Silicon, and Windows x64. Exact package tuples remain provisional until target-specific artifact inspection and clean-install evidence proves each compatibility floor:
+The five formally supported operating-system and architecture families are Linux x64/ARM64, macOS Intel/Apple Silicon, and Windows x64. Linux additionally ships static musl variants for x64 and ARM64, producing seven target archives:
 
-| Operating system | Architecture | Rust target candidate | npm package candidate | PyPI tag candidate |
-|---|---|---|---|---|
-| Linux | x64 | `x86_64-unknown-linux-gnu` | `sno-ai-linux-x64` | `manylinux_2_17_x86_64` |
-| Linux | ARM64 | `aarch64-unknown-linux-gnu` | `sno-ai-linux-arm64` | `manylinux_2_17_aarch64` |
-| macOS | Intel | `x86_64-apple-darwin` | `sno-ai-darwin-x64` | `macosx_11_0_x86_64` |
-| macOS | Apple Silicon | `aarch64-apple-darwin` | `sno-ai-darwin-arm64` | `macosx_11_0_arm64` |
-| Windows | x64 | `x86_64-pc-windows-msvc` | `sno-ai-win32-x64` | `win_amd64` |
+| Support class | Operating system | Architecture | Rust target |
+|---|---|---|---|
+| Native | Linux | x64 | `x86_64-unknown-linux-gnu` |
+| Native | Linux | ARM64 | `aarch64-unknown-linux-gnu` |
+| Portable Linux | Linux musl/Alpine | x64 | `x86_64-unknown-linux-musl` |
+| Portable Linux | Linux musl/Alpine | ARM64 | `aarch64-unknown-linux-musl` |
+| Native | macOS | Intel | `x86_64-apple-darwin` |
+| Native | macOS | Apple Silicon | `aarch64-apple-darwin` |
+| Native | Windows | x64 | `x86_64-pc-windows-msvc` |
 
-Linux musl/Alpine and Windows ARM64 prebuilt packages are not part of version `0.1.0`. Root wrappers must fail closed on unsupported platforms. Cargo source installation may work on additional Rust targets, but those targets are not release claims. A candidate tuple becomes a release claim only after a matching-runner build, artifact inspection, clean installation, and help/version/local-station smoke at the declared minimum platform; otherwise that family is explicitly deferred rather than relabeled with a weaker untested tag.
+Each target becomes a release claim only after a matching-architecture build, real-binary execution, archive extraction, and help/version/local-Station smoke. Musl artifacts also execute inside a pinned Alpine image. Final Shell and PowerShell installers must install the exact local staged archives, repeat after the same bytes are downloaded from a GitHub draft, and repeat again from the immutable public URLs before the release is declared green. Windows ARM64 remains unsupported while its standard GitHub-hosted runner is public preview and outside the service-level guarantee; cross-compilation alone cannot promote a target.
 
 ### PRD-GOAL-6 — Repository and Public-Release Readiness
 
-Create private repository `github.com/sno-ai/sno-cli`, Apache-2.0 license, English README and contributing guide, repository metadata, continuous integration, release workflow stubs, and naming guardrails. The repository may become public later without changing package behavior.
+Create repository `github.com/sno-ai/sno-cli`, Apache-2.0 license, English README and contributing guide, repository metadata, continuous integration, production release automation, and naming guardrails. The repository becomes public and release immutability is enabled before the first public GitHub binary release.
 
 ### PRD-GOAL-7 — Clean Migration
 
@@ -106,7 +107,7 @@ After the Rust implementation passes parity and production-shaped checks, retire
 
 ### PRD-AUTH-1 — Human Publish Authority
 
-No crates.io publish occurs before the owner reviews the exact package contents and review report, then explicitly approves `cargo publish`. npm and PyPI publishes likewise require valid company credentials and a pre-publish package inspection.
+No crates.io publish occurs before the exact package contents, review report, and required gates are inspected. The owner has explicitly authorized direct publication of `0.1.1` after those gates pass; a new approval is required only if the package scope or settled release contract changes. GitHub creates only a mutable draft after local archive and installer checks; it publishes and freezes that draft only after the GitHub-downloaded assets pass, and the release is not declared green until anonymous public Shell and PowerShell checks also pass.
 
 ### PRD-AUTH-2 — Local Identity Authority
 
@@ -122,7 +123,7 @@ The migrated Account and Station commands must read and write the current `~/.sn
 
 ### PRD-SEC-1 — Secret Containment
 
-The CLI must never print or package a machine secret, machine-secret hash, registry token, npm token, PyPI token, or GitHub token. Identity files use owner-only permissions on Unix. Machine registration sends only the secret hash without authorization. Claim sends no authorization header: the device-code request carries the machine UUID and user CUID, and the device-token request carries the device code and device grant type. Audit verification alone sends the raw machine secret as bearer after registration.
+The CLI must never print or package a machine secret, machine-secret hash, registry token, or GitHub token. Identity files use owner-only permissions on Unix. Machine registration sends only the secret hash without authorization. Claim sends no authorization header: the device-code request carries the machine UUID and user CUID, and the device-token request carries the device code and device grant type. Audit verification alone sends the raw machine secret as bearer after registration.
 
 ### PRD-SEC-2 — Transport Security
 
@@ -146,7 +147,7 @@ Implementation must not begin until `scripts/verify-legacy-baseline.sh` proves t
 
 ### PRD-AUTH-4 — Release Access Before Each Distribution Stage
 
-Rust and crates.io implementation requires non-secret evidence that GitHub repository creation is authorized and a newly generated crates.io token for company account `SnoInfo` has been accepted by Cargo. npm packaging cannot begin until npm authentication resolves to the approved company account with publish access for the root and platform package names. PyPI packaging cannot begin until it is explicitly deferred or authenticated under the approved company account with permission to publish `sno`. Tokens must never be copied into project files, logs, command arguments captured as evidence, or CI artifacts.
+Rust and crates.io implementation requires non-secret evidence that GitHub repository creation is authorized and a crates.io token for company account `SnoInfo` has been accepted by Cargo. GitHub binary publication requires repository release permission and a passing tag-triggered workflow. Tokens must never be copied into project files, logs, command arguments captured as evidence, or CI artifacts.
 
 ## Non-Goals
 
@@ -156,18 +157,18 @@ Rust and crates.io implementation requires non-secret evidence that GitHub repos
 - `PRD-NG-4`: No interactive setup wizard, memory installer, gateway configuration, scale configuration, or broad product orchestration from the obsolete draft PRD.
 - `PRD-NG-5`: No `sno watch` command and no `.snorc` configuration file.
 - `PRD-NG-6`: No publication of `sno-station` or `sno-starport` placeholder crates or packages.
-- `PRD-NG-7`: Do not touch the disputed npm package name `sno`.
+- `PRD-NG-7`: No npm, PyPI, Node.js, or Python distribution wrapper; Rust is the sole CLI implementation.
 - `PRD-NG-8`: Do not alter previously published company packages named in the owner prompt.
 - `PRD-NG-9`: No source-hiding claim. crates.io publication exposes the source included in the crate archive.
-- `PRD-NG-10`: No prebuilt Linux musl/Alpine or Windows ARM64 package in version `0.1.0`.
+- `PRD-NG-10`: No Windows ARM64 or 32-bit prebuilt package until native production-grade runner evidence exists.
 
 ## Workflow
 
-1. User installs `sno` through Cargo, npm, PyPI, or a GitHub release artifact.
+1. User installs `sno` through Cargo or a GitHub Release archive/installer.
 2. User runs `sno --help` or `sno --version`.
 3. User runs a migrated workflow under `sno account machine ...` or `sno station ...`; the CLI uses compatible local state and production APIs.
 4. User runs `sno <name>` for an extension; the CLI resolves and executes `sno-<name>` from `PATH`.
-5. Release owner inspects package contents, dry-run output, test evidence, and review findings before authorizing each registry publish.
+5. Release owner inspects package contents, target runtime evidence, integrity metadata, and review findings before publication.
 
 All routing, parsing, validation, retries, status handling, schema checks, package selection, and process exit propagation are deterministic code. No model is part of runtime behavior.
 
@@ -176,7 +177,7 @@ All routing, parsing, validation, retries, status handling, schema checks, packa
 - `PRD-FAIL-1`: Any legacy operator command is missing, silently weakened, or exposed outside its approved Account or Station command group.
 - `PRD-FAIL-2`: A Rust command corrupts or cannot read TypeScript-generated identity, consent, pause, or buffer state.
 - `PRD-FAIL-3`: JSON mode emits prose, multiple values, or secret material.
-- `PRD-FAIL-4`: A registry package installs without a runnable `sno` binary for its declared platform.
+- `PRD-FAIL-4`: A GitHub artifact or installer lacks a runnable `sno` binary for its declared target.
 - `PRD-FAIL-5`: External subcommand dispatch invokes a shell, changes arguments, or masks the child failure.
 - `PRD-FAIL-6`: A package is published before its required review and owner approval.
 - `PRD-FAIL-7`: The old CLI remains an active parallel implementation after the migration is accepted.
@@ -192,12 +193,12 @@ All routing, parsing, validation, retries, status handling, schema checks, packa
 - `TEST-4`: Registration, claim, and audit tests use the real local HTTP fixture server and assert request paths, bodies, bearer placement, HTTPS rejection, persisted state, and secret absence.
 - `TEST-5`: Export tests assert JSONL, CSV, and tarball content, manifest hashes, empty buffers, and unchanged shipment flags.
 - `TEST-6`: Package tests inspect `cargo package --list`, unpack the `.crate`, install it into a clean temporary root, and run help/version plus one local migrated workflow.
-- `TEST-7`: Platform-package tests install each built npm package in its declared operating-system/architecture runner and execute the real binary. The root npm wrapper must fail closed on unsupported platforms.
-- `TEST-8`: PyPI wheel tests, when in scope, install each wheel in a clean environment and execute the same real binary checks.
+- `TEST-7`: Matching-architecture release jobs execute each built binary, extract its archive, and repeat version/help/local-Station smoke using real filesystem and SQLite state.
+- `TEST-8`: Shell and PowerShell installer tests install into clean temporary prefixes, execute the installed binary, and fail closed on unsupported platforms.
 - `TEST-9`: A production-shaped pre-publish smoke uses the normal binary against the canonical production service for anonymous registration and diagnostics without printing secrets. Audit verification runs only when a real event is available.
 - `TEST-10`: Migration negative searches prove no active `nodix` CLI invocation, old app, or old package remains outside immutable archives and explicitly unrelated Nodix product names.
 - `TEST-11`: `scripts/check-test-substitutes.sh` enforces the versioned `policy/test-substitutes.json` inventory across dependency manifests and test sources. `scripts/test-test-substitute-policy.sh` must prove that seeded mocking dependencies, internal-module replacement, and undeclared service replacement fail while only the declared real loopback HTTP server passes.
-- `TEST-12`: Every approved platform family must freeze an exact tuple only after its binary target, npm platform package, and PyPI wheel when PyPI is in scope pass artifact inspection, clean-install help/version, and one local `sno station` smoke on a runner at the declared minimum platform.
+- `TEST-12`: Every approved target must pass target build, archive inspection, clean extraction, help/version, and one local `sno station` smoke on the matching runner; musl targets additionally execute in pinned Alpine.
 
 Mocks are not permitted for in-repository code. The allowed test substitute is a real loopback HTTP server standing in for the external production service; the production smoke separately validates the real service path. The repository must include a deterministic CI policy check that fails when a mocking dependency, internal-module replacement, or unreviewed test substitute is introduced.
 
@@ -205,10 +206,10 @@ Mocks are not permitted for in-repository code. The allowed test substitute is a
 
 - The GitHub repository is created private and pushed only after required git verification and owner confirmation for the protected default branch.
 - CI runs formatting, linting, tests, package inspection, and supported-target builds.
-- Release artifacts are checksummed. Package wrappers select only artifacts produced for the same version.
+- Release artifacts are checksummed and carry build provenance when GitHub attestations are available. Installers select only artifacts produced for the exact version and host target.
 - crates.io versions are permanent. A faulty release may be yanked and superseded but not overwritten or deleted.
-- npm and PyPI releases must not be published until their platform installation smoke passes.
-- The old TypeScript CLI remains active until replacement packages have been published, installed through their public registry paths on the frozen platform matrix, and passed the production-shaped smoke. Legacy deletion is merged only after that evidence exists. If publication fails before cutover, keep the old CLI active and do not merge its deletion.
+- GitHub release tags and assets are immutable. A faulty release is superseded by a new version and never replaced in place.
+- The old TypeScript CLI remains active until the Rust crate and public GitHub artifacts have passed the production-shaped smoke. Legacy deletion is merged only after that evidence exists. If publication fails before cutover, keep the old CLI active and do not merge its deletion.
 
 ## Naming Guardrails
 
@@ -227,7 +228,7 @@ Always:
 
 Ask:
 
-- Before every irreversible registry publish.
+- Before publishing if the reviewed package scope or settled release contract changes; `0.1.1` is already authorized after its gates pass.
 - Before changing a settled command, state, auth, or JSON contract.
 - Before weakening or deferring any Release Green-Light criterion.
 
@@ -247,17 +248,17 @@ Every item is `risky: true` and requires recorded evidence.
 - `PRD-GL-2`: Every legacy operator workflow has behavior-level Rust coverage under its approved Account or Station command path, including JSON output and exit parity.
 - `PRD-GL-3`: TypeScript-to-Rust and Rust-to-TypeScript state compatibility passes for identity, consent, pause state, and SQLite buffer/export data.
 - `PRD-GL-4`: Security tests prove no secret output, HTTPS enforcement, direct external process execution, owner-only identity permissions, and package archive cleanliness.
-- `PRD-GL-5`: GitHub repository `sno-ai/sno-cli` exists as private, CI is green, Apache-2.0 and repository metadata are present, and the naming guardrail is documented.
+- `PRD-GL-5`: GitHub repository `sno-ai/sno-cli` is public before binary publication, CI is green, release immutability is enabled, Apache-2.0 and repository metadata are present, and the naming guardrail is documented.
 - `PRD-GL-6`: `cargo fmt --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-targets --all-features`, `cargo package --list`, and `cargo publish --dry-run` pass from a clean tree.
-- `PRD-GL-7`: The exact `.crate` contents and final source review are presented to the owner; `cargo publish` runs only after explicit approval and publishes `sno` `0.1.0` under `SnoInfo`.
-- `PRD-GL-8`: npm `sno-ai` `0.1.0` is published only after real platform packages install and run the compiled `sno` binary; npm authentication and two-factor requirements are satisfied.
-- `PRD-GL-9`: PyPI `sno` `0.1.0` is either published as tested real-binary wheels or explicitly recorded as deferred; no empty package is uploaded.
+- `PRD-GL-7`: The exact `.crate` contents and final source review are presented to the owner; the synchronized release publishes `sno` `0.1.1` under `SnoInfo` and tags the same reviewed source version.
+- `PRD-GL-8`: Seven GitHub target archives are published only after native build, real-binary execution, clean extraction, and local-Station smoke; musl assets additionally pass pinned-Alpine execution.
+- `PRD-GL-9`: Shell and PowerShell installers, Cargo Binstall metadata, SHA-256 checksums, and available GitHub artifact attestations match the exact released version and assets.
 - `PRD-GL-10`: The old TypeScript CLI is retired and active callers/docs are updated after parity passes; immutable archives remain unchanged.
 - `PRD-GL-11`: The hash-backed legacy contract matrix and golden corpus cover every migrated behavior, and every row maps to a passing parity test.
-- `PRD-GL-12`: The five approved operating-system/architecture families either freeze an exact proven tuple after target build, package construction, clean registry-style install, and executable smoke at the declared floor, or are explicitly deferred; no unsupported prebuilt platform is advertised.
-- `PRD-GL-13`: Non-secret release-access evidence proves the approved GitHub and crates.io authority before Rust implementation, npm authority before npm packaging, and PyPI authority or explicit deferral before PyPI packaging.
+- `PRD-GL-12`: The five native platform families and two Linux musl targets freeze exact tuples only after matching-runner build, archive construction, clean extraction, and executable smoke; no unsupported prebuilt platform is advertised.
+- `PRD-GL-13`: Non-secret release-access evidence proves approved GitHub and crates.io authority before publication.
 - `PRD-GL-14`: The reviewed test-substitute inventory and deterministic CI policy check pass with the loopback external-service fixture as the only exception.
-- `PRD-GL-15`: Replacement packages are publicly installable and pass production-shaped smoke before any legacy CLI deletion is merged.
+- `PRD-GL-15`: The crates.io package and GitHub native artifacts are publicly installable and pass production-shaped smoke before any legacy CLI deletion is merged.
 
 ## Stable ID Registry
 
@@ -274,10 +275,10 @@ Every item is `risky: true` and requires recorded evidence.
 
 ## Release Packet
 
-- Scenario: greenfield product plus cross-repository migration and multi-registry release.
+- Scenario: greenfield product plus cross-repository migration and Rust-native release.
 - Source PRD: this file.
 - Reference implementation: `nodix-private/apps/nodix-cli` at the recorded source commit.
 - Reference contract: archived `add-sno-cli` OpenSpec artifacts; reference only, not authoritative naming or packaging.
-- Required human gates: PRD release, crates.io publish approval, protected-branch push confirmation, and archive readiness.
+- Required human gates: PRD release, crates.io publish approval, and archive readiness. The owner has granted standing authorization for normal commits and pushes.
 - Phase-boundary commits: require standing owner authorization at PRD release.
 - Next artifact after approval: derived OpenSpec change `sno-cli-initial-release` with hash-backed traceability.

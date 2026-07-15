@@ -37,4 +37,4 @@ Tests use real files, real SQLite databases, real child processes, and the allow
 
 ## Publishing
 
-Registry publication is irreversible. Inspect the exact package archive, pass `cargo publish --dry-run`, and obtain explicit release-owner approval before running `cargo publish`. npm and PyPI packages must install and run the same real binary; empty reservation packages are forbidden.
+Registry publication is irreversible. Inspect the exact package archive and pass `cargo publish --dry-run` before running an authorized `cargo publish`. Native binaries are released only through the hardened GitHub Release workflow: archives and local staged installers pass first, GitHub-downloaded draft assets pass before immutable publication, and anonymous public installers pass before the release is declared green. Do not add JavaScript or Python distribution wrappers.

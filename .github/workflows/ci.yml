@@ -8,32 +8,153 @@ on:
 permissions:
   contents: read
 
+env:
+  CARGO_TERM_COLOR: always
+
 jobs:
   quality:
-    name: Quality
-    runs-on: ubuntu-latest
+    name: Quality and release policy
+    runs-on: ubuntu-22.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
         with:
           components: clippy,rustfmt
-      - uses: Swatinem/rust-cache@v2
-      - run: sudo apt-get update && sudo apt-get install -y ripgrep
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - name: Install policy dependencies
+        run: sudo apt-get update && sudo apt-get install -y jq ripgrep
       - run: cargo fmt --all --check
       - run: cargo clippy --all-targets --all-features -- -D warnings
       - run: scripts/check-test-substitutes.sh
       - run: scripts/test-test-substitute-policy.sh
-      - run: cargo package --list
+      - run: scripts/check-release-surfaces.sh
+      - run: scripts/test-release-surface-policy.sh
+      - run: scripts/check-release-workflow.sh
+      - run: scripts/test-release-workflow-policy.sh
+      - run: cargo package --locked --list
+      - name: Verify generated release workflow
+        shell: bash
+        run: |
+          set -euo pipefail
+          archive="cargo-dist-x86_64-unknown-linux-gnu.tar.xz"
+          curl --proto '=https' --tlsv1.2 --fail --location --silent --show-error \
+            --output "$archive" \
+            "https://github.com/axodotdev/cargo-dist/releases/download/v0.32.0/$archive"
+          printf '%s  %s\n' \
+            'eb52f9fae0d0506774e9f1801c1168f87fa2c87a45e2d64d3ae7c89401929946' \
+            "$archive" | sha256sum --check --strict
+          tar -xJf "$archive"
+          version="$(sed -nE 's/^version = "([^"]+)"$/\1/p' Cargo.toml | head -n 1)"
+          cargo-dist-x86_64-unknown-linux-gnu/dist plan --tag="v$version" --output-format=json > dist-plan.json
+          test "$(jq '[.artifacts[] | select(.kind == "executable-zip")] | length' dist-plan.json)" -eq 7
 
-  test:
-    name: Test (${{ matrix.os }})
+  native:
+    name: Native (${{ matrix.name }})
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
+        include:
+          - name: Linux x64
+            os: ubuntu-22.04
+            arch: x86_64
+          - name: Linux ARM64
+            os: ubuntu-24.04-arm
+            arch: aarch64
+          - name: macOS Intel
+            os: macos-15-intel
+            arch: x86_64
+          - name: macOS Apple Silicon
+            os: macos-15
+            arch: arm64
+          - name: Windows x64
+            os: windows-2022
+            arch: X64
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: Swatinem/rust-cache@v2
-      - run: cargo test --all-targets --all-features
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+      - run: cargo test --all-targets --all-features --locked
+      - run: cargo build --profile dist --locked
+      - name: Verify Unix host and binary
+        if: runner.os != 'Windows'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          binary=target/dist/sno
+          version="$(sed -nE 's/^version = "([^"]+)"$/\1/p' Cargo.toml | head -n 1)"
+          test "$("$binary" --version)" = "sno $version"
+          help="$($binary --help)"
+          for command in account station starport; do
+            rg -q "^[[:space:]]+$command" <<<"$help"
+          done
+          profile="$(mktemp -d)"
+          test "$(SNO_PROFILE_DIR="$profile" "$binary" station telemetry consent get --json)" = '{"consent":"metadata-only"}'
+      - name: Verify Windows host and binary
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $observed = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
+          if ($observed -ne '${{ matrix.arch }}') { throw "expected ${{ matrix.arch }}, observed $observed" }
+          $binary = 'target/dist/sno.exe'
+          $version = (Select-String -Path Cargo.toml -Pattern '^version = "([^"]+)"$').Matches[0].Groups[1].Value
+          if ((& $binary --version) -ne "sno $version") { throw 'unexpected version output' }
+          $help = (& $binary --help) -join "`n"
+          foreach ($command in @('account', 'station', 'starport')) {
+            if ($help -notmatch "(?m)^\s+$command") { throw "missing command: $command" }
+          }
+          $profile = Join-Path $env:RUNNER_TEMP ([guid]::NewGuid().ToString())
+          New-Item -ItemType Directory -Path $profile | Out-Null
+          $env:SNO_PROFILE_DIR = $profile
+          $consent = & $binary station telemetry consent get --json | ConvertFrom-Json
+          if ($consent.consent -ne 'metadata-only') { throw 'unexpected fresh-profile consent' }
+
+  musl:
+    name: Static Linux (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: x64
+            os: ubuntu-22.04
+            target: x86_64-unknown-linux-musl
+            arch: x86_64
+          - name: ARM64
+            os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+            arch: aarch64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        with:
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@4be7066ada62dd38de10e7b70166bc74ed198c30 # stable
+        with:
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@e18b497796c12c097a38f9edb9d0641fb99eee32 # v2
+        with:
+          key: ${{ matrix.target }}
+      - run: sudo apt-get update && sudo apt-get install -y musl-tools
+      - run: cargo build --profile dist --locked --target ${{ matrix.target }}
+      - name: Execute static binary in pinned Alpine
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          image='alpine@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce'
+          binary="$PWD/target/${{ matrix.target }}/dist/sno"
+          profile="$(mktemp -d)"
+          version="$(sed -nE 's/^version = "([^"]+)"$/\1/p' Cargo.toml | head -n 1)"
+          test "$(docker run --rm --pull=always -v "$binary:/sno:ro" "$image" /sno --version)" = "sno $version"
+          help="$(docker run --rm -v "$binary:/sno:ro" "$image" /sno --help)"
+          for command in account station starport; do
+            rg -q "^[[:space:]]+$command" <<<"$help"
+          done
+          output="$(docker run --rm -v "$binary:/sno:ro" -v "$profile:/profile" -e SNO_PROFILE_DIR=/profile "$image" /sno station telemetry consent get --json)"
+          test "$output" = '{"consent":"metadata-only"}'

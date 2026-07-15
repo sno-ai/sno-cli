@@ -1,0 +1,142 @@
+name: Release archive smoke
+
+on:
+  workflow_call:
+    inputs:
+      plan:
+        description: The cargo-dist release plan.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  archive:
+    name: Extracted archive (${{ matrix.name }})
+    if: github.event_name != 'pull_request'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: Linux x64
+            os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+            archive: sno-x86_64-unknown-linux-gnu.tar.gz
+            arch: x86_64
+            musl: false
+          - name: Linux ARM64
+            os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-gnu
+            archive: sno-aarch64-unknown-linux-gnu.tar.gz
+            arch: aarch64
+            musl: false
+          - name: Linux musl x64
+            os: ubuntu-22.04
+            target: x86_64-unknown-linux-musl
+            archive: sno-x86_64-unknown-linux-musl.tar.gz
+            arch: x86_64
+            musl: true
+          - name: Linux musl ARM64
+            os: ubuntu-24.04-arm
+            target: aarch64-unknown-linux-musl
+            archive: sno-aarch64-unknown-linux-musl.tar.gz
+            arch: aarch64
+            musl: true
+          - name: macOS Intel
+            os: macos-15-intel
+            target: x86_64-apple-darwin
+            archive: sno-x86_64-apple-darwin.tar.gz
+            arch: x86_64
+            musl: false
+          - name: macOS Apple Silicon
+            os: macos-15
+            target: aarch64-apple-darwin
+            archive: sno-aarch64-apple-darwin.tar.gz
+            arch: arm64
+            musl: false
+          - name: Windows x64
+            os: windows-2022
+            target: x86_64-pc-windows-msvc
+            archive: sno-x86_64-pc-windows-msvc.zip
+            arch: X64
+            musl: false
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Download matching build artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: artifacts-build-local-${{ matrix.target }}
+          path: artifacts
+
+      - name: Verify and execute Unix archive
+        if: runner.os != 'Windows' && !matrix.musl
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          cd artifacts
+          if command -v sha256sum >/dev/null 2>&1; then
+            sha256sum --check --strict "${{ matrix.archive }}.sha256"
+          else
+            shasum -a 256 --check "${{ matrix.archive }}.sha256"
+          fi
+          extract="$(mktemp -d)"
+          tar -xzf "${{ matrix.archive }}" -C "$extract"
+          binary="$(find "$extract" -type f -name sno -perm -u+x -print -quit)"
+          test -n "$binary"
+          "$binary" --version | grep -Eq '^sno [0-9]+\.[0-9]+\.[0-9]+'
+          help="$($binary --help)"
+          for command in account station starport; do
+            grep -Eq "^[[:space:]]+$command" <<<"$help"
+          done
+          profile="$(mktemp -d)"
+          test "$(SNO_PROFILE_DIR="$profile" "$binary" station telemetry consent get --json)" = '{"consent":"metadata-only"}'
+
+      - name: Verify and execute musl archive in pinned Alpine
+        if: runner.os == 'Linux' && matrix.musl
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(uname -m)" = "${{ matrix.arch }}"
+          cd artifacts
+          sha256sum --check --strict "${{ matrix.archive }}.sha256"
+          extract="$(mktemp -d)"
+          tar -xzf "${{ matrix.archive }}" -C "$extract"
+          binary="$(find "$extract" -type f -name sno -perm -u+x -print -quit)"
+          test -n "$binary"
+          profile="$(mktemp -d)"
+          image='alpine@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce'
+          docker run --rm --pull=always -v "$binary:/sno:ro" "$image" /sno --version | grep -Eq '^sno [0-9]+\.[0-9]+\.[0-9]+'
+          help="$(docker run --rm -v "$binary:/sno:ro" "$image" /sno --help)"
+          for command in account station starport; do
+            grep -Eq "^[[:space:]]+$command" <<<"$help"
+          done
+          output="$(docker run --rm -v "$binary:/sno:ro" -v "$profile:/profile" -e SNO_PROFILE_DIR=/profile "$image" /sno station telemetry consent get --json)"
+          test "$output" = '{"consent":"metadata-only"}'
+
+      - name: Verify and execute Windows archive
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $observed = [System.Runtime.InteropServices.RuntimeInformation]::OSArchitecture.ToString()
+          if ($observed -ne '${{ matrix.arch }}') { throw "expected ${{ matrix.arch }}, observed $observed" }
+          Set-Location artifacts
+          $actual = (Get-FileHash '${{ matrix.archive }}' -Algorithm SHA256).Hash.ToLowerInvariant()
+          $expected = ((Get-Content '${{ matrix.archive }}.sha256') -split '\s+')[0].ToLowerInvariant()
+          if ($actual -ne $expected) { throw 'archive checksum mismatch' }
+          $extract = Join-Path $env:RUNNER_TEMP ([guid]::NewGuid().ToString())
+          Expand-Archive '${{ matrix.archive }}' -DestinationPath $extract
+          $binary = (Get-ChildItem $extract -Recurse -Filter sno.exe | Select-Object -First 1).FullName
+          if (-not $binary) { throw 'sno.exe is absent from archive' }
+          if ((& $binary --version) -notmatch '^sno \d+\.\d+\.\d+') { throw 'unexpected version output' }
+          $help = (& $binary --help) -join "`n"
+          foreach ($command in @('account', 'station', 'starport')) {
+            if ($help -notmatch "(?m)^\s+$command") { throw "missing command: $command" }
+          }
+          $profile = Join-Path $env:RUNNER_TEMP ([guid]::NewGuid().ToString())
+          New-Item -ItemType Directory -Path $profile | Out-Null
+          $env:SNO_PROFILE_DIR = $profile
+          $consent = & $binary station telemetry consent get --json | ConvertFrom-Json
+          if ($consent.consent -ne 'metadata-only') { throw 'unexpected fresh-profile consent' }

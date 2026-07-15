@@ -50,21 +50,9 @@ The application imports `@snoai/sno-observe` for every operational behavior.
 9a54f2e595fa5bb54c8834eb545f69a946ae8d0449c97b61b36f2b619d478a9f  openspec/changes/archive/2026-05-02-add-sno-cli/specs/sno-cli/spec.md
 ```
 
-## Registry and Repository Name Checks
+## Registry and Repository State
 
-Commands:
-
-```text
-cargo info sno
-npm view sno-ai name version dist-tags --json
-python -m pip index versions sno
-gh repo view sno-ai/sno-cli --json name,visibility,url,defaultBranchRef
-curl -sS -o /dev/null -w '%{http_code}' https://pypi.org/pypi/sno/json
-curl -sS -o /dev/null -w '%{http_code}' -H 'User-Agent: sno-cli-name-check/0.1 contact=info@sno.ai' https://crates.io/api/v1/crates/sno
-curl -sS -o /dev/null -w '%{http_code}' https://registry.npmjs.org/sno-ai
-```
-
-Observed results:
+Initial name-availability probe captured on 2026-07-14 PDT, preserved as historical evidence:
 
 ```text
 crates.io: exact crate sno not found
@@ -74,16 +62,54 @@ GitHub: sno-ai/sno-cli could not be resolved
 Direct registry APIs: crates.io 404, npm 404, PyPI 404
 ```
 
-These are time-sensitive observations and must be repeated immediately before publishing or repository creation.
+These historical JavaScript and Python registry checks no longer represent release requirements; the owner removed both distribution channels on 2026-07-15 PDT.
+
+Commands:
+
+```text
+cargo info sno
+gh repo view sno-ai/sno-cli --json name,visibility,url,defaultBranchRef
+curl -sS -o /dev/null -w '%{http_code}' -H 'User-Agent: sno-cli-name-check/0.1 contact=info@sno.ai' https://crates.io/api/v1/crates/sno
+```
+
+Observed results:
+
+```text
+crates.io: sno 0.1.0 is public under SnoInfo
+GitHub: https://github.com/sno-ai/sno-cli exists and is private
+```
+
+These are time-sensitive observations and must be repeated before the next release.
+
+## Published Rust CLI Baseline
+
+Captured: 2026-07-15 PDT
+
+Command:
+
+```text
+cargo install sno --version 0.1.0 --locked --root <fresh-temp-root>
+<fresh-temp-root>/bin/sno --version
+<fresh-temp-root>/bin/sno --help
+SNO_PROFILE_DIR=<fresh-temp-profile> <fresh-temp-root>/bin/sno station telemetry consent get --json
+```
+
+Observed:
+
+```text
+Installed package sno v0.1.0 from crates.io in 44.93 seconds
+sno 0.1.0
+Built-in command tree: account, station, starport
+Fresh-profile Station result: {"consent":"metadata-only"}
+```
+
+This proves the public crate installs the real Rust CLI and completes the required local Station baseline without using repository-local binaries.
 
 ## Local Release Tool Readiness
 
 ```text
 GitHub CLI: authenticated as LarHope with repo and workflow scopes
-Cargo credentials file: present; owning crates.io account not yet proven
-npm whoami: unauthorized
-PyPI config: missing
-Twine: missing
+Cargo credentials file: present; sno 0.1.0 publication under SnoInfo verified
 ```
 
 No secret value is stored in this repository or recorded in this evidence.
@@ -101,13 +127,11 @@ Cargo login: accepted a newly generated 365-day crates.io token supplied by the 
 Cargo credential primary: ~/.cargo/credentials.toml, mode 0600
 Cargo credential backup: ~/.config/sno-cli/credentials/crates-io-credentials.toml, mode 0600
 Cargo credential copies: byte-identical
-npm authentication: unavailable (401 Unauthorized)
-PyPI authentication: unavailable; packaging may be deferred under the PRD
 ```
 
 The crates.io token API does not expose an account-identity endpoint to token authentication: `/api/v1/me` returned `403` with `this action can only be performed on the crates.io website`. The owner supplied the new token for company account `SnoInfo`; Cargo accepted and stored it. The final publish remains separately gated by exact package review and explicit owner approval.
 
-The npm authentication gap blocks npm packaging and publication, not the Rust implementation or crates.io dry-run. npm work cannot start until the approved company identity is authenticated. PyPI remains explicitly deferrable rather than shipping an empty package.
+No JavaScript or Python registry is part of the SNO CLI release contract. Public distribution is crates.io plus native GitHub Release artifacts.
 
 ## Legacy Contract Test Evidence
 
@@ -147,7 +171,7 @@ test-substitute policy self-test passed: 8 forbidden mutations rejected, allowli
 
 The source manifest contains one hash per file and includes shared hashing, canonical JSON, wire-envelope, flush, identity, filesystem, transport, buffer, export, diagnostics, device-claim, registration, audit, all legacy CLI/observability tests, common identifier sources, package manifests, and the root dependency lockfile. Every matrix row maps to source owners, named legacy tests, and named golden cases. The namespace validator requires `sno station` prefixing for every migrated behavior and requires negative top-level coverage for all six old command nouns.
 
-The package families approved by the owner are Linux x64/ARM64, macOS Intel/Apple Silicon, and Windows x64. Exact binary/package/wheel tuples are candidates, not compatibility claims, until matching-runner artifact and minimum-platform installation evidence exists. An unproven family is deferred instead of shipping an untested compatibility tag.
+The approved native families are Linux x64/ARM64, macOS Intel/Apple Silicon, and Windows x64. Linux also receives static musl x64/ARM64 artifacts. Exact target tuples are compatibility claims only after matching-runner build, archive extraction, and real-binary smoke evidence. Windows ARM64 remains excluded while its standard hosted runner is public preview.
 
 ## Legacy Claim Request Capture
 

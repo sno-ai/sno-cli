@@ -1,0 +1,19 @@
+name: Public installer smoke
+
+on:
+  workflow_call:
+    inputs:
+      plan:
+        description: The cargo-dist release plan.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    uses: ./.github/workflows/release-installer-verify.yml
+    with:
+      mode: public
+    secrets: inherit

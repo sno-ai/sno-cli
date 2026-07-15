@@ -1,0 +1,36 @@
+# disposition<TAB>path<TAB>reason when excluded
+include	.github/workflows/ci.yml
+include	.github/workflows/release-archive-smoke.yml
+include	.github/workflows/release-draft-installer-smoke.yml
+include	.github/workflows/release-installer-smoke.yml
+include	.github/workflows/release-installer-verify.yml
+include	.github/workflows/release-preflight.yml
+include	.github/workflows/release-public-installer-smoke.yml
+include	.github/workflows/release-sbom.yml
+include	.github/workflows/release.yml
+include	CONTRIBUTING.md
+include	Cargo.lock
+include	Cargo.toml
+include	README.md
+include	ai-doc/ACTIVE/PRD/LEGACY-CONTRACT-MATRIX-sno-cli-initial-release.md
+include	ai-doc/ACTIVE/PRD/PROBE-RESULTS-sno-cli-initial-release.md
+include	ai-doc/ACTIVE/PRD/sno-cli-initial-release.md
+include	dist-workspace.toml
+include	openspec/changes/rust-binary-distribution/.openspec.yaml
+include	openspec/changes/rust-binary-distribution/design.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/agentic-debt-plan-review.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/agentic-debt-code-review.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-resolution.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review-round2.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/code-review.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/plan-review-round2.md
+include	openspec/changes/rust-binary-distribution/evidence/reviews/plan-review.md
+include	openspec/changes/rust-binary-distribution/proposal.md
+include	openspec/changes/rust-binary-distribution/specs/rust-binary-distribution/spec.md
+include	openspec/changes/rust-binary-distribution/tasks.md
+include	policy/release-surfaces.tsv
+exclude	scripts/check-release-surfaces.sh	Policy implementation must name the prohibited definitions it rejects.
+include	scripts/check-release-workflow.sh
+include	scripts/install-cargo-dist.sh
+exclude	scripts/test-release-surface-policy.sh	Policy self-test must construct prohibited fixtures.
+include	scripts/test-release-workflow-policy.sh
