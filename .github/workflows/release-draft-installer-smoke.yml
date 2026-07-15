@@ -7,6 +7,10 @@ on:
         description: The cargo-dist release plan.
         required: true
         type: string
+      release_id:
+        description: The numeric GitHub draft release ID.
+        required: true
+        type: string
 
 permissions:
   contents: read
@@ -16,4 +20,5 @@ jobs:
     uses: ./.github/workflows/release-installer-verify.yml
     with:
       mode: draft
+      release_id: ${{ inputs.release_id }}
     secrets: inherit

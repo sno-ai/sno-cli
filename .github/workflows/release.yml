@@ -257,6 +257,7 @@ jobs:
     runs-on: "ubuntu-22.04"
     outputs:
       val: ${{ steps.host.outputs.manifest }}
+      draft_id: ${{ steps.create_release.outputs.release_id }}
     permissions:
       "attestations": "write"
       "contents": "write"
@@ -309,6 +310,7 @@ jobs:
           subject-path: |
             artifacts/*
       - name: Create GitHub Release
+        id: create_release
         env:
           RELEASE_TAG: "${{ needs.plan.outputs.tag }}"
           PRERELEASE_FLAG: "${{ fromJson(steps.host.outputs.manifest).announcement_is_prerelease && '--prerelease' || '' }}"
@@ -328,6 +330,11 @@ jobs:
           echo "$ANNOUNCEMENT_BODY" > $RUNNER_TEMP/notes.txt
 
           gh release create "$RELEASE_TAG" --draft --target "$RELEASE_COMMIT" $PRERELEASE_FLAG --title "$ANNOUNCEMENT_TITLE" --notes-file "$RUNNER_TEMP/notes.txt" artifacts/*
+          mapfile -t draft_ids < <(gh api --paginate \
+            "repos/${GITHUB_REPOSITORY}/releases?per_page=100" \
+            --jq ".[] | select(.tag_name == \"${RELEASE_TAG}\" and .draft == true) | .id")
+          test "${#draft_ids[@]}" -eq 1
+          echo "release_id=${draft_ids[0]}" >> "$GITHUB_OUTPUT"
 
   custom-release-draft-installer-smoke:
     needs:
@@ -336,6 +343,7 @@ jobs:
     uses: ./.github/workflows/release-draft-installer-smoke.yml
     with:
       plan: ${{ needs.plan.outputs.val }}
+      release_id: ${{ needs.host.outputs.draft_id }}
     secrets: inherit
 
   host-public-candidate:
@@ -348,6 +356,7 @@ jobs:
       contents: write
     env:
       GH_TOKEN: ${{ github.token }}
+      DRAFT_ID: ${{ needs.host.outputs.draft_id }}
     outputs:
       tag: ${{ steps.candidate.outputs.tag }}
     steps:
@@ -360,8 +369,21 @@ jobs:
           set -euo pipefail
           candidate_tag="sno-release-candidate-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
           echo "tag=$candidate_tag" >> "$GITHUB_OUTPUT"
+          [[ "$DRAFT_ID" =~ ^[0-9]+$ ]]
           mkdir artifacts
-          gh release download "$FINAL_TAG" --repo "$GITHUB_REPOSITORY" --dir artifacts
+          assets="$(gh api --paginate "repos/${GITHUB_REPOSITORY}/releases/${DRAFT_ID}/assets?per_page=100")"
+          mapfile -t asset_rows < <(jq -r '.[] | [.id, .name] | @tsv' <<<"$assets")
+          test "${#asset_rows[@]}" -gt 0
+          for row in "${asset_rows[@]}"; do
+            IFS=$'\t' read -r asset_id asset_name <<<"$row"
+            [[ "$asset_id" =~ ^[0-9]+$ ]]
+            [[ "$asset_name" != */* && "$asset_name" != .* ]]
+            gh api \
+              -H 'Accept: application/octet-stream' \
+              -H 'X-GitHub-Api-Version: 2026-03-10' \
+              "repos/${GITHUB_REPOSITORY}/releases/assets/${asset_id}" > "artifacts/${asset_name}"
+            test -s "artifacts/${asset_name}"
+          done
           gh release create "$candidate_tag" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$GITHUB_SHA" \
@@ -421,6 +443,7 @@ jobs:
       - name: Publish verified draft as immutable release
         env:
           RELEASE_TAG: "${{ needs.plan.outputs.tag }}"
+          DRAFT_ID: ${{ needs.host.outputs.draft_id }}
         shell: bash
         run: |
           set -euo pipefail
@@ -431,7 +454,12 @@ jobs:
             echo "release tag moved: expected $GITHUB_SHA, found $resolved_commit" >&2
             exit 1
           }
-          gh release edit "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" --draft=false
+          [[ "$DRAFT_ID" =~ ^[0-9]+$ ]]
+          published="$(gh api --method PATCH \
+            "repos/${GITHUB_REPOSITORY}/releases/${DRAFT_ID}" \
+            -F draft=false)"
+          test "$(jq -r '.tag_name' <<<"$published")" = "$RELEASE_TAG"
+          test "$(jq -r '.draft' <<<"$published")" = false
 
   verify-published-release:
     needs:
@@ -496,9 +524,14 @@ jobs:
       contents: write
     env:
       GH_TOKEN: ${{ github.token }}
+      DRAFT_ID: ${{ needs.host.outputs.draft_id }}
     steps:
       - name: Delete failed draft without deleting its tag
-        run: gh release delete "${{ needs.plan.outputs.tag }}" --repo "$GITHUB_REPOSITORY" --yes
+        shell: bash
+        run: |
+          set -euo pipefail
+          [[ "$DRAFT_ID" =~ ^[0-9]+$ ]]
+          gh api --method DELETE "repos/${GITHUB_REPOSITORY}/releases/${DRAFT_ID}"
 
   announce:
     needs:
