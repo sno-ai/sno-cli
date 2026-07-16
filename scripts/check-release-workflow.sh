@@ -111,6 +111,8 @@ rg -Uq 'release-installer-verify\.yml\n    with:\n      mode: candidate' "$candi
 rg -q 'SNO_DOWNLOAD_URL="file://' "$installer_verify" || fail "staged Unix installer does not consume local artifacts"
 rg -q 'sh "artifacts/\$\{\{ matrix\.script \}\}"' "$installer_verify" || fail "staged Unix installer is not executed"
 rg -q '& "artifacts/\$\{\{ matrix\.script \}\}"' "$installer_verify" || fail "staged PowerShell installer is not executed"
+rg -Fq 'export HOME="$(mktemp -d)"' "$installer_verify" || fail "Unix installer verification does not isolate the user home"
+rg -Fq 'export CARGO_HOME="$HOME/.cargo"' "$installer_verify" || fail "Unix installer verification does not install inside the isolated home"
 rg -q 'releases/\$\{DRAFT_ID\}/assets' "$installer_verify" || fail "draft smoke does not address the draft by numeric release ID"
 rg -q 'Accept: application/octet-stream' "$installer_verify" || fail "draft smoke does not download exact asset bytes"
 rg -q 'X-GitHub-Api-Version: 2026-03-10' "$installer_verify" || fail "draft asset download does not pin the GitHub API contract"

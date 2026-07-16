@@ -59,6 +59,10 @@ root="$(make_fixture installer-bypass)"
 sed -i '/& "artifacts\/\${{ matrix.script }}"/d' "$root/.github/workflows/release-installer-verify.yml"
 expect_failure "$root"
 
+root="$(make_fixture unix-home-isolation-bypass)"
+sed -i '/export HOME="$(mktemp -d)"/d' "$root/.github/workflows/release-installer-verify.yml"
+expect_failure "$root"
+
 root="$(make_fixture receipt-bypass)"
 sed -i '/test "\${RELEASE_AUTHORIZED_SHA}" = "\${GITHUB_SHA}"/d' "$root/.github/workflows/release-preflight.yml"
 expect_failure "$root"
@@ -104,4 +108,4 @@ sed -i '/needs.custom-release-public-installer-smoke.result == '\''failure'\''/s
 expect_failure "$root"
 
 "$checker" "$repo_root" >/dev/null
-printf 'release-workflow policy self-test passed: 20 security mutations rejected and repository accepted\n'
+printf 'release-workflow policy self-test passed: 21 security mutations rejected and repository accepted\n'

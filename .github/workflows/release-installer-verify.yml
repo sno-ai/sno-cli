@@ -111,7 +111,8 @@ jobs:
         run: |
           set -euo pipefail
           test "$(uname -m)" = "${{ matrix.arch }}"
-          export CARGO_HOME="$(mktemp -d)"
+          export HOME="$(mktemp -d)"
+          export CARGO_HOME="$HOME/.cargo"
           if [[ '${{ inputs.mode }}' = public || '${{ inputs.mode }}' = candidate ]]; then
             if [[ '${{ inputs.mode }}' = candidate ]]; then
               export SNO_DOWNLOAD_URL="https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}"
