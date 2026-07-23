@@ -62,6 +62,8 @@ The default wait timeout is 60 seconds. A completed job exits `0`.
 A failed job or timeout exits `1`; invalid flags or missing required values exit `2`.
 Add `--json` to either command for stable JSON output. The CLI rereads local sidecar discovery on
 every request and poll, so an active wait can reconnect after a sidecar restart.
+If the audit stream is unavailable, the job remains non-terminal and the sidecar reports the
+write failure; `--wait` exits `1` when its timeout expires instead of claiming an unaudited result.
 
 REM JSON start output includes both `job_id` and `correlation_id`. The CLI sends the correlation
 id to the sidecar and writes a durable, token-free JSONL trace for each parsed command, discovery

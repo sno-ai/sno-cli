@@ -466,6 +466,8 @@ mod tests {
         assert!(readme.contains("sno station rem-status <JOB_ID> --wait --timeout"));
         assert!(readme.contains("returns immediately"));
         assert!(readme.contains("failed job or timeout exits `1`"));
+        assert!(readme.contains("audit stream is unavailable"));
+        assert!(readme.contains("job remains non-terminal"));
         assert!(readme.contains("SNO_REM_CORRELATION_ID"));
         assert!(readme.contains("$OPENCLAW_STATE_DIR/mem-claw/rem-trace.jsonl"));
         assert!(readme.contains("correlation_id"));
