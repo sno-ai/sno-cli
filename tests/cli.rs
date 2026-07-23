@@ -827,6 +827,258 @@ fn rem_start_surfaces_failed_allocated_job() {
 }
 
 #[test]
+fn rem_human_output_keeps_job_id_actionable_on_success_and_failure() {
+    let profile = TempDir::new().expect("profile");
+    let server = SnoServiceServer::start(vec![
+        Box::new(|_| ServiceResponse::json(202, json!({"job_id":"job-human-start"}))),
+        Box::new(|_| {
+            ServiceResponse::json(
+                200,
+                json!({
+                    "state":"running",
+                    "type":"noop",
+                    "scope":"persona:human",
+                    "started_at":"2026-07-23T06:00:00Z",
+                    "finished_at":null,
+                    "stats":null,
+                    "error":null,
+                    "correlation_id":null
+                }),
+            )
+        }),
+        Box::new(|_| {
+            ServiceResponse::json(
+                200,
+                json!({
+                    "state":"failed",
+                    "type":"noop",
+                    "scope":"persona:human",
+                    "started_at":"2026-07-23T06:00:00Z",
+                    "finished_at":"2026-07-23T06:00:01Z",
+                    "stats":null,
+                    "error":"sidecar_restart",
+                    "correlation_id":null
+                }),
+            )
+        }),
+        Box::new(|_| {
+            ServiceResponse::json(
+                400,
+                json!({"job_id":"job-human-rejected","error":"unsupported_rem_type"}),
+            )
+        }),
+    ]);
+    write_rem_discovery(profile.path(), service_port(&server), "boot-token-human");
+
+    let started = sno(
+        profile.path(),
+        &[
+            "station",
+            "rem-start",
+            "--type",
+            "noop",
+            "--scope",
+            "persona:human",
+        ],
+    );
+    assert_eq!(started.status.code(), Some(0), "{}", stderr(&started));
+    assert!(stdout(&started).contains("job-human-start"));
+
+    let running = sno(
+        profile.path(),
+        &["station", "rem-status", "job-human-start"],
+    );
+    assert_eq!(running.status.code(), Some(0), "{}", stderr(&running));
+    assert!(stdout(&running).contains("job-human-start"));
+    assert!(stdout(&running).contains("running"));
+
+    let failed = sno(
+        profile.path(),
+        &["station", "rem-status", "job-human-start"],
+    );
+    assert_eq!(failed.status.code(), Some(1));
+    assert!(stderr(&failed).contains("job-human-start"));
+    assert!(stderr(&failed).contains("sidecar_restart"));
+
+    let rejected = sno(
+        profile.path(),
+        &[
+            "station",
+            "rem-start",
+            "--type",
+            "rem-review",
+            "--scope",
+            "persona:human",
+        ],
+    );
+    assert_eq!(rejected.status.code(), Some(1));
+    assert!(stderr(&rejected).contains("job-human-rejected"));
+    assert!(stderr(&rejected).contains("unsupported_rem_type"));
+    assert_eq!(server.finish().len(), 4);
+}
+
+#[test]
+fn rem_one_shot_status_reads_running_then_stable_done() {
+    let profile = TempDir::new().expect("profile");
+    let server = SnoServiceServer::start(vec![
+        Box::new(|_| {
+            ServiceResponse::json(
+                200,
+                json!({
+                    "state":"running",
+                    "type":"noop",
+                    "scope":"persona:one-shot",
+                    "started_at":"2026-07-23T06:00:00Z",
+                    "finished_at":null,
+                    "stats":null,
+                    "error":null,
+                    "correlation_id":null
+                }),
+            )
+        }),
+        Box::new(|_| ServiceResponse::json(200, rem_done_job())),
+        Box::new(|_| ServiceResponse::json(200, rem_done_job())),
+    ]);
+    write_rem_discovery(profile.path(), service_port(&server), "boot-token-one-shot");
+
+    for expected in ["running", "done", "done"] {
+        let output = sno(
+            profile.path(),
+            &["station", "rem-status", "job-one-shot", "--json"],
+        );
+        assert_eq!(output.status.code(), Some(0), "{}", stderr(&output));
+        assert_eq!(
+            serde_json::from_slice::<Value>(&output.stdout).expect("REM status JSON")["state"],
+            expected
+        );
+    }
+    assert_eq!(server.finish().len(), 3);
+}
+
+#[test]
+fn rem_exit_codes_are_stable() {
+    let profile = TempDir::new().expect("profile");
+    let server = SnoServiceServer::start(vec![
+        Box::new(|_| ServiceResponse::json(200, rem_done_job())),
+        Box::new(|_| {
+            ServiceResponse::json(
+                200,
+                json!({
+                    "state":"failed",
+                    "type":"noop",
+                    "scope":"persona:test-68a19d8c",
+                    "started_at":"2026-07-23T06:00:00Z",
+                    "finished_at":"2026-07-23T06:00:01Z",
+                    "stats":null,
+                    "error":"sidecar_restart",
+                    "correlation_id":null
+                }),
+            )
+        }),
+    ]);
+    write_rem_discovery(profile.path(), service_port(&server), "boot-token-exits");
+
+    let done = sno(
+        profile.path(),
+        &["station", "rem-status", "job-done", "--json"],
+    );
+    let failed = sno(
+        profile.path(),
+        &["station", "rem-status", "job-failed", "--json"],
+    );
+    assert_eq!(server.finish().len(), 2);
+    fs::remove_file(profile.path().join("station/sidecar.json")).expect("remove discovery");
+    let timeout = sno(
+        profile.path(),
+        &[
+            "station",
+            "rem-status",
+            "job-timeout",
+            "--wait",
+            "--timeout",
+            "1",
+            "--json",
+        ],
+    );
+    let usage = sno(profile.path(), &["station", "rem-start", "--type", "noop"]);
+
+    for (label, output, expected) in [
+        ("done", done, 0),
+        ("failed", failed, 1),
+        ("timeout", timeout, 1),
+        ("invalid usage", usage, 2),
+    ] {
+        assert_eq!(
+            output.status.code(),
+            Some(expected),
+            "{label}: stdout={} stderr={}",
+            stdout(&output),
+            stderr(&output),
+        );
+    }
+}
+
+#[test]
+fn rem_common_local_errors_are_clean() {
+    let missing_profile = TempDir::new().expect("missing profile");
+    let missing = sno(
+        missing_profile.path(),
+        &[
+            "station",
+            "rem-start",
+            "--type",
+            "noop",
+            "--scope",
+            "persona:missing",
+        ],
+    );
+    assert_eq!(missing.status.code(), Some(1));
+    assert!(stderr(&missing).contains("sidecar not running"));
+    assert!(!stderr(&missing).contains("panicked"));
+
+    let malformed_profile = TempDir::new().expect("malformed profile");
+    fs::create_dir_all(malformed_profile.path().join("station")).expect("station directory");
+    fs::write(
+        malformed_profile.path().join("station/sidecar.json"),
+        r#"{"port":"#,
+    )
+    .expect("malformed discovery");
+    let malformed = sno(
+        malformed_profile.path(),
+        &[
+            "station",
+            "rem-start",
+            "--type",
+            "noop",
+            "--scope",
+            "persona:malformed",
+        ],
+    );
+    assert_eq!(malformed.status.code(), Some(1));
+    assert!(stderr(&malformed).contains("discovery is malformed"));
+    assert!(!stderr(&malformed).contains("already running"));
+    assert!(!stderr(&malformed).contains("panicked"));
+
+    let unknown_profile = TempDir::new().expect("unknown profile");
+    let server = SnoServiceServer::start(vec![Box::new(|_| {
+        ServiceResponse::json(404, json!({"error":"job_not_found"}))
+    })]);
+    write_rem_discovery(
+        unknown_profile.path(),
+        service_port(&server),
+        "boot-token-unknown",
+    );
+    let unknown = sno(
+        unknown_profile.path(),
+        &["station", "rem-status", "job-does-not-exist"],
+    );
+    assert_eq!(unknown.status.code(), Some(1));
+    assert!(stderr(&unknown).contains("job-does-not-exist"));
+    assert!(!stderr(&unknown).contains("panicked"));
+    assert_eq!(server.finish().len(), 1);
+}
+
+#[test]
 fn rem_wait_rereads_discovery_after_sidecar_restart() {
     let profile = TempDir::new().expect("profile");
     let trace_path = profile.path().join("mem-claw").join("rem-trace.jsonl");

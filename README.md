@@ -58,6 +58,7 @@ sno station rem-status <JOB_ID>
 sno station rem-status <JOB_ID> --wait --timeout 60
 ```
 
+Human-readable status output includes both the job id and state.
 The default wait timeout is 60 seconds. A completed job exits `0`.
 A failed job or timeout exits `1`; invalid flags or missing required values exit `2`.
 Add `--json` to either command for stable JSON output. The CLI rereads local sidecar discovery on

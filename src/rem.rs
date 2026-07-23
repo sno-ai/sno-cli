@@ -244,7 +244,7 @@ pub(crate) fn run_status(
     if json_enabled {
         print_json(&serde_json::to_value(&job)?)?;
     } else {
-        println!("{}", job.state);
+        println!("{job_id}: {}", job.state);
     }
     Ok(0)
 }
