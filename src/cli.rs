@@ -12,6 +12,9 @@ use crate::export::{self, ExportFormat};
 use crate::service;
 use crate::state::{self, ConsentValue};
 
+#[path = "rem.rs"]
+mod rem;
+
 const RETIRED_ROOT_COMMANDS: &[&str] =
     &["consent", "observe", "register", "claim", "audit", "doctor"];
 
@@ -67,6 +70,31 @@ enum MachineCommand {
 
 #[derive(Debug, Subcommand)]
 enum SnoStationCommand {
+    #[command(about = "Start an asynchronous local REM job")]
+    RemStart {
+        #[arg(
+            long = "type",
+            value_name = "TYPE",
+            help = "REM action type, including noop"
+        )]
+        rem_type: String,
+        #[arg(long, value_name = "SCOPE", help = "Memory scope for the REM job")]
+        scope: String,
+    },
+    #[command(about = "Read or wait for a local REM job")]
+    RemStatus {
+        #[arg(value_name = "JOB_ID")]
+        job_id: String,
+        #[arg(long, help = "Poll until the job is done, failed, or times out")]
+        wait: bool,
+        #[arg(
+            long,
+            requires = "wait",
+            value_name = "SECONDS",
+            help = "Wait timeout in seconds (default: 60)"
+        )]
+        timeout: Option<u64>,
+    },
     #[command(about = "Manage local telemetry")]
     Telemetry {
         #[command(subcommand)]
@@ -158,6 +186,14 @@ fn dispatch_account(command: AccountCommand, json_enabled: bool) -> Result<i32, 
 
 fn dispatch_sno_station(command: SnoStationCommand, json_enabled: bool) -> Result<i32, CliError> {
     match command {
+        SnoStationCommand::RemStart { rem_type, scope } => {
+            rem::run_start(&rem_type, &scope, json_enabled)
+        }
+        SnoStationCommand::RemStatus {
+            job_id,
+            wait,
+            timeout,
+        } => rem::run_status(&job_id, wait, timeout, json_enabled),
         SnoStationCommand::Telemetry { command } => dispatch_telemetry(command, json_enabled),
         SnoStationCommand::Audit { command } => match command {
             AuditCommand::Verify { event_id } => service::run_audit_verify(&event_id, json_enabled),
@@ -357,4 +393,78 @@ pub(crate) fn print_json(value: &Value) -> Result<(), CliError> {
     stdout.write_all(b"\n")?;
     stdout.flush()?;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use clap::{CommandFactory, Parser};
+
+    use super::SnoCli;
+
+    #[test]
+    fn station_help_lists_only_canonical_rem_commands() {
+        let mut command = SnoCli::command();
+        let station = command
+            .find_subcommand_mut("station")
+            .expect("station command");
+        let help = station.render_long_help().to_string();
+
+        assert!(help.contains("rem-start"));
+        assert!(help.contains("rem-status"));
+        assert!(!help.contains("rem run"));
+        assert!(!help.contains("rem wait"));
+    }
+
+    #[test]
+    fn rem_start_and_wait_flags_parse() {
+        assert!(
+            SnoCli::try_parse_from([
+                "sno",
+                "station",
+                "rem-start",
+                "--type",
+                "noop",
+                "--scope",
+                "persona:test-68a19d8c",
+            ])
+            .is_ok()
+        );
+        assert!(
+            SnoCli::try_parse_from([
+                "sno",
+                "station",
+                "rem-status",
+                "job-019f8da3",
+                "--wait",
+                "--timeout",
+                "1",
+            ])
+            .is_ok()
+        );
+    }
+
+    #[test]
+    fn rem_status_rejects_timeout_without_wait() {
+        let error = SnoCli::try_parse_from([
+            "sno",
+            "station",
+            "rem-status",
+            "job-019f8da3",
+            "--timeout",
+            "1",
+        ])
+        .expect_err("timeout requires wait");
+
+        assert!(error.to_string().contains("--wait"));
+    }
+
+    #[test]
+    fn readme_documents_async_rem_commands_and_exit_codes() {
+        let readme = include_str!("../README.md");
+
+        assert!(readme.contains("sno station rem-start --type noop --scope"));
+        assert!(readme.contains("sno station rem-status <JOB_ID> --wait --timeout"));
+        assert!(readme.contains("returns immediately"));
+        assert!(readme.contains("failed job or timeout exits `1`"));
+    }
 }

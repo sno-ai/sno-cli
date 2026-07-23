@@ -25,6 +25,13 @@ impl ServiceResponse {
             body: value.to_string(),
         }
     }
+
+    pub fn truncated_json(body: &str) -> Self {
+        Self {
+            status: 299,
+            body: body.to_owned(),
+        }
+    }
 }
 
 type Handler = Box<dyn Fn(CapturedRequest) -> ServiceResponse + Send>;
@@ -146,19 +153,29 @@ fn read_request(stream: &mut TcpStream) -> CapturedRequest {
 }
 
 fn write_response(stream: &mut TcpStream, response: ServiceResponse) {
-    let reason = match response.status {
+    let wire_status = if response.status == 299 {
+        200
+    } else {
+        response.status
+    };
+    let reason = match wire_status {
         200 => "OK",
         400 => "Bad Request",
         404 => "Not Found",
         409 => "Conflict",
         _ => "Response",
     };
+    let content_length = if response.status == 299 {
+        response.body.len() + 200
+    } else {
+        response.body.len()
+    };
     write!(
         stream,
         "HTTP/1.1 {} {}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
-        response.status,
+        wire_status,
         reason,
-        response.body.len(),
+        content_length,
         response.body,
     )
     .expect("write response");

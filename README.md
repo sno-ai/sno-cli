@@ -36,9 +36,32 @@ sno station telemetry resume
 sno station telemetry export [PATH] [--format tarball|jsonl|csv]
 sno station audit verify <EVENT_ID>
 sno station doctor
+sno station rem-start --type noop --scope <SCOPE>
+sno station rem-status <JOB_ID> [--wait [--timeout <SECONDS>]]
 ```
 
 Every built-in command accepts `--json`. Commands emit one JSON value except `sno account machine claim`, which emits newline-delimited JSON: an `authorization` record before waiting and a final `result` or `error` record. This lets users and automation receive the browser verification code before approval. Success is exit code `0`, runtime failure is `1`, and invalid usage is `2`.
+
+### Local REM jobs
+
+REM jobs use the local Sno Station sidecar and are asynchronous. Start returns immediately with a
+job id:
+
+```sh
+sno station rem-start --type noop --scope persona:demo
+```
+
+Read the current state once, or wait for a terminal state:
+
+```sh
+sno station rem-status <JOB_ID>
+sno station rem-status <JOB_ID> --wait --timeout 60
+```
+
+The default wait timeout is 60 seconds. A completed job exits `0`.
+A failed job or timeout exits `1`; invalid flags or missing required values exit `2`.
+Add `--json` to either command for stable JSON output. The CLI rereads local sidecar discovery on
+every request and poll, so an active wait can reconnect after a sidecar restart.
 
 ### External subcommands
 

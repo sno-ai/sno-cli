@@ -724,3 +724,178 @@ fn external_subcommand_preserves_literal_arguments_and_exit_code() {
     assert_eq!(output.status.code(), Some(7));
     assert_eq!(stdout(&output), "literal;$HOME\n$(false)\n");
 }
+
+#[test]
+fn rem_start_posts_type_scope_and_boot_token() {
+    let profile = TempDir::new().expect("profile");
+    let server = SnoServiceServer::start(vec![Box::new(|request| {
+        assert_eq!(request.method, "POST");
+        assert_eq!(request.target, "/rem/run");
+        assert_eq!(
+            request.headers.get("x-sidecar-token").map(String::as_str),
+            Some("boot-token-1")
+        );
+        assert_eq!(
+            serde_json::from_str::<Value>(&request.body).expect("REM start body"),
+            json!({"type":"noop","scope":"persona:test-68a19d8c"})
+        );
+        ServiceResponse::json(202, json!({"job_id":"job-019f8da3"}))
+    })]);
+    write_rem_discovery(profile.path(), service_port(&server), "boot-token-1");
+
+    let output = sno(
+        profile.path(),
+        &[
+            "station",
+            "rem-start",
+            "--type",
+            "noop",
+            "--scope",
+            "persona:test-68a19d8c",
+            "--json",
+        ],
+    );
+
+    assert_eq!(output.status.code(), Some(0), "{}", stderr(&output));
+    assert_eq!(
+        serde_json::from_slice::<Value>(&output.stdout).expect("REM start JSON"),
+        json!({"job_id":"job-019f8da3"})
+    );
+    assert_eq!(server.finish().len(), 1);
+}
+
+#[test]
+fn rem_start_surfaces_failed_allocated_job() {
+    let profile = TempDir::new().expect("profile");
+    let server = SnoServiceServer::start(vec![Box::new(|_| {
+        ServiceResponse::json(
+            400,
+            json!({"job_id":"job-unsupported","error":"unsupported_rem_type"}),
+        )
+    })]);
+    write_rem_discovery(profile.path(), service_port(&server), "boot-token-2");
+
+    let output = sno(
+        profile.path(),
+        &[
+            "station",
+            "rem-start",
+            "--type",
+            "rem-review",
+            "--scope",
+            "persona:test-68a19d8c",
+            "--json",
+        ],
+    );
+
+    assert_eq!(output.status.code(), Some(1));
+    let error = serde_json::from_slice::<Value>(&output.stdout).expect("allocated failure JSON");
+    assert_eq!(error["error"], "unsupported_rem_type");
+    assert!(
+        error["message"]
+            .as_str()
+            .is_some_and(|message| message.contains("job-unsupported"))
+    );
+    assert_eq!(server.finish().len(), 1);
+}
+
+#[test]
+fn rem_wait_rereads_discovery_after_sidecar_restart() {
+    let profile = TempDir::new().expect("profile");
+    let done_server = SnoServiceServer::start(vec![Box::new(|request| {
+        assert_eq!(request.target, "/rem/jobs/job-restarted");
+        ServiceResponse::json(200, rem_done_job())
+    })]);
+    let done_port = service_port(&done_server);
+    let profile_path = profile.path().to_path_buf();
+    let old_server = SnoServiceServer::start(vec![Box::new(move |_| {
+        write_rem_discovery(&profile_path, done_port, "new-token");
+        ServiceResponse::json(401, json!({"error":"unauthorized"}))
+    })]);
+    write_rem_discovery(profile.path(), service_port(&old_server), "old-token");
+
+    let output = sno(
+        profile.path(),
+        &[
+            "station",
+            "rem-status",
+            "job-restarted",
+            "--wait",
+            "--timeout",
+            "2",
+            "--json",
+        ],
+    );
+
+    assert_eq!(output.status.code(), Some(0), "{}", stderr(&output));
+    let job = serde_json::from_slice::<Value>(&output.stdout).expect("REM status JSON");
+    assert_eq!(job["state"], "done");
+    assert_eq!(job["stats"]["operations"], 0);
+    assert_eq!(old_server.finish().len(), 1);
+    assert_eq!(done_server.finish().len(), 1);
+}
+
+#[test]
+fn rem_wait_retries_after_truncated_restart_response() {
+    let profile = TempDir::new().expect("profile");
+    let done_server = SnoServiceServer::start(vec![Box::new(|_| {
+        ServiceResponse::json(200, rem_done_job())
+    })]);
+    let done_port = service_port(&done_server);
+    let profile_path = profile.path().to_path_buf();
+    let truncated_server = SnoServiceServer::start(vec![Box::new(move |_| {
+        write_rem_discovery(&profile_path, done_port, "new-token");
+        ServiceResponse::truncated_json(r#"{"state":"run"#)
+    })]);
+    write_rem_discovery(profile.path(), service_port(&truncated_server), "old-token");
+
+    let output = sno(
+        profile.path(),
+        &[
+            "station",
+            "rem-status",
+            "job-restarted",
+            "--wait",
+            "--timeout",
+            "2",
+            "--json",
+        ],
+    );
+
+    assert_eq!(output.status.code(), Some(0), "{}", stderr(&output));
+    assert_eq!(
+        serde_json::from_slice::<Value>(&output.stdout).expect("REM status JSON")["state"],
+        "done"
+    );
+    assert_eq!(truncated_server.finish().len(), 1);
+    assert_eq!(done_server.finish().len(), 1);
+}
+
+fn service_port(server: &SnoServiceServer) -> u16 {
+    server
+        .base_url()
+        .rsplit_once(':')
+        .and_then(|(_, port)| port.parse().ok())
+        .expect("loopback service port")
+}
+
+fn write_rem_discovery(profile: &Path, port: u16, token: &str) {
+    let station = profile.join("station");
+    fs::create_dir_all(&station).expect("station directory");
+    fs::write(
+        station.join("sidecar.json"),
+        json!({"port":port,"token":token,"pid":123}).to_string(),
+    )
+    .expect("REM discovery");
+}
+
+fn rem_done_job() -> Value {
+    json!({
+        "state":"done",
+        "type":"noop",
+        "scope":"persona:test-68a19d8c",
+        "started_at":"2026-07-23T06:00:00Z",
+        "finished_at":"2026-07-23T06:00:01Z",
+        "stats":{"operations":0}
+    })
+}
