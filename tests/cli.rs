@@ -7,7 +7,7 @@ use std::path::Path;
 use std::process::{Command, Output, Stdio};
 use std::sync::mpsc;
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
@@ -869,6 +869,47 @@ fn rem_wait_retries_after_truncated_restart_response() {
     );
     assert_eq!(truncated_server.finish().len(), 1);
     assert_eq!(done_server.finish().len(), 1);
+}
+
+#[test]
+fn rem_wait_times_out_when_sidecar_never_appears() {
+    let profile = TempDir::new().expect("profile");
+    let started = Instant::now();
+    let mut child = Command::new(env!("CARGO_BIN_EXE_sno"))
+        .args([
+            "station",
+            "rem-status",
+            "job-missing",
+            "--wait",
+            "--timeout",
+            "1",
+            "--json",
+        ])
+        .env("SNO_PROFILE_DIR", profile.path())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("REM status process");
+    let patience = Instant::now() + Duration::from_secs(2);
+    loop {
+        if child.try_wait().expect("poll REM status process").is_some() {
+            break;
+        }
+        if Instant::now() >= patience {
+            child.kill().expect("kill hung REM status process");
+            child.wait().expect("reap hung REM status process");
+            panic!("REM status exceeded the test patience bound");
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+    let output = child.wait_with_output().expect("collect REM status output");
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(started.elapsed() < Duration::from_secs(2));
+    assert_eq!(
+        serde_json::from_slice::<Value>(&output.stdout).expect("REM timeout JSON")["error"],
+        "rem_timeout"
+    );
 }
 
 fn service_port(server: &SnoServiceServer) -> u16 {
