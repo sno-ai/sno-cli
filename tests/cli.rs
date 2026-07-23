@@ -728,12 +728,20 @@ fn external_subcommand_preserves_literal_arguments_and_exit_code() {
 #[test]
 fn rem_start_posts_type_scope_and_boot_token() {
     let profile = TempDir::new().expect("profile");
+    let trace_path = profile.path().join("rem-trace.jsonl");
     let server = SnoServiceServer::start(vec![Box::new(|request| {
         assert_eq!(request.method, "POST");
         assert_eq!(request.target, "/rem/run");
         assert_eq!(
             request.headers.get("x-sidecar-token").map(String::as_str),
             Some("boot-token-1")
+        );
+        assert_eq!(
+            request
+                .headers
+                .get("x-rem-correlation-id")
+                .map(String::as_str),
+            Some("corr-start-019f8da3")
         );
         assert_eq!(
             serde_json::from_str::<Value>(&request.body).expect("REM start body"),
@@ -743,9 +751,8 @@ fn rem_start_posts_type_scope_and_boot_token() {
     })]);
     write_rem_discovery(profile.path(), service_port(&server), "boot-token-1");
 
-    let output = sno(
-        profile.path(),
-        &[
+    let output = Command::new(env!("CARGO_BIN_EXE_sno"))
+        .args([
             "station",
             "rem-start",
             "--type",
@@ -753,15 +760,30 @@ fn rem_start_posts_type_scope_and_boot_token() {
             "--scope",
             "persona:test-68a19d8c",
             "--json",
-        ],
-    );
+        ])
+        .env("SNO_PROFILE_DIR", profile.path())
+        .env("SNO_REM_CORRELATION_ID", "corr-start-019f8da3")
+        .env("SNO_REM_TRACE_FILE", &trace_path)
+        .output()
+        .expect("REM start");
 
     assert_eq!(output.status.code(), Some(0), "{}", stderr(&output));
     assert_eq!(
         serde_json::from_slice::<Value>(&output.stdout).expect("REM start JSON"),
-        json!({"job_id":"job-019f8da3"})
+        json!({"job_id":"job-019f8da3","correlation_id":"corr-start-019f8da3"})
     );
     assert_eq!(server.finish().len(), 1);
+    let trace = fs::read_to_string(trace_path).expect("REM trace");
+    for event in [
+        "command_received",
+        "discovery_resolved",
+        "http_request_sent",
+        "http_response_received",
+    ] {
+        assert!(trace.contains(&format!(r#""event":"{event}""#)), "{trace}");
+    }
+    assert!(trace.contains(r#""correlation_id":"corr-start-019f8da3""#));
+    assert!(!trace.contains("boot-token-1"));
 }
 
 #[test]
@@ -802,21 +824,35 @@ fn rem_start_surfaces_failed_allocated_job() {
 #[test]
 fn rem_wait_rereads_discovery_after_sidecar_restart() {
     let profile = TempDir::new().expect("profile");
+    let trace_path = profile.path().join("rem-trace.jsonl");
     let done_server = SnoServiceServer::start(vec![Box::new(|request| {
         assert_eq!(request.target, "/rem/jobs/job-restarted");
+        assert_eq!(
+            request
+                .headers
+                .get("x-rem-correlation-id")
+                .map(String::as_str),
+            Some("corr-wait-019f8da3")
+        );
         ServiceResponse::json(200, rem_done_job())
     })]);
     let done_port = service_port(&done_server);
     let profile_path = profile.path().to_path_buf();
-    let old_server = SnoServiceServer::start(vec![Box::new(move |_| {
+    let old_server = SnoServiceServer::start(vec![Box::new(move |request| {
+        assert_eq!(
+            request
+                .headers
+                .get("x-rem-correlation-id")
+                .map(String::as_str),
+            Some("corr-wait-019f8da3")
+        );
         write_rem_discovery(&profile_path, done_port, "new-token");
         ServiceResponse::json(401, json!({"error":"unauthorized"}))
     })]);
     write_rem_discovery(profile.path(), service_port(&old_server), "old-token");
 
-    let output = sno(
-        profile.path(),
-        &[
+    let output = Command::new(env!("CARGO_BIN_EXE_sno"))
+        .args([
             "station",
             "rem-status",
             "job-restarted",
@@ -824,8 +860,12 @@ fn rem_wait_rereads_discovery_after_sidecar_restart() {
             "--timeout",
             "2",
             "--json",
-        ],
-    );
+        ])
+        .env("SNO_PROFILE_DIR", profile.path())
+        .env("SNO_REM_CORRELATION_ID", "corr-wait-019f8da3")
+        .env("SNO_REM_TRACE_FILE", &trace_path)
+        .output()
+        .expect("REM wait");
 
     assert_eq!(output.status.code(), Some(0), "{}", stderr(&output));
     let job = serde_json::from_slice::<Value>(&output.stdout).expect("REM status JSON");
@@ -833,6 +873,15 @@ fn rem_wait_rereads_discovery_after_sidecar_restart() {
     assert_eq!(job["stats"]["operations"], 0);
     assert_eq!(old_server.finish().len(), 1);
     assert_eq!(done_server.finish().len(), 1);
+    let trace = fs::read_to_string(trace_path).expect("REM trace");
+    assert!(trace.contains(r#""poll_index":1"#), "{trace}");
+    assert!(
+        trace.contains(r#""transient_class":"unauthorized""#),
+        "{trace}"
+    );
+    assert!(trace.contains(r#""poll_index":2"#), "{trace}");
+    assert!(!trace.contains("old-token"));
+    assert!(!trace.contains("new-token"));
 }
 
 #[test]

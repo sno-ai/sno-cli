@@ -63,6 +63,12 @@ A failed job or timeout exits `1`; invalid flags or missing required values exit
 Add `--json` to either command for stable JSON output. The CLI rereads local sidecar discovery on
 every request and poll, so an active wait can reconnect after a sidecar restart.
 
+REM JSON start output includes both `job_id` and `correlation_id`. The CLI sends the correlation
+id to the sidecar and writes a durable, token-free JSONL trace for each parsed command, discovery
+read, request, response, poll, and transient failure. A caller can set `SNO_REM_CORRELATION_ID` to
+join start and status under one id, and `SNO_REM_TRACE_FILE` to select the trace file. Otherwise,
+the CLI creates an id and writes under the selected profile's `station/rem-trace.jsonl`.
+
 ### External subcommands
 
 An executable named `sno-example` on `PATH` is available as:
