@@ -66,8 +66,9 @@ every request and poll, so an active wait can reconnect after a sidecar restart.
 REM JSON start output includes both `job_id` and `correlation_id`. The CLI sends the correlation
 id to the sidecar and writes a durable, token-free JSONL trace for each parsed command, discovery
 read, request, response, poll, and transient failure. A caller can set `SNO_REM_CORRELATION_ID` to
-join start and status under one id, and `SNO_REM_TRACE_FILE` to select the trace file. Otherwise,
-the CLI creates an id and writes under the selected profile's `station/rem-trace.jsonl`.
+join start and status under one id. Otherwise, the CLI creates an id. The process trace is fixed at
+`$OPENCLAW_STATE_DIR/mem-claw/rem-trace.jsonl`, defaulting to
+`~/.openclaw/mem-claw/rem-trace.jsonl`.
 `SNO_REM_TRACE=0` disables this process trace only; it does not control the sidecar's independent
 memory audit stream.
 

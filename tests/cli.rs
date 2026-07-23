@@ -18,6 +18,7 @@ fn sno(profile: &Path, arguments: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_sno"))
         .args(arguments)
         .env("SNO_PROFILE_DIR", profile)
+        .env("OPENCLAW_STATE_DIR", profile)
         .output()
         .expect("run sno")
 }
@@ -728,7 +729,8 @@ fn external_subcommand_preserves_literal_arguments_and_exit_code() {
 #[test]
 fn rem_start_posts_type_scope_and_boot_token() {
     let profile = TempDir::new().expect("profile");
-    let trace_path = profile.path().join("rem-trace.jsonl");
+    let trace_path = profile.path().join("mem-claw").join("rem-trace.jsonl");
+    let ignored_override = profile.path().join("unauthorized-third-trace.jsonl");
     let server = SnoServiceServer::start(vec![Box::new(|request| {
         assert_eq!(request.method, "POST");
         assert_eq!(request.target, "/rem/run");
@@ -762,8 +764,9 @@ fn rem_start_posts_type_scope_and_boot_token() {
             "--json",
         ])
         .env("SNO_PROFILE_DIR", profile.path())
+        .env("OPENCLAW_STATE_DIR", profile.path())
         .env("SNO_REM_CORRELATION_ID", "corr-start-019f8da3")
-        .env("SNO_REM_TRACE_FILE", &trace_path)
+        .env("SNO_REM_TRACE_FILE", &ignored_override)
         .output()
         .expect("REM start");
 
@@ -784,6 +787,7 @@ fn rem_start_posts_type_scope_and_boot_token() {
     }
     assert!(trace.contains(r#""correlation_id":"corr-start-019f8da3""#));
     assert!(!trace.contains("boot-token-1"));
+    assert!(!ignored_override.exists());
 }
 
 #[test]
@@ -824,7 +828,7 @@ fn rem_start_surfaces_failed_allocated_job() {
 #[test]
 fn rem_wait_rereads_discovery_after_sidecar_restart() {
     let profile = TempDir::new().expect("profile");
-    let trace_path = profile.path().join("rem-trace.jsonl");
+    let trace_path = profile.path().join("mem-claw").join("rem-trace.jsonl");
     let done_server = SnoServiceServer::start(vec![Box::new(|request| {
         assert_eq!(request.target, "/rem/jobs/job-restarted");
         assert_eq!(
@@ -862,8 +866,8 @@ fn rem_wait_rereads_discovery_after_sidecar_restart() {
             "--json",
         ])
         .env("SNO_PROFILE_DIR", profile.path())
+        .env("OPENCLAW_STATE_DIR", profile.path())
         .env("SNO_REM_CORRELATION_ID", "corr-wait-019f8da3")
-        .env("SNO_REM_TRACE_FILE", &trace_path)
         .output()
         .expect("REM wait");
 

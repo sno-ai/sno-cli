@@ -467,7 +467,7 @@ mod tests {
         assert!(readme.contains("returns immediately"));
         assert!(readme.contains("failed job or timeout exits `1`"));
         assert!(readme.contains("SNO_REM_CORRELATION_ID"));
-        assert!(readme.contains("SNO_REM_TRACE_FILE"));
+        assert!(readme.contains("$OPENCLAW_STATE_DIR/mem-claw/rem-trace.jsonl"));
         assert!(readme.contains("correlation_id"));
     }
 }

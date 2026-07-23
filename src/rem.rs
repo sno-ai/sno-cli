@@ -6,6 +6,7 @@ use std::thread;
 use std::time::{Duration, Instant};
 
 use chrono::Utc;
+use fs2::FileExt;
 use reqwest::StatusCode;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
@@ -21,7 +22,7 @@ const REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
 const REM_CORRELATION_HEADER: &str = "X-Rem-Correlation-Id";
 const REM_CORRELATION_ID_ENV: &str = "SNO_REM_CORRELATION_ID";
 const REM_TRACE_ENV: &str = "SNO_REM_TRACE";
-const REM_TRACE_FILE_ENV: &str = "SNO_REM_TRACE_FILE";
+const OPENCLAW_STATE_DIR_ENV: &str = "OPENCLAW_STATE_DIR";
 
 #[derive(Debug, Deserialize)]
 struct SidecarDiscovery {
@@ -59,17 +60,13 @@ struct RemTrace {
 }
 
 impl RemTrace {
-    fn from_environment(profile_dir: &Path) -> Result<Self, CliError> {
+    fn from_environment() -> Result<Self, CliError> {
         let correlation_id = env::var(REM_CORRELATION_ID_ENV)
             .ok()
             .filter(|value| !value.trim().is_empty())
             .unwrap_or_else(|| format!("rem-corr-{}", Uuid::now_v7()));
         let path = if trace_enabled() {
-            Some(
-                env::var_os(REM_TRACE_FILE_ENV)
-                    .map(PathBuf::from)
-                    .unwrap_or_else(|| profile_dir.join("station").join("rem-trace.jsonl")),
-            )
+            Some(rem_trace_path()?)
         } else {
             None
         };
@@ -117,18 +114,28 @@ impl RemTrace {
                     format!("failed to open {}: {error}", path.display()),
                 )
             })?;
-        writeln!(file, "{}", Value::Object(record)).map_err(|error| {
+        file.lock_exclusive().map_err(|error| {
             CliError::runtime(
                 "rem_trace_error",
-                format!("failed to write {}: {error}", path.display()),
+                format!("failed to lock {}: {error}", path.display()),
             )
         })?;
-        file.sync_all().map_err(|error| {
+        let append_result = writeln!(file, "{}", Value::Object(record))
+            .and_then(|()| file.sync_all())
+            .map_err(|error| {
+                CliError::runtime(
+                    "rem_trace_error",
+                    format!("failed to write and sync {}: {error}", path.display()),
+                )
+            });
+        let unlock_result = FileExt::unlock(&file).map_err(|error| {
             CliError::runtime(
                 "rem_trace_error",
-                format!("failed to sync {}: {error}", path.display()),
+                format!("failed to unlock {}: {error}", path.display()),
             )
-        })
+        });
+        append_result?;
+        unlock_result
     }
 }
 
@@ -138,9 +145,22 @@ fn trace_enabled() -> bool {
         .is_some_and(|value| matches!(value.to_ascii_lowercase().as_str(), "0" | "false" | "off"))
 }
 
+fn rem_trace_path() -> Result<PathBuf, CliError> {
+    let state_dir = if let Some(path) = env::var_os(OPENCLAW_STATE_DIR_ENV) {
+        PathBuf::from(path)
+    } else {
+        env::var_os("HOME")
+            .or_else(|| env::var_os("USERPROFILE"))
+            .map(PathBuf::from)
+            .map(|home| home.join(".openclaw"))
+            .ok_or_else(|| CliError::runtime("rem_trace_error", "home directory is unavailable"))?
+    };
+    Ok(state_dir.join("mem-claw").join("rem-trace.jsonl"))
+}
+
 pub(crate) fn run_start(rem_type: &str, scope: &str, json_enabled: bool) -> Result<i32, CliError> {
     let profile_dir = profile_dir_from_environment()?;
-    let trace = RemTrace::from_environment(&profile_dir)?;
+    let trace = RemTrace::from_environment()?;
     trace.append(
         "command_received",
         json!({
@@ -173,7 +193,7 @@ pub(crate) fn run_status(
     json_enabled: bool,
 ) -> Result<i32, CliError> {
     let profile_dir = profile_dir_from_environment()?;
-    let trace = RemTrace::from_environment(&profile_dir)?;
+    let trace = RemTrace::from_environment()?;
     let timeout = timeout_seconds
         .map(Duration::from_secs)
         .unwrap_or(DEFAULT_WAIT_TIMEOUT);
@@ -300,24 +320,29 @@ fn send_start_at(
             "poll_index": 1,
         }),
     )?;
-    let response = client()?
+    let response = match client()?
         .post(format!("{endpoint}/rem/run"))
         .header("X-Sidecar-Token", discovery.token)
         .header(REM_CORRELATION_HEADER, &trace.correlation_id)
         .json(&json!({ "type": rem_type, "scope": scope }))
         .send()
-        .map_err(|_| {
-            let _ = trace.append(
-                "http_request_failed",
-                json!({
-                    "method": "POST",
-                    "path": "/rem/run",
-                    "poll_index": 1,
-                    "transient_class": "refused_or_reset",
-                }),
-            );
-            CliError::runtime("sidecar_not_running", "sidecar not running")
-        })?;
+    {
+        Ok(response) => response,
+        Err(error) => {
+            trace_request_failure(
+                trace,
+                "POST",
+                "/rem/run",
+                1,
+                "refused_or_reset",
+                &error.to_string(),
+            )?;
+            return Err(CliError::runtime(
+                "sidecar_not_running",
+                "sidecar not running",
+            ));
+        }
+    };
     let status = response.status();
     let bytes = response
         .bytes()
@@ -423,23 +448,28 @@ fn fetch_status_at(
             "poll_index": poll_index,
         }),
     )?;
-    let response = client()?
+    let response = match client()?
         .get(format!("{endpoint}{path}"))
         .header("X-Sidecar-Token", discovery.token)
         .header(REM_CORRELATION_HEADER, &trace.correlation_id)
         .send()
-        .map_err(|_| {
-            let _ = trace.append(
-                "http_request_failed",
-                json!({
-                    "method": "GET",
-                    "path": path,
-                    "poll_index": poll_index,
-                    "transient_class": "refused_or_reset",
-                }),
-            );
-            CliError::runtime("sidecar_not_running", "sidecar not running")
-        })?;
+    {
+        Ok(response) => response,
+        Err(error) => {
+            trace_request_failure(
+                trace,
+                "GET",
+                &path,
+                poll_index,
+                "refused_or_reset",
+                &error.to_string(),
+            )?;
+            return Err(CliError::runtime(
+                "sidecar_not_running",
+                "sidecar not running",
+            ));
+        }
+    };
     let status = response.status();
     trace.append(
         "http_response_received",
@@ -500,4 +530,85 @@ fn transient_class(error: &CliError) -> &'static str {
 
 fn status_error_code(status: StatusCode) -> String {
     format!("sidecar_http_{}", status.as_u16())
+}
+
+fn trace_request_failure(
+    trace: &RemTrace,
+    method: &str,
+    path: &str,
+    poll_index: usize,
+    transient_class: &str,
+    transport_error: &str,
+) -> Result<(), CliError> {
+    trace.append(
+        "http_request_failed",
+        json!({
+            "method": method,
+            "path": path,
+            "poll_index": poll_index,
+            "transient_class": transient_class,
+            "transport_error": transport_error,
+        }),
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use fs2::FileExt;
+    use std::sync::mpsc;
+
+    #[test]
+    fn request_failure_does_not_mask_trace_write_failure() {
+        let trace_directory = tempfile::tempdir().expect("trace directory");
+        let trace = RemTrace {
+            correlation_id: "corr-trace-failure".to_owned(),
+            path: Some(trace_directory.path().to_path_buf()),
+        };
+
+        let error = trace_request_failure(
+            &trace,
+            "GET",
+            "/rem/jobs/job-trace-failure",
+            1,
+            "refused_or_reset",
+            "connection refused",
+        )
+        .expect_err("trace write failure must win");
+
+        assert_eq!(error.code, "rem_trace_error");
+    }
+
+    #[test]
+    fn trace_append_waits_for_the_cross_process_file_lock() {
+        let trace_directory = tempfile::tempdir().expect("trace directory");
+        let trace_path = trace_directory.path().join("rem-trace.jsonl");
+        let lock_holder = OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(&trace_path)
+            .expect("trace lock file");
+        lock_holder.lock_exclusive().expect("hold trace lock");
+        let trace = RemTrace {
+            correlation_id: "corr-concurrent-append".to_owned(),
+            path: Some(trace_path),
+        };
+        let (sender, receiver) = mpsc::channel();
+        let writer = thread::spawn(move || {
+            sender
+                .send(trace.append("command_received", json!({"command":"rem-start"})))
+                .expect("send append result");
+        });
+
+        assert!(
+            receiver.recv_timeout(Duration::from_millis(50)).is_err(),
+            "append ignored the held file lock"
+        );
+        FileExt::unlock(&lock_holder).expect("release trace lock");
+        receiver
+            .recv_timeout(Duration::from_secs(1))
+            .expect("append completed after lock release")
+            .expect("append succeeded");
+        writer.join().expect("trace writer");
+    }
 }
