@@ -68,6 +68,8 @@ id to the sidecar and writes a durable, token-free JSONL trace for each parsed c
 read, request, response, poll, and transient failure. A caller can set `SNO_REM_CORRELATION_ID` to
 join start and status under one id, and `SNO_REM_TRACE_FILE` to select the trace file. Otherwise,
 the CLI creates an id and writes under the selected profile's `station/rem-trace.jsonl`.
+`SNO_REM_TRACE=0` disables this process trace only; it does not control the sidecar's independent
+memory audit stream.
 
 ### External subcommands
 

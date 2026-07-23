@@ -20,6 +20,7 @@ const POLL_INTERVAL: Duration = Duration::from_millis(100);
 const REQUEST_TIMEOUT: Duration = Duration::from_secs(2);
 const REM_CORRELATION_HEADER: &str = "X-Rem-Correlation-Id";
 const REM_CORRELATION_ID_ENV: &str = "SNO_REM_CORRELATION_ID";
+const REM_TRACE_ENV: &str = "SNO_REM_TRACE";
 const REM_TRACE_FILE_ENV: &str = "SNO_REM_TRACE_FILE";
 
 #[derive(Debug, Deserialize)]
@@ -54,7 +55,7 @@ pub(crate) struct RemJob {
 
 struct RemTrace {
     correlation_id: String,
-    path: PathBuf,
+    path: Option<PathBuf>,
 }
 
 impl RemTrace {
@@ -63,22 +64,33 @@ impl RemTrace {
             .ok()
             .filter(|value| !value.trim().is_empty())
             .unwrap_or_else(|| format!("rem-corr-{}", Uuid::now_v7()));
-        let path = env::var_os(REM_TRACE_FILE_ENV)
-            .map(PathBuf::from)
-            .unwrap_or_else(|| profile_dir.join("station").join("rem-trace.jsonl"));
+        let path = if trace_enabled() {
+            Some(
+                env::var_os(REM_TRACE_FILE_ENV)
+                    .map(PathBuf::from)
+                    .unwrap_or_else(|| profile_dir.join("station").join("rem-trace.jsonl")),
+            )
+        } else {
+            None
+        };
         let trace = Self {
             correlation_id,
             path,
         };
-        trace.append(
-            "trace_opened",
-            json!({ "trace_file": trace.path.display().to_string() }),
-        )?;
+        if let Some(path) = &trace.path {
+            trace.append(
+                "trace_opened",
+                json!({ "trace_file": path.display().to_string() }),
+            )?;
+        }
         Ok(trace)
     }
 
     fn append(&self, event: &str, fields: Value) -> Result<(), CliError> {
-        let parent = self.path.parent().ok_or_else(|| {
+        let Some(path) = &self.path else {
+            return Ok(());
+        };
+        let parent = path.parent().ok_or_else(|| {
             CliError::runtime("rem_trace_error", "REM trace path has no parent directory")
         })?;
         fs::create_dir_all(parent).map_err(|error| {
@@ -98,26 +110,32 @@ impl RemTrace {
         let mut file = OpenOptions::new()
             .create(true)
             .append(true)
-            .open(&self.path)
+            .open(path)
             .map_err(|error| {
                 CliError::runtime(
                     "rem_trace_error",
-                    format!("failed to open {}: {error}", self.path.display()),
+                    format!("failed to open {}: {error}", path.display()),
                 )
             })?;
         writeln!(file, "{}", Value::Object(record)).map_err(|error| {
             CliError::runtime(
                 "rem_trace_error",
-                format!("failed to write {}: {error}", self.path.display()),
+                format!("failed to write {}: {error}", path.display()),
             )
         })?;
         file.sync_all().map_err(|error| {
             CliError::runtime(
                 "rem_trace_error",
-                format!("failed to sync {}: {error}", self.path.display()),
+                format!("failed to sync {}: {error}", path.display()),
             )
         })
     }
+}
+
+fn trace_enabled() -> bool {
+    !env::var(REM_TRACE_ENV)
+        .ok()
+        .is_some_and(|value| matches!(value.to_ascii_lowercase().as_str(), "0" | "false" | "off"))
 }
 
 pub(crate) fn run_start(rem_type: &str, scope: &str, json_enabled: bool) -> Result<i32, CliError> {
