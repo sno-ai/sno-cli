@@ -9,6 +9,7 @@ use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
+use fs2::FileExt;
 use serde_json::{Value, json};
 use sha2::{Digest, Sha256};
 use sno_service_server::{ServiceResponse, SnoServiceServer};
@@ -956,6 +957,59 @@ fn rem_wait_times_out_when_sidecar_never_appears() {
         thread::sleep(Duration::from_millis(10));
     }
     let output = child.wait_with_output().expect("collect REM status output");
+
+    assert_eq!(output.status.code(), Some(1));
+    assert!(started.elapsed() < Duration::from_secs(2));
+    assert_eq!(
+        serde_json::from_slice::<Value>(&output.stdout).expect("REM timeout JSON")["error"],
+        "rem_timeout"
+    );
+}
+
+#[test]
+fn rem_wait_timeout_survives_a_stalled_trace_writer() {
+    let profile = TempDir::new().expect("profile");
+    let trace_dir = profile.path().join("mem-claw");
+    fs::create_dir_all(&trace_dir).expect("trace directory");
+    let trace_path = trace_dir.join("rem-trace.jsonl");
+    let trace_lock = fs::OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(&trace_path)
+        .expect("trace file");
+    trace_lock.lock_exclusive().expect("hold trace lock");
+
+    let started = Instant::now();
+    let mut child = Command::new(env!("CARGO_BIN_EXE_sno"))
+        .args([
+            "station",
+            "rem-status",
+            "job-missing",
+            "--wait",
+            "--timeout",
+            "1",
+            "--json",
+        ])
+        .env("SNO_PROFILE_DIR", profile.path())
+        .env("OPENCLAW_STATE_DIR", profile.path())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .expect("REM status process");
+    let patience = Instant::now() + Duration::from_secs(2);
+    loop {
+        if child.try_wait().expect("poll REM status process").is_some() {
+            break;
+        }
+        if Instant::now() >= patience {
+            child.kill().expect("kill hung REM status process");
+            child.wait().expect("reap hung REM status process");
+            panic!("REM status trace blocked past the wait deadline");
+        }
+        thread::sleep(Duration::from_millis(10));
+    }
+    let output = child.wait_with_output().expect("collect REM status output");
+    FileExt::unlock(&trace_lock).expect("release trace lock");
 
     assert_eq!(output.status.code(), Some(1));
     assert!(started.elapsed() < Duration::from_secs(2));

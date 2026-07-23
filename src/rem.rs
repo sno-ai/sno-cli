@@ -2,6 +2,7 @@ use std::env;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::{Path, PathBuf};
+use std::sync::mpsc;
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -57,10 +58,11 @@ pub(crate) struct RemJob {
 struct RemTrace {
     correlation_id: String,
     path: Option<PathBuf>,
+    deadline: Option<Instant>,
 }
 
 impl RemTrace {
-    fn from_environment() -> Result<Self, CliError> {
+    fn from_environment(deadline: Option<Instant>) -> Result<Self, CliError> {
         let correlation_id = env::var(REM_CORRELATION_ID_ENV)
             .ok()
             .filter(|value| !value.trim().is_empty())
@@ -73,6 +75,7 @@ impl RemTrace {
         let trace = Self {
             correlation_id,
             path,
+            deadline,
         };
         if let Some(path) = &trace.path {
             trace.append(
@@ -87,15 +90,6 @@ impl RemTrace {
         let Some(path) = &self.path else {
             return Ok(());
         };
-        let parent = path.parent().ok_or_else(|| {
-            CliError::runtime("rem_trace_error", "REM trace path has no parent directory")
-        })?;
-        fs::create_dir_all(parent).map_err(|error| {
-            CliError::runtime(
-                "rem_trace_error",
-                format!("failed to create {}: {error}", parent.display()),
-            )
-        })?;
         let mut record = serde_json::Map::new();
         record.insert("timestamp".to_owned(), json!(Utc::now().to_rfc3339()));
         record.insert("component".to_owned(), json!("sno_cli"));
@@ -104,39 +98,73 @@ impl RemTrace {
         if let Value::Object(fields) = fields {
             record.extend(fields);
         }
-        let mut file = OpenOptions::new()
-            .create(true)
-            .append(true)
-            .open(path)
-            .map_err(|error| {
-                CliError::runtime(
+        let line = format!("{}\n", Value::Object(record));
+        if let Some(deadline) = self.deadline {
+            let remaining = deadline.saturating_duration_since(Instant::now());
+            if remaining.is_zero() {
+                return Ok(());
+            }
+            let path = path.clone();
+            let (sender, receiver) = mpsc::sync_channel(1);
+            thread::spawn(move || {
+                let _ = sender.send(append_trace_line(&path, line));
+            });
+            return match receiver.recv_timeout(remaining) {
+                Ok(result) => result,
+                Err(mpsc::RecvTimeoutError::Timeout) => Ok(()),
+                Err(mpsc::RecvTimeoutError::Disconnected) => Err(CliError::runtime(
                     "rem_trace_error",
-                    format!("failed to open {}: {error}", path.display()),
-                )
-            })?;
-        file.lock_exclusive().map_err(|error| {
+                    "REM trace writer stopped unexpectedly",
+                )),
+            };
+        }
+        append_trace_line(path, line)
+    }
+}
+
+fn append_trace_line(path: &Path, line: String) -> Result<(), CliError> {
+    let parent = path.parent().ok_or_else(|| {
+        CliError::runtime("rem_trace_error", "REM trace path has no parent directory")
+    })?;
+    fs::create_dir_all(parent).map_err(|error| {
+        CliError::runtime(
+            "rem_trace_error",
+            format!("failed to create {}: {error}", parent.display()),
+        )
+    })?;
+    let mut file = OpenOptions::new()
+        .create(true)
+        .append(true)
+        .open(path)
+        .map_err(|error| {
             CliError::runtime(
                 "rem_trace_error",
-                format!("failed to lock {}: {error}", path.display()),
+                format!("failed to open {}: {error}", path.display()),
             )
         })?;
-        let append_result = writeln!(file, "{}", Value::Object(record))
-            .and_then(|()| file.sync_all())
-            .map_err(|error| {
-                CliError::runtime(
-                    "rem_trace_error",
-                    format!("failed to write and sync {}: {error}", path.display()),
-                )
-            });
-        let unlock_result = FileExt::unlock(&file).map_err(|error| {
+    file.lock_exclusive().map_err(|error| {
+        CliError::runtime(
+            "rem_trace_error",
+            format!("failed to lock {}: {error}", path.display()),
+        )
+    })?;
+    let append_result = file
+        .write_all(line.as_bytes())
+        .and_then(|()| file.sync_all())
+        .map_err(|error| {
             CliError::runtime(
                 "rem_trace_error",
-                format!("failed to unlock {}: {error}", path.display()),
+                format!("failed to write and sync {}: {error}", path.display()),
             )
         });
-        append_result?;
-        unlock_result
-    }
+    let unlock_result = FileExt::unlock(&file).map_err(|error| {
+        CliError::runtime(
+            "rem_trace_error",
+            format!("failed to unlock {}: {error}", path.display()),
+        )
+    });
+    append_result?;
+    unlock_result
 }
 
 fn trace_enabled() -> bool {
@@ -160,7 +188,7 @@ fn rem_trace_path() -> Result<PathBuf, CliError> {
 
 pub(crate) fn run_start(rem_type: &str, scope: &str, json_enabled: bool) -> Result<i32, CliError> {
     let profile_dir = profile_dir_from_environment()?;
-    let trace = RemTrace::from_environment()?;
+    let trace = RemTrace::from_environment(None)?;
     trace.append(
         "command_received",
         json!({
@@ -193,10 +221,11 @@ pub(crate) fn run_status(
     json_enabled: bool,
 ) -> Result<i32, CliError> {
     let profile_dir = profile_dir_from_environment()?;
-    let trace = RemTrace::from_environment()?;
     let timeout = timeout_seconds
         .map(Duration::from_secs)
         .unwrap_or(DEFAULT_WAIT_TIMEOUT);
+    let deadline = Instant::now() + timeout;
+    let trace = RemTrace::from_environment(wait.then_some(deadline))?;
     trace.append(
         "command_received",
         json!({
@@ -207,7 +236,7 @@ pub(crate) fn run_status(
             "json": json_enabled,
         }),
     )?;
-    let job = poll_status_at(&profile_dir, job_id, wait, timeout, POLL_INTERVAL, &trace)?;
+    let job = poll_status_at(&profile_dir, job_id, wait, deadline, POLL_INTERVAL, &trace)?;
     trace.append(
         "command_emitted",
         json!({ "command": "rem-status", "job_id": job_id, "state": job.state }),
@@ -380,13 +409,18 @@ fn poll_status_at(
     profile_dir: &Path,
     job_id: &str,
     wait: bool,
-    timeout: Duration,
+    deadline: Instant,
     interval: Duration,
     trace: &RemTrace,
 ) -> Result<RemJob, CliError> {
-    let started = Instant::now();
     let mut poll_index = 0;
     loop {
+        if wait && Instant::now() >= deadline {
+            return Err(CliError::runtime(
+                "rem_timeout",
+                format!("timed out waiting for REM job {job_id}"),
+            ));
+        }
         poll_index += 1;
         match fetch_status_at(profile_dir, job_id, poll_index, trace) {
             Ok(job) => match job.state.as_str() {
@@ -419,13 +453,13 @@ fn poll_status_at(
             }
             Err(error) => return Err(error),
         }
-        if started.elapsed() >= timeout {
+        if Instant::now() >= deadline {
             return Err(CliError::runtime(
                 "rem_timeout",
                 format!("timed out waiting for REM job {job_id}"),
             ));
         }
-        thread::sleep(interval);
+        thread::sleep(interval.min(deadline.saturating_duration_since(Instant::now())));
     }
 }
 
@@ -564,6 +598,7 @@ mod tests {
         let trace = RemTrace {
             correlation_id: "corr-trace-failure".to_owned(),
             path: Some(trace_directory.path().to_path_buf()),
+            deadline: None,
         };
 
         let error = trace_request_failure(
@@ -592,6 +627,7 @@ mod tests {
         let trace = RemTrace {
             correlation_id: "corr-concurrent-append".to_owned(),
             path: Some(trace_path),
+            deadline: None,
         };
         let (sender, receiver) = mpsc::channel();
         let writer = thread::spawn(move || {
