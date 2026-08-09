@@ -896,7 +896,7 @@ fn rem_human_output_keeps_job_id_actionable_on_success_and_failure() {
         profile.path(),
         &["station", "rem-status", "job-human-start"],
     );
-    assert_eq!(failed.status.code(), Some(1));
+    assert_eq!(failed.status.code(), Some(3));
     assert!(stderr(&failed).contains("job-human-start"));
     assert!(stderr(&failed).contains("sidecar_restart"));
 
@@ -1004,8 +1004,8 @@ fn rem_exit_codes_are_stable() {
 
     for (label, output, expected) in [
         ("done", done, 0),
-        ("failed", failed, 1),
-        ("timeout", timeout, 1),
+        ("failed", failed, 3),
+        ("timeout", timeout, 4),
         ("invalid usage", usage, 2),
     ] {
         assert_eq!(
@@ -1032,7 +1032,7 @@ fn rem_common_local_errors_are_clean() {
             "persona:missing",
         ],
     );
-    assert_eq!(missing.status.code(), Some(1));
+    assert_eq!(missing.status.code(), Some(7));
     assert!(stderr(&missing).contains("sidecar not running"));
     assert!(!stderr(&missing).contains("panicked"));
 
@@ -1054,7 +1054,7 @@ fn rem_common_local_errors_are_clean() {
             "persona:malformed",
         ],
     );
-    assert_eq!(malformed.status.code(), Some(1));
+    assert_eq!(malformed.status.code(), Some(7));
     assert!(stderr(&malformed).contains("discovery is malformed"));
     assert!(!stderr(&malformed).contains("already running"));
     assert!(!stderr(&malformed).contains("panicked"));
@@ -1072,7 +1072,7 @@ fn rem_common_local_errors_are_clean() {
         unknown_profile.path(),
         &["station", "rem-status", "job-does-not-exist"],
     );
-    assert_eq!(unknown.status.code(), Some(1));
+    assert_eq!(unknown.status.code(), Some(9));
     assert!(stderr(&unknown).contains("job-does-not-exist"));
     assert!(!stderr(&unknown).contains("panicked"));
     assert_eq!(server.finish().len(), 1);
@@ -1210,7 +1210,7 @@ fn rem_wait_times_out_when_sidecar_never_appears() {
     }
     let output = child.wait_with_output().expect("collect REM status output");
 
-    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(output.status.code(), Some(4));
     assert!(started.elapsed() < Duration::from_secs(2));
     assert_eq!(
         serde_json::from_slice::<Value>(&output.stdout).expect("REM timeout JSON")["error"],
@@ -1263,7 +1263,7 @@ fn rem_wait_timeout_survives_a_stalled_trace_writer() {
     let output = child.wait_with_output().expect("collect REM status output");
     FileExt::unlock(&trace_lock).expect("release trace lock");
 
-    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(output.status.code(), Some(4));
     assert!(started.elapsed() < Duration::from_secs(2));
     assert_eq!(
         serde_json::from_slice::<Value>(&output.stdout).expect("REM timeout JSON")["error"],

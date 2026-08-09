@@ -16,6 +16,7 @@ use uuid::Uuid;
 
 use super::print_json;
 use crate::error::CliError;
+use crate::rem_outcome::RemError;
 
 const DEFAULT_WAIT_TIMEOUT: Duration = Duration::from_secs(60);
 const POLL_INTERVAL: Duration = Duration::from_millis(100);
@@ -112,8 +113,8 @@ impl RemTrace {
             return match receiver.recv_timeout(remaining) {
                 Ok(result) => result,
                 Err(mpsc::RecvTimeoutError::Timeout) => Ok(()),
-                Err(mpsc::RecvTimeoutError::Disconnected) => Err(CliError::runtime(
-                    "rem_trace_error",
+                Err(mpsc::RecvTimeoutError::Disconnected) => Err(CliError::rem(
+                    RemError::Trace,
                     "REM trace writer stopped unexpectedly",
                 )),
             };
@@ -123,12 +124,12 @@ impl RemTrace {
 }
 
 fn append_trace_line(path: &Path, line: String) -> Result<(), CliError> {
-    let parent = path.parent().ok_or_else(|| {
-        CliError::runtime("rem_trace_error", "REM trace path has no parent directory")
-    })?;
+    let parent = path
+        .parent()
+        .ok_or_else(|| CliError::rem(RemError::Trace, "REM trace path has no parent directory"))?;
     fs::create_dir_all(parent).map_err(|error| {
-        CliError::runtime(
-            "rem_trace_error",
+        CliError::rem(
+            RemError::Trace,
             format!("failed to create {}: {error}", parent.display()),
         )
     })?;
@@ -137,14 +138,14 @@ fn append_trace_line(path: &Path, line: String) -> Result<(), CliError> {
         .append(true)
         .open(path)
         .map_err(|error| {
-            CliError::runtime(
-                "rem_trace_error",
+            CliError::rem(
+                RemError::Trace,
                 format!("failed to open {}: {error}", path.display()),
             )
         })?;
     file.lock_exclusive().map_err(|error| {
-        CliError::runtime(
-            "rem_trace_error",
+        CliError::rem(
+            RemError::Trace,
             format!("failed to lock {}: {error}", path.display()),
         )
     })?;
@@ -152,14 +153,14 @@ fn append_trace_line(path: &Path, line: String) -> Result<(), CliError> {
         .write_all(line.as_bytes())
         .and_then(|()| file.sync_all())
         .map_err(|error| {
-            CliError::runtime(
-                "rem_trace_error",
+            CliError::rem(
+                RemError::Trace,
                 format!("failed to write and sync {}: {error}", path.display()),
             )
         });
     let unlock_result = FileExt::unlock(&file).map_err(|error| {
-        CliError::runtime(
-            "rem_trace_error",
+        CliError::rem(
+            RemError::Trace,
             format!("failed to unlock {}: {error}", path.display()),
         )
     });
@@ -181,7 +182,7 @@ fn rem_trace_path() -> Result<PathBuf, CliError> {
             .or_else(|| env::var_os("USERPROFILE"))
             .map(PathBuf::from)
             .map(|home| home.join(".openclaw"))
-            .ok_or_else(|| CliError::runtime("rem_trace_error", "home directory is unavailable"))?
+            .ok_or_else(|| CliError::rem(RemError::Trace, "home directory is unavailable"))?
     };
     Ok(state_dir.join("mem-claw").join("rem-trace.jsonl"))
 }
@@ -257,7 +258,7 @@ fn profile_dir_from_environment() -> Result<PathBuf, CliError> {
         .or_else(|| env::var_os("USERPROFILE"))
         .map(PathBuf::from)
         .map(|home| home.join(".sno"))
-        .ok_or_else(|| CliError::runtime("profile_error", "home directory is unavailable"))
+        .ok_or_else(|| CliError::rem(RemError::Profile, "home directory is unavailable"))
 }
 
 fn discovery_path(profile_dir: &Path) -> PathBuf {
@@ -291,24 +292,24 @@ fn read_discovery(
                 }),
             )?;
             return Err(if error.kind() == std::io::ErrorKind::NotFound {
-                CliError::runtime("sidecar_not_running", "sidecar not running")
+                CliError::rem(RemError::SidecarNotRunning, "sidecar not running")
             } else {
-                CliError::runtime(
-                    "sidecar_discovery_error",
+                CliError::rem(
+                    RemError::SidecarDiscovery,
                     format!("failed to read {}: {error}", path.display()),
                 )
             });
         }
     };
     let discovery = serde_json::from_slice::<SidecarDiscovery>(&bytes).map_err(|_| {
-        CliError::runtime(
-            "sidecar_discovery_invalid",
+        CliError::rem(
+            RemError::SidecarDiscoveryInvalid,
             format!("sidecar discovery is malformed at {}", path.display()),
         )
     })?;
     if discovery.token.is_empty() {
-        return Err(CliError::runtime(
-            "sidecar_discovery_invalid",
+        return Err(CliError::rem(
+            RemError::SidecarDiscoveryInvalid,
             format!("sidecar discovery is malformed at {}", path.display()),
         ));
     }
@@ -328,7 +329,7 @@ fn client() -> Result<Client, CliError> {
     Client::builder()
         .timeout(REQUEST_TIMEOUT)
         .build()
-        .map_err(|error| CliError::runtime("sidecar_client_error", error.to_string()))
+        .map_err(|error| CliError::rem(RemError::SidecarClient, error.to_string()))
 }
 
 fn send_start_at(
@@ -366,8 +367,8 @@ fn send_start_at(
                 "refused_or_reset",
                 &error.to_string(),
             )?;
-            return Err(CliError::runtime(
-                "sidecar_not_running",
+            return Err(CliError::rem(
+                RemError::SidecarNotRunning,
                 "sidecar not running",
             ));
         }
@@ -375,7 +376,7 @@ fn send_start_at(
     let status = response.status();
     let bytes = response
         .bytes()
-        .map_err(|error| CliError::runtime("sidecar_response_error", error.to_string()))?;
+        .map_err(|error| CliError::rem(RemError::SidecarResponse, error.to_string()))?;
     trace.append(
         "http_response_received",
         json!({
@@ -387,8 +388,8 @@ fn send_start_at(
     )?;
     if status.is_success() {
         return serde_json::from_slice(&bytes).map_err(|_| {
-            CliError::runtime(
-                "sidecar_response_invalid",
+            CliError::rem(
+                RemError::ResponseInvalid,
                 "sidecar returned an invalid REM start response",
             )
         });
@@ -402,7 +403,7 @@ fn send_start_at(
         Some(job_id) => format!("REM job {job_id} failed: {code}"),
         None => format!("REM start failed: {code}"),
     };
-    Err(CliError::runtime(code, message))
+    Err(CliError::rem_reported(code, message))
 }
 
 fn poll_status_at(
@@ -416,8 +417,8 @@ fn poll_status_at(
     let mut poll_index = 0;
     loop {
         if wait && Instant::now() >= deadline {
-            return Err(CliError::runtime(
-                "rem_timeout",
+            return Err(CliError::rem(
+                RemError::Timeout,
                 format!("timed out waiting for REM job {job_id}"),
             ));
         }
@@ -427,16 +428,16 @@ fn poll_status_at(
                 "done" => return Ok(job),
                 "failed" => {
                     let reason = job.error.as_deref().unwrap_or("unknown");
-                    return Err(CliError::runtime(
-                        "rem_job_failed",
+                    return Err(CliError::rem(
+                        RemError::JobFailed,
                         format!("REM job {job_id} failed / {reason}"),
                     ));
                 }
                 "queued" | "running" if wait => {}
                 "queued" | "running" => return Ok(job),
                 _ => {
-                    return Err(CliError::runtime(
-                        "sidecar_response_invalid",
+                    return Err(CliError::rem(
+                        RemError::ResponseInvalid,
                         "sidecar returned an invalid REM job state",
                     ));
                 }
@@ -454,8 +455,8 @@ fn poll_status_at(
             Err(error) => return Err(error),
         }
         if Instant::now() >= deadline {
-            return Err(CliError::runtime(
-                "rem_timeout",
+            return Err(CliError::rem(
+                RemError::Timeout,
                 format!("timed out waiting for REM job {job_id}"),
             ));
         }
@@ -498,8 +499,8 @@ fn fetch_status_at(
                 "refused_or_reset",
                 &error.to_string(),
             )?;
-            return Err(CliError::runtime(
-                "sidecar_not_running",
+            return Err(CliError::rem(
+                RemError::SidecarNotRunning,
                 "sidecar not running",
             ));
         }
@@ -515,19 +516,19 @@ fn fetch_status_at(
         }),
     )?;
     if status == StatusCode::UNAUTHORIZED {
-        return Err(CliError::runtime(
-            "sidecar_unauthorized",
+        return Err(CliError::rem(
+            RemError::SidecarUnauthorized,
             "sidecar authentication failed",
         ));
     }
     if status == StatusCode::NOT_FOUND {
-        return Err(CliError::runtime(
-            "rem_job_not_found",
+        return Err(CliError::rem(
+            RemError::JobNotFound,
             format!("REM job not found: {job_id}"),
         ));
     }
     if !status.is_success() {
-        return Err(CliError::runtime(
+        return Err(CliError::rem_reported(
             status_error_code(status),
             format!(
                 "sidecar status request failed with HTTP {}",
@@ -537,10 +538,10 @@ fn fetch_status_at(
     }
     let bytes = response
         .bytes()
-        .map_err(|_| CliError::runtime("sidecar_response_truncated", "sidecar not running"))?;
+        .map_err(|_| CliError::rem(RemError::ResponseTruncated, "sidecar not running"))?;
     serde_json::from_slice::<RemJob>(&bytes).map_err(|_| {
-        CliError::runtime(
-            "sidecar_response_invalid",
+        CliError::rem(
+            RemError::ResponseInvalid,
             "sidecar returned an invalid REM status response",
         )
     })

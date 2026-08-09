@@ -1,32 +1,32 @@
 ## ADDED Requirements
 
 ### Requirement: REQ-1 Single outcome declaration
-The tool SHALL carry one declaration listing every outcome class reachable by the `station rem-*` family. Each entry SHALL contain exactly one class name, exactly one process exit code, and an `error_codes` list, and raise and exit sites SHALL resolve both machine-readable error codes and process exits through that declaration. Success and unclassified failure SHALL have empty `error_codes` lists, invalid usage SHALL contain exactly `usage_error`, and every other named failure class SHALL contain at least one error code.
+The tool SHALL carry one declaration listing every outcome class reachable by the `station rem-*` family. Each entry SHALL own one class name, one process exit code, and the machine-readable error codes assigned to that class. Both the error code and process exit code for a classified REM failure SHALL be read from that entry rather than independently written at the raise site. Success and unclassified failure SHALL have no assigned error codes, invalid usage SHALL own exactly `usage_error`, and every other named failure class SHALL own at least one error code. This requirement constrains observable ownership, not the Rust module, type, constructor, iterator, or accessor layout.
 
 #### Scenario: Raise and exit sites derive both codes
 - **WHEN** a REM operation resolves a known failure
-- **THEN** its error code belongs to exactly one declaration entry and its process exit code is obtained from that entry
+- **THEN** its error code and process exit code both come from exactly one declaration entry at either process-exit site
 
 ### Requirement: REQ-2 Unique outcome identifiers
-No two entries SHALL share a class name or process exit code, no machine-readable error code SHALL occur in more than one entry's `error_codes` list, and the tool's test suite SHALL fail each kind of collision independently.
+No two outcome classes SHALL share a process exit code, no machine-readable error code SHALL belong to more than one outcome class, and the tool's test suite SHALL fail each kind of collision independently.
 
-#### Scenario: Duplicate class identity is rejected
-- **WHEN** two declaration entries share a class name or process exit code
-- **THEN** the class-identity test fails before the build can ship
+#### Scenario: Duplicate process exit is rejected
+- **WHEN** two outcome classes share a process exit code
+- **THEN** the exit-code collision test fails before the build can ship
 
 #### Scenario: Duplicate error membership is rejected
-- **WHEN** one machine-readable error code appears in two entries' `error_codes` lists
+- **WHEN** one machine-readable error code belongs to two outcome classes
 - **THEN** the tool's test suite fails before the build can ship
 
 ### Requirement: REQ-3 Documentation matches the declaration
 `README.md` SHALL document the `station rem-*` exit codes in a table generated from or checked against the outcome declaration.
 
 #### Scenario: Documentation drift is rejected
-- **WHEN** the README exit-code table differs from the declaration
-- **THEN** a repository test fails
+- **WHEN** the README exit-code table's normalized semantic rows differ from the declaration
+- **THEN** a repository test fails regardless of Rust or Markdown formatting
 
 ### Requirement: REQ-4 Family-wide classification with non-REM stability
-The outcome declaration SHALL govern every command in the `sno station rem-*` family. Commands outside that family SHALL retain their existing exit behavior, and a generic runtime error without a named REM outcome SHALL continue to exit `1`.
+The outcome declaration SHALL govern every command in the `sno station rem-*` family. Commands outside that family SHALL retain their existing exit behavior, and a generic runtime error not classified by a REM command SHALL continue to exit `1`, even when its error-code string is also present in the REM declaration.
 
 #### Scenario: Shared sidecar failure is classified only for REM commands
 - **WHEN** `rem-start` and `rem-status` encounter a stopped sidecar and unrelated commands encounter generic runtime failures
@@ -41,6 +41,21 @@ The REM command family SHALL use exactly these outcome classes and exit codes: s
 
 ### Requirement: REQ-6 Every raisable REM error is mapped
 Every machine-readable error code raisable by a REM path SHALL map to exactly one declared outcome class, and the test suite SHALL fail when a raisable code is unmapped.
+
+The exact error-code mapping is:
+
+| Exit code | Outcome class | Error codes |
+|---:|---|---|
+| 0 | success | — |
+| 1 | unclassified failure | — |
+| 2 | invalid usage | `usage_error` |
+| 3 | job failed | `rem_job_failed` |
+| 4 | wait deadline passed | `rem_timeout` |
+| 5 | state vocabulary mismatch | `rem_state_unrecognised` |
+| 6 | malformed or truncated response | `sidecar_response_invalid`, `sidecar_response_truncated` |
+| 7 | sidecar failure | `sidecar_not_running`, `sidecar_unauthorized`, `sidecar_client_error`, `sidecar_discovery_error`, `sidecar_discovery_invalid`, `sidecar_response_error` |
+| 8 | local environment failure | `profile_error`, `rem_trace_error` |
+| 9 | unknown job identifier | `rem_job_not_found` |
 
 #### Scenario: New unmapped raise site fails the build
 - **WHEN** a REM path gains a raisable error code absent from the declaration
@@ -132,24 +147,24 @@ Exit code `5` SHALL fail the persona in both runners, and the applicable runner 
 - **THEN** the applicable runner fails the persona and logs the state and state-vocabulary mismatch
 
 ### Requirement: REQ-18 Both traces record the routing tuple
-Every final outcome record written to an available CLI or runner trace SHALL contain `raw_state`, `state_unavailable_reason`, `outcome_class`, and `exit_code`. Exactly one of `raw_state` and `state_unavailable_reason` SHALL be non-null: a component that obtained a decoded job state SHALL record it byte-for-byte, while a component without a state SHALL set `raw_state` to null and set `state_unavailable_reason` to the machine-readable error code or `job-state-not-returned` for successful `rem-start`. A trace sink that cannot be opened or written cannot record its own `rem_trace_error` and is exempt from this trace-record guarantee.
+After an unrecognised-state outcome, the existing CLI and `run_rem.sh` traces SHALL contain the raw state string byte-for-byte, the outcome class, and the exit code.
 
-#### Scenario: Routing can be reconstructed across state availability
-- **WHEN** success, job failure, unfamiliar state, invalid response, and pre-connection failure are each exercised with writable tracing
-- **THEN** every CLI and runner final outcome record contains the outcome class and exit code, records the raw state when observed, and otherwise records a non-empty state-unavailable reason
+#### Scenario: Unrecognised-state routing can be reconstructed
+- **WHEN** the CLI reports an unrecognised state through `run_rem.sh`
+- **THEN** both traces contain the raw state, outcome class, and exit code needed to explain the persona failure
 
 ### Requirement: REQ-19 JSON transport remains separate from routing
-Both runners SHALL continue passing `--json` wherever each already does and SHALL NOT parse human-readable message text for a routing decision.
+`run_rem.sh` SHALL continue passing `--json` wherever it already does and SHALL NOT parse human-readable message text for a routing decision.
 
 #### Scenario: Message replacement does not alter routing
-- **WHEN** the CLI returns the same exit code with unrelated message text to either runner
-- **THEN** that runner makes the identical decision and retains its existing `--json` invocation
+- **WHEN** the CLI returns the same exit code with unrelated message text to `run_rem.sh`
+- **THEN** the runner makes the identical decision and retains its existing `--json` invocation
 
 ### Requirement: REQ-20 Runner-owned exits are disjoint
-Both `run_rem.sh` and `run_rem_noop.sh` SHALL exit `20` for their own usage error and `21` for their own rejected operation type. Neither SHALL originate any code from `0` through `9`; such codes SHALL only be propagated from the tool.
+`run_rem.sh` SHALL exit `20` for its own usage error and `21` for its own rejected operation type. The runner SHALL NOT originate any code from `0` through `9`; every path returning a code in that range SHALL propagate the tool's own captured exit code.
 
 #### Scenario: Runner failures cannot be confused with tool outcomes
-- **WHEN** either runner is invoked without an argument or with an operation type it rejects
+- **WHEN** `run_rem.sh` is invoked without an argument or with an operation type it rejects
 - **THEN** it exits `20` or `21` respectively, while no runner-owned path emits `0` through `9`
 
 ### Requirement: REQ-21 Operation names and validation exits have separate owners

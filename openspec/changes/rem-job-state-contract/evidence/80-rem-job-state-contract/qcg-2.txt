@@ -1,0 +1,102 @@
+QCG-2 RED evidence
+
+Command:
+cargo test --test rem_job_state_contract qcg_2_duplicate_exit_and_error_are_rejected -- --exact
+
+Expected RED:
+The two independent negative controls must reject a duplicate exit and a duplicate error membership.
+The current product has no declaration carrying the released semantic rows, so after those controls
+run the focused test must fail on the missing product declaration.
+
+Observed:
+Process exit: 101
+Compilation: success
+Harness/environment errors: none
+Test result: 0 passed; 1 failed
+Failure:
+QCG-2 product declaration is missing:
+"missing single REM outcome declaration containing the released semantic rows"
+
+Diagnosis:
+Genuine product RED. The negative controls are valid; the shipped declaration they are meant to
+guard does not exist yet.
+
+Test SHA-256:
+9bd0359683593fcc16321169592f9dc22bce62c62681c42c174183243782f2ee  tests/rem_job_state_contract.rs
+
+Plan SHA-256:
+fe05ef77ceacf32e6250055c502acc1972da8c625924120a77aebab672a8f40f  openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/test-plan.md
+
+Product source unchanged proof:
+git diff --exit-code -- src
+Result: exit 0, empty output.
+git status --short src README.md Cargo.toml Cargo.lock
+Result: exit 0, empty output.
+
+GREEN rerun attempt after product handback
+
+$ cargo test --test rem_job_state_contract qcg_2_duplicate_exit_and_error_are_rejected -- --exact
+status=101
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s
+     Running tests/rem_job_state_contract.rs (target/debug/deps/rem_job_state_contract-71b5df54f1c7d44f)
+
+running 1 test
+test qcg_2_duplicate_exit_and_error_are_rejected ... FAILED
+
+failures:
+
+---- qcg_2_duplicate_exit_and_error_are_rejected stdout ----
+
+thread 'qcg_2_duplicate_exit_and_error_are_rejected' panicked at tests/rem_job_state_contract.rs:331:9:
+assertion `left == right` failed: QCG-2 duplicate or missing declaration member `unclassified failure` in /home/lh/code/sno-cli/src/rem_outcome.rs
+  left: 2
+ right: 1
+
+failures:
+    qcg_2_duplicate_exit_and_error_are_rejected
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+
+Product defect:
+`src/rem_outcome.rs` owns the class-name literal `unclassified failure` twice: once in the
+REM_OUTCOMES declaration and once in validate_outcomes. The second spelling can drift from the
+entry-owned name required by REQ-1. The frozen test was not edited.
+
+Frozen test SHA-256 unchanged:
+9bd0359683593fcc16321169592f9dc22bce62c62681c42c174183243782f2ee  tests/rem_job_state_contract.rs
+
+Product diff scope observed for this rerun:
+src/cli.rs
+src/error.rs
+src/lib.rs
+src/rem.rs
+src/rem_outcome.rs
+src/service.rs
+The independent test owner did not edit these files.
+
+GREEN rerun after product defect fix
+
+```text
+$ cargo test --test rem_job_state_contract qcg_2_duplicate_exit_and_error_are_rejected -- --exact
+status=0
+   Compiling sno v0.1.7 (/home/lh/code/sno-cli)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.83s
+     Running tests/rem_job_state_contract.rs (target/debug/deps/rem_job_state_contract-71b5df54f1c7d44f)
+
+running 1 test
+test qcg_2_duplicate_exit_and_error_are_rejected ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 4 filtered out; finished in 0.00s
+```
+
+Frozen test SHA-256 unchanged:
+9bd0359683593fcc16321169592f9dc22bce62c62681c42c174183243782f2ee  tests/rem_job_state_contract.rs
+
+Product diff scope observed for final GREEN:
+src/cli.rs
+src/error.rs
+src/lib.rs
+src/rem.rs
+src/rem_outcome.rs
+src/service.rs
+The independent test owner did not edit these files.

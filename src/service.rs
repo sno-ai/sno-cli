@@ -94,7 +94,7 @@ pub fn run_claim(json_enabled: bool) -> Result<i32, CliError> {
                 "error": error.code,
                 "message": error.message,
             }))?;
-            return Ok(error.exit_code);
+            return Ok(error.exit_code());
         }
         Err(error) => return Err(error),
     };

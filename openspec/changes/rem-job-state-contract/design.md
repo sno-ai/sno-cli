@@ -29,9 +29,13 @@ The REM sidecar protocol and the Memora harness above the runners remain unchang
 
 ### One declaration owns both machine contracts
 
-The Rust tool will define one declaration shaped as an ordered collection of records with exactly three fields: `name`, `exit_code`, and `error_codes`. `error_codes` is a list because several error codes fold into one outcome class. The success and unclassified records have empty lists; invalid usage contains exactly `usage_error`; every other named failure class contains one or more error codes. Both sites that convert a runtime error into a process result will resolve through this declaration.
+The Rust tool will define one declaration that owns each outcome class name, its process exit code, and the error codes assigned to it. Several error codes may fold into one outcome class. Success and unclassified have no assigned error code; invalid usage owns exactly `usage_error`; every other named failure class owns one or more error codes.
 
-Class-name uniqueness, exit-code uniqueness, and global error-code uniqueness are separate invariants. Separate negative tests will duplicate a class name, duplicate an exit code, and place one error code in two lists. Other tests reject missing mappings, a non-empty unclassified list, and README drift.
+Classification is bounded to the REM command family. Generic `CliError::runtime` remains unclassified and keeps exit `1`, including the existing non-REM `profile_error` raise in `src/state.rs`. Both process-conversion sites derive a classified REM error's process exit from the single declaration while preserving the existing generic exit for every error not classified by a REM command. The Rust module, type, constructor, and accessor layout are implementation choices, not part of QCG-1.
+
+Independent tests compare the declaration's observable semantic rows and exercise real REM error-to-process conversion. They also prove that a raise site cannot independently choose either machine code. README verification compares normalized semantic rows rather than Rust or Markdown formatting. No test requires a particular module, type, constructor, iterator, or accessor layout.
+
+Exit-code uniqueness and global error-code uniqueness are separate invariants. Separate negative tests duplicate an exit code and place one error code in two outcome classes. Other tests reject missing mappings, an error assigned to unclassified, a named outcome assigned exit `1`, and README drift.
 
 Maintaining separate error and exit tables was rejected because they could disagree while each remained locally valid. Writing codes at raise sites was rejected because it would recreate the same distributed ownership.
 
@@ -72,15 +76,15 @@ Treating every unfamiliar state as malformed was rejected because it hides which
 
 ### The shell callers route only by exit code
 
-Each of the two consumers uses the same enumerated routing table for both `rem-start` and `rem-status`. Known codes have one fate each; an absent code fails the persona and is logged. Both runners retain their existing JSON usage but never parse message prose to decide. Each currently originates `exit 2` for both usage and rejected-operation failures, so both move those paths to `20` and `21`; codes `0` through `9` can only be propagated from the tool.
+Each of the two consumers uses the same enumerated routing table for both `rem-start` and `rem-status`. Known codes have one fate each; an absent code fails the persona and is logged. Both runners retain their existing JSON usage. `run_rem.sh` never parses message prose to decide, moves its own usage and rejected-operation failures from `2` to `20` and `21`, and only propagates codes `0` through `9` from the tool.
+
+QCG-16 exercises the two runner-owned failures, searches the script for any literal runner exit in `0` through `9`, and walks every path returning a code in that range back to the immediately captured result of a real `sno` invocation. The shell function layout is an implementation choice, not an additional contract.
 
 Routing on message text was rejected because prose is diagnostic, not a stable machine interface. Reusing the tool's range for runner failures was rejected because the same number would have two owners.
 
 ### Traces record an honest decision tuple
 
-Every final CLI and runner outcome record written to an available REM trace will carry `raw_state`, `state_unavailable_reason`, `outcome_class`, and `exit_code`. Exactly one of `raw_state` and `state_unavailable_reason` is non-null. If a decoded job record exists, `raw_state` contains its state byte-for-byte and the absence reason is null. If no job state exists, `raw_state` is null and the reason is the machine-readable error code, or `job-state-not-returned` for a successful `rem-start` response. A trace sink that cannot be opened or written cannot record its own `rem_trace_error`; that error remains the explicit observable failure.
-
-The current CLI trace has a state only on successful `command_emitted` status rows, while both runners record only stdout and exit code on `harness_cli_received`. The implementation must therefore add a final outcome row on failure paths rather than merely renaming existing success fields. These are extensions of the existing JSONL trace, not a new tracing subsystem. Trace extraction may observe structured output for recording, but routing remains exclusively exit-code based.
+When an unrecognised state is reported, the existing CLI and `run_rem.sh` traces will record the raw state byte-for-byte, the outcome class, and the exit code. This extends the existing JSONL traces rather than creating a new tracing subsystem. Trace extraction may observe structured output for recording, but routing remains exclusively exit-code based.
 
 ### Cross-repository edits remain independently landable
 
@@ -93,6 +97,7 @@ The CLI declaration and messages land before the runner routing tables so the ru
 - **README behavior drifts from the declaration** → A declaration-to-document consistency test blocks the change.
 - **A captured stdout path loses the unfamiliar state** → Integration coverage invokes the same command-substitution boundary used by both runners.
 - **Cross-repository changes land in the wrong order** → The CLI classification lands first, and an independent landing-order test covers the main runner with each change present alone.
+- **The real E2E cannot naturally emit a synthetic fallback or future code** → QCG-12 uses isolated, scenario-specific `sno` builds for the PRD-authorized unclassified and eleventh-code controls, installs each selected build into the Chapter 0 path, and records its source revision before invoking both ordinary runners. All sidecar-originated outcomes still travel through the live sidecar and real store.
 
 ## Migration Plan
 
@@ -100,8 +105,8 @@ The CLI declaration and messages land before the runner routing tables so the ru
 2. Separate unfamiliar-state handling from malformed-response handling.
 3. Assign and verify the ten outcome exits and their diagnostic messages.
 4. Update the README table and protect non-REM behavior.
-5. After the tool emits the new codes, add the routing table and fail-closed arm to both runners, and move each runner's own usage and rejected-operation exits to `20` and `21`. In the main runner, leave the sibling-owned accepted names and message unchanged while changing the exit number in that block.
-6. Extend both existing traces and run the real installed-tool, live-sidecar, real-store acceptance path.
+5. After the tool emits the new codes, add the routing table and fail-closed arm to both runners. In `run_rem.sh`, move its own usage and rejected-operation exits to `20` and `21`, leaving the sibling-owned accepted names and message unchanged while changing the exit number in that block.
+6. Extend the existing CLI and `run_rem.sh` traces for the unrecognised-state outcome, then run the real installed-tool, live-sidecar, real-store acceptance path.
 
 Rollback is a single coordinated revert before release. No stored data or external published contract requires migration.
 

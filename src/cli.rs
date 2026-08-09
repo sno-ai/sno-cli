@@ -384,7 +384,7 @@ fn print_cli_error(error: &CliError, json_enabled: bool) -> i32 {
     } else {
         eprintln!("error: {}", error.message);
     }
-    error.exit_code
+    error.exit_code()
 }
 
 pub(crate) fn print_json(value: &Value) -> Result<(), CliError> {

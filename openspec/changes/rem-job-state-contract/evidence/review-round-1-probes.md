@@ -68,4 +68,4 @@ Read findings:
 - `sno-cli/src/rem.rs:239-243` records `state` only after a successful status result. Failure returns at `src/rem.rs:418-454` occur before that row, and discovery, authentication, transport, and parse failures at `src/rem.rs:466-546` may never obtain a job state.
 - `run_rem.sh:56-70,105-119` and `run_rem_noop.sh:58-72,106-120` record stdout and exit code but no outcome class or normalized state availability.
 
-The trace contract must add final outcome rows rather than rename a success-only field. `raw_state` must be nullable; when it is null, `state_unavailable_reason` records the machine-readable error code or `job-state-not-returned`. A trace sink that cannot write cannot record its own `rem_trace_error`, so that failure is the explicit exception.
+These read findings establish that the unrecognised-state outcome needs a new trace record rather than a rename of the success-only field. The released PRD limits QCG-14 to the raw state, outcome class, and exit code in the CLI and `run_rem.sh` traces for that path; this probe does not extend the trace contract beyond it.
