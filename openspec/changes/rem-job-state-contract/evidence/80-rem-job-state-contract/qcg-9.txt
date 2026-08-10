@@ -60,3 +60,47 @@ state-before-error ordering, job/state/version-skew message content,
 
 Frozen test SHA-256 verified before rerun:
 8e8296590d48d9af57184e1c08c4480e114b26a1a98f5fd2c0b377c6af158f01  tests/rem_job_state_contract.rs
+
+Named shell acceptance entrypoint
+
+Reviewed plan SHA-256:
+dd4eace80536f11c1d446a36c04bc604d4e5dbb4463d26ebf28f837fef9091ec  /tmp/rem-section7-test-plan-v4.md
+
+```text
+$ bash -n tests/rem-status-unrecognised-state-message.sh
+status=0
+```
+
+```text
+$ bash tests/rem-status-unrecognised-state-message.sh
+status=0
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s
+     Running tests/rem_job_state_contract.rs (target/debug/deps/rem_job_state_contract-71b5df54f1c7d44f)
+
+running 1 test
+test qcg_9_unfamiliar_state_precedes_error_and_survives_shell_capture ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.03s
+
+proof_marker=qcg_9_unfamiliar_state_precedes_error_and_survives_shell_capture
+proof_execution_count=1
+```
+
+Negative control RED observed. The real proof completed and emitted its marker
+and execution count before the directly executed oracle returned non-zero;
+the wrapper propagated that status unchanged.
+
+```text
+$ REM_ACCEPTANCE_ORACLE=/bin/false bash tests/rem-status-unrecognised-state-message.sh
+status=1
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s
+     Running tests/rem_job_state_contract.rs (target/debug/deps/rem_job_state_contract-71b5df54f1c7d44f)
+
+running 1 test
+test qcg_9_unfamiliar_state_precedes_error_and_survives_shell_capture ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 13 filtered out; finished in 0.03s
+
+proof_marker=qcg_9_unfamiliar_state_precedes_error_and_survives_shell_capture
+proof_execution_count=1
+```
