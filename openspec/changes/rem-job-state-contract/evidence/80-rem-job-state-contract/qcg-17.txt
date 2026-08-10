@@ -1,0 +1,44 @@
+QCG-17 named acceptance entrypoint evidence
+
+Reviewed plan SHA-256:
+dd4eace80536f11c1d446a36c04bc604d4e5dbb4463d26ebf28f837fef9091ec  /tmp/rem-section7-test-plan-v4.md
+
+The committed Section 5 GREEN artifact and receipt both matched SHA-256
+`db25eac132ad648b9cbe3e653b08bf68df9c20857393a3738161d6656a3f3e66`
+before execution.
+
+```text
+$ bash -n tests/rem-runner-independent-landing-order.sh
+status=0
+$ bash tests/rem-runner-independent-landing-order.sh
+status=0
+Section5 mode=baseline expected_observations=24 estimated_rate_min=0.5_obs/s estimated_wall_max=90s hard_timeout=120s
+progress_count=24
+throughput_check_at_observation_20=passed rate_at_least_0.5 eta_at_most_20s
+progress 1/24 case=section-first-code-0 exit=0
+progress 12/24 case=sibling-first-code-0 exit=0
+progress 24/24 case=qcg16-rejected exit=21 rate=3.63_obs/s eta=0.0s
+Section5 boundary_reached observations=24/24 forwarded_requests=30 sidecar_pid=260673 store=/mnt/ramdisk/tmp/mem-claw-test-9vnESO/test.sqlite
+Section5 hashes plan=2b8aab7093536b3ee54a08b18db35b9ca9a6cc9938f3d8d93e65cfadaa3bbd69 fixture=9d1e734f43fadb5a65f477e79237fb122d94b94efe3e4a94b7219fdcf04a8bde current_cli=e672158b54a190b9e71c4acb32f046c6d573e12b24b74efa31abb4b508b2f7f8 future_cli=f0e68abe79d632494cc0e2b4cbe7ad00b190db15f1d3fab1e4caa7cc93b65327 run_rem=36efcb14b5437f845370e2b9b3cf05e77d63943a447c4c615175d8971781dc6c run_rem_noop=c1f66c318e6b1fd9e16db2113480f399f4dd05dac6cb7ca4dfab836b5ac449e7
+Section5 PASS QCG-12 QCG-13 QCG-15 QCG-16 QCG-17
+NEGATIVE CONTROL RED QCG17: landing orders used different stores: /tmp/store-a/persona.sqlite != /tmp/store-b/persona.sqlite
+reviewed_plan_sha256=dd4eace80536f11c1d446a36c04bc604d4e5dbb4463d26ebf28f837fef9091ec
+proof_execution_count=24
+proof_marker=qcg17_independent_landing_orders_one_store_two_jobs
+negative_control_red_observed=1
+```
+
+The frozen baseline checked both exact runner validation owners. Section-first
+used operation `noop`; sibling-first used `rem-update`. Both successful runs
+reported different non-empty job identifiers while the oracle observed the
+single `dbPath` shown above. It also retained the complete prior `0..9`
+routing proof for both landing orders.
+
+Named-script negative control RED observed:
+```text
+$ bash tests/rem-runner-independent-landing-order.sh negative-control
+status=1
+Section5 mode=negative-qcg17 expected_observations=1 estimated_wall_max=5s hard_timeout=120s
+NEGATIVE CONTROL RED QCG17: landing orders used different stores: /tmp/store-a/persona.sqlite != /tmp/store-b/persona.sqlite
+Section5 cleaned runtime_root=/tmp/sno-section5-runner-contract.1bsitA status=1
+```
