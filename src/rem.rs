@@ -445,12 +445,22 @@ fn poll_status_at(
                     let mut stdout = io::stdout().lock();
                     writeln!(stdout, "{job_id}: {state}")?;
                     stdout.flush()?;
-                    return Err(CliError::rem(
+                    let error = CliError::rem(
                         RemError::StateUnrecognised,
                         format!(
                             "REM job {job_id} has state {state}: the sidecar reported a state this build does not know"
                         ),
-                    ));
+                    );
+                    trace.append(
+                        "outcome_classified",
+                        json!({
+                            "job_id": job_id,
+                            "raw_state": state,
+                            "outcome_class": error.outcome_class(),
+                            "exit_code": error.exit_code(),
+                        }),
+                    )?;
+                    return Err(error);
                 }
             },
             Err(error) if wait && is_transient_wait_error(&error) => {

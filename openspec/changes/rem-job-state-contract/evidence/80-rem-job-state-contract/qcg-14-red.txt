@@ -1,0 +1,71 @@
+QCG-14 RED freeze evidence
+
+Mode: Test Implementation, independent test owner.
+Behavior source: released PRD REQ-18/QCG-14 and OpenSpec tasks 6.1/6.2.
+Reviewed plan SHA-256: 27536c728d7733338ac557531f1ec7b58f8f02db180cc835dd313655a2092a48
+Codex plan reviewer disposition: ADMIT
+Mock Inventory: empty
+
+Expected RED
+
+The ordinary external run_rem.sh entry reaches POST start and GET status, the current compiled sno
+classifies the byte-identical unfamiliar state as state vocabulary mismatch, and run_rem.sh exits 5.
+The test then fails only because the sno_cli and memora_harness logical JSONL trace streams do not
+each persist raw_state, outcome_class, and exit_code together in one record.
+
+Focused command
+
+  bash tests/rem-trace-records-state-class-and-exit-code.sh
+
+Observed exit
+
+  1
+
+Complete observed output
+
+  QCG-14 expected_observations=1 estimated_rate=1_obs/s estimated_wall=1s hard_timeout=20s
+  QCG-14 boundary_reached requests=2 runner_exit=5 trace_records=17
+  QCG-14 RED: sno_cli missing tuple fields [raw_state,outcome_class,exit_code]; memora_harness missing tuple fields [raw_state,outcome_class]
+  QCG-14 cleaned runtime_root=/tmp/sno-qcg14-trace-tuple.c3EQfd
+
+RED diagnosis
+
+- Genuine product-behavior RED: yes.
+- Fixture route reached: yes, exactly POST /rem/run followed by GET /rem/jobs/<job-id> with the
+  expected token and correlation identifier.
+- Ordinary runner exit: exactly 5.
+- Raw unfamiliar state survived runner stdout byte-identically: yes.
+- Trace parse: 17 JSONL records parsed; both sno_cli and memora_harness records were present for
+  the same correlation identifier.
+- Failure cause: only the REQ-18 tuple fields are absent. This is not a syntax, import, fixture,
+  environment, compile, symbol, timeout, or cleanup failure.
+
+Frozen artifact hashes
+
+  27536c728d7733338ac557531f1ec7b58f8f02db180cc835dd313655a2092a48  tests/rem-trace-records-state-class-and-exit-code.plan.md
+  e108424a108c01777d040d856ad94f500ea9387ddc79bdb902f0eb90ede671d0  tests/rem-trace-records-state-class-and-exit-code.plan.sha256
+  c271ebc024cc4aef53ed85b0e483adc0e8d09fbba21780a489ba6d37c70293b9  tests/rem-trace-records-state-class-and-exit-code.sh
+  0e9988bd645348bdaa278641bf2beea51c917adf103954783181275701263618  tests/rem-trace-records-state-class-and-exit-code.mts
+  a378e7e9be89dfcbe142f8fe47f3bfc76b60fdeb8c4e119fa1d2ff4caea9c0ef  openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/qcg-14-plan-review.md
+  907189b03d0453c7975947583bf015948dd59cbb57b33d50bfb1e78276626667  target/debug/sno
+  8148307bf4178ff56637e634bbc66067a58e5f7155ff916ddec5c3ec08d0d1c7  /home/lh/code/sno-station-core-edge-rem-wave/evals/memora/scripts/run_rem.sh
+
+Test-owned validation
+
+  bash -n tests/rem-trace-records-state-class-and-exit-code.sh
+
+Observed: exit 0, no output.
+
+  /home/lh/code/sno-station-core-edge-rem-wave/node_modules/.bin/tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --types node --typeRoots /home/lh/code/sno-station-core-edge-rem-wave/node_modules/@types tests/rem-trace-records-state-class-and-exit-code.mts
+
+Observed: exit 0, no output.
+
+  /home/lh/code/sno-station-core-edge-rem-wave/node_modules/.bin/biome check --config-path=/home/lh/code/sno-station-core-edge-rem-wave/biome.json tests/rem-trace-records-state-class-and-exit-code.mts
+
+Observed:
+
+  Checked 1 file in 7ms. No fixes applied.
+
+  rg -n 'mock|Mock|monkeypatch|patch|Fake|stub|SimpleNamespace|assert_not_called|assert_called' tests/rem-trace-records-state-class-and-exit-code.sh tests/rem-trace-records-state-class-and-exit-code.mts
+
+Observed: exit 1, no matches. This is the expected clean-search result.

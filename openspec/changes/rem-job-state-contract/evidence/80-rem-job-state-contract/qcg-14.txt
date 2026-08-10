@@ -1,0 +1,86 @@
+QCG-14 independent GREEN evidence
+
+Behavior contract: REQ-18 / QCG-14
+OpenSpec tasks: 6.1 / 6.2
+Mode: Test Implementation, same independent test owner that froze RED
+Product handback: the coordinator reported that product and runner changes were complete and had
+final-byte Codex Reviewer approval. This test owner did not edit or inspect those implementation
+changes before rerunning the frozen test.
+
+Frozen artifact verification before GREEN
+
+  27536c728d7733338ac557531f1ec7b58f8f02db180cc835dd313655a2092a48  tests/rem-trace-records-state-class-and-exit-code.plan.md
+  e108424a108c01777d040d856ad94f500ea9387ddc79bdb902f0eb90ede671d0  tests/rem-trace-records-state-class-and-exit-code.plan.sha256
+  c271ebc024cc4aef53ed85b0e483adc0e8d09fbba21780a489ba6d37c70293b9  tests/rem-trace-records-state-class-and-exit-code.sh
+  0e9988bd645348bdaa278641bf2beea51c917adf103954783181275701263618  tests/rem-trace-records-state-class-and-exit-code.mts
+
+These hashes exactly match the RED freeze in qcg-14-red.txt. The reviewed plan receipt also passed:
+
+  tests/rem-trace-records-state-class-and-exit-code.plan.md: OK
+
+Focused GREEN command
+
+  bash tests/rem-trace-records-state-class-and-exit-code.sh
+
+```text
+$ bash tests/rem-trace-records-state-class-and-exit-code.sh
+status=0
+QCG-14 expected_observations=1 estimated_rate=1_obs/s estimated_wall=1s hard_timeout=20s
+QCG-14 boundary_reached requests=2 runner_exit=5 trace_records=18
+QCG-14 PASS raw_state="future terminal/β: sidecar_response_invalid; exit 0" outcome_class="state vocabulary mismatch" exit_code=5
+QCG-14 cleaned runtime_root=/tmp/sno-qcg14-trace-tuple.MSQjie
+```
+
+Observed exit
+
+  0
+
+Complete observed output
+
+  QCG-14 expected_observations=1 estimated_rate=1_obs/s estimated_wall=1s hard_timeout=20s
+  QCG-14 boundary_reached requests=2 runner_exit=5 trace_records=18
+  QCG-14 PASS raw_state="future terminal/β: sidecar_response_invalid; exit 0" outcome_class="state vocabulary mismatch" exit_code=5
+  QCG-14 cleaned runtime_root=/tmp/sno-qcg14-trace-tuple.MSQjie
+
+GREEN interpretation
+
+- The unchanged ordinary run_rem.sh boundary sent exactly POST /rem/run and GET /rem/jobs/<job-id>.
+- The runner received the byte-identical unfamiliar state and propagated tool exit 5.
+- Both sno_cli and memora_harness trace records contained raw_state, outcome_class
+  "state vocabulary mismatch", and numeric exit_code 5 together.
+- The temporary runtime root was cleaned.
+- The same frozen artifact and exact command changed from the recorded product-behavior RED to GREEN.
+
+Boundary hashes used by GREEN
+
+  fc8809950e3aea1f9355d68466d1437e7d9c08cd50d290d1766d91935ac2dc32  target/debug/sno
+  ae77cbeb852f23ae87f35cca8128d57fa3ece8456062fc6589f04493499cf084  /home/lh/code/sno-station-core-edge-rem-wave/evals/memora/scripts/run_rem.sh
+
+Test-owned static checks after GREEN
+
+  bash -n tests/rem-trace-records-state-class-and-exit-code.sh
+
+Observed: exit 0, no output.
+
+  /home/lh/code/sno-station-core-edge-rem-wave/node_modules/.bin/tsc --noEmit --strict --target ES2022 --module NodeNext --moduleResolution NodeNext --types node --typeRoots /home/lh/code/sno-station-core-edge-rem-wave/node_modules/@types tests/rem-trace-records-state-class-and-exit-code.mts
+
+Observed: exit 0, no output.
+
+  /home/lh/code/sno-station-core-edge-rem-wave/node_modules/.bin/biome check --config-path=/home/lh/code/sno-station-core-edge-rem-wave/biome.json tests/rem-trace-records-state-class-and-exit-code.mts
+
+Observed:
+
+  Checked 1 file in 7ms. No fixes applied.
+
+  rg -n 'mock|Mock|monkeypatch|patch|Fake|stub|SimpleNamespace|assert_not_called|assert_called' tests/rem-trace-records-state-class-and-exit-code.sh tests/rem-trace-records-state-class-and-exit-code.mts
+
+Observed: exit 1, no matches. This is the expected clean-search result.
+
+Final frozen artifact verification after GREEN and static checks
+
+  27536c728d7733338ac557531f1ec7b58f8f02db180cc835dd313655a2092a48  tests/rem-trace-records-state-class-and-exit-code.plan.md
+  e108424a108c01777d040d856ad94f500ea9387ddc79bdb902f0eb90ede671d0  tests/rem-trace-records-state-class-and-exit-code.plan.sha256
+  c271ebc024cc4aef53ed85b0e483adc0e8d09fbba21780a489ba6d37c70293b9  tests/rem-trace-records-state-class-and-exit-code.sh
+  0e9988bd645348bdaa278641bf2beea51c917adf103954783181275701263618  tests/rem-trace-records-state-class-and-exit-code.mts
+
+Mock Inventory: empty.

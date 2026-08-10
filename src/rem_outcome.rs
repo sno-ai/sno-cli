@@ -30,6 +30,12 @@ pub(crate) struct RemOutcome {
     error_codes: &'static [RemErrorCode],
 }
 
+impl RemOutcome {
+    pub(crate) const fn name(&self) -> &'static str {
+        self.name
+    }
+}
+
 pub(crate) struct ResolvedRemError {
     pub(crate) code: &'static str,
     pub(crate) outcome: &'static RemOutcome,

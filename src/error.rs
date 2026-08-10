@@ -56,6 +56,10 @@ impl CliError {
         self.rem_outcome
             .map_or(self.fallback_exit_code, |outcome| outcome.exit_code)
     }
+
+    pub(crate) fn outcome_class(&self) -> Option<&'static str> {
+        self.rem_outcome.map(RemOutcome::name)
+    }
 }
 
 impl Display for CliError {

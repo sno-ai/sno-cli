@@ -32,8 +32,8 @@
 
 ## 6. Extend Existing Traces
 
-- [ ] 6.1 Using `codex-coder`, record the unrecognised state's byte-identical raw state, outcome class, and exit code in the existing CLI and `run_rem.sh` traces.
-- [ ] 6.2 Have the independent test owner rerun and freeze GREEN for QCG-14 on the unrecognised-state path through `run_rem.sh`.
+- [x] 6.1 Using `codex-coder`, record the unrecognised state's byte-identical raw state, outcome class, and exit code in the existing CLI and `run_rem.sh` traces. — evidence: `evidence/80-rem-job-state-contract/qcg-14.txt`, `QCG-14 PASS raw_state="future terminal/β: sidecar_response_invalid; exit 0" outcome_class="state vocabulary mismatch" exit_code=5`
+- [x] 6.2 Have the independent test owner rerun and freeze GREEN for QCG-14 on the unrecognised-state path through `run_rem.sh`. — evidence: `evidence/80-rem-job-state-contract/section-6-independent-green.md`, `QCG-14 PASS raw_state="future terminal/β: sidecar_response_invalid; exit 0" outcome_class="state vocabulary mismatch" exit_code=5`
 
 ## 7. Run the Acceptance Gates
 
