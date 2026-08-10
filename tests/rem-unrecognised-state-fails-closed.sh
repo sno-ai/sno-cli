@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
 
-readonly REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+readonly REPO_ROOT
 readonly BASE_RUNNER="$REPO_ROOT/tests/rem-runner-routing-contract.sh"
 readonly GREEN_ARTIFACT="$REPO_ROOT/openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/section-5-independent-green.md"
 readonly GREEN_RECEIPT="$REPO_ROOT/openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/section-5-independent-green.sha256"
