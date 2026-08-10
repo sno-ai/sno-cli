@@ -1,6 +1,6 @@
 use std::env;
 use std::fs::{self, OpenOptions};
-use std::io::Write;
+use std::io::{self, Write};
 use std::path::{Path, PathBuf};
 use std::sync::mpsc;
 use std::thread;
@@ -435,10 +435,21 @@ fn poll_status_at(
                 }
                 "queued" | "running" if wait => {}
                 "queued" | "running" => return Ok(job),
-                _ => {
+                "" => {
                     return Err(CliError::rem(
                         RemError::ResponseInvalid,
-                        "sidecar returned an invalid REM job state",
+                        "sidecar returned an empty REM job state",
+                    ));
+                }
+                state => {
+                    let mut stdout = io::stdout().lock();
+                    writeln!(stdout, "{job_id}: {state}")?;
+                    stdout.flush()?;
+                    return Err(CliError::rem(
+                        RemError::StateUnrecognised,
+                        format!(
+                            "REM job {job_id} has state {state}: the sidecar reported a state this build does not know"
+                        ),
                     ));
                 }
             },

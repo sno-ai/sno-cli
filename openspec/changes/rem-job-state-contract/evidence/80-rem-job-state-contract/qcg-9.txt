@@ -1,0 +1,62 @@
+QCG-9 RED-freeze evidence
+
+Command:
+cargo test --test rem_job_state_contract qcg_9_unfamiliar_state_precedes_error_and_survives_shell_capture -- --exact --nocapture --test-threads=1
+
+Expected RED:
+Waiting and non-waiting unfamiliar states exit 5, print the byte-identical raw
+state to stdout before the error, name the job/state/version skew, emit
+`rem_state_unrecognised`, and survive `/bin/sh` command substitution.
+
+Observed:
+The test compiled and all five real CLI invocations completed: non-waiting,
+waiting, JSON, merged stdout/stderr, and command substitution. The shell caller
+itself survived with exit 0, but command substitution captured sno exit `6`
+and empty stdout (`6\n\n`) instead of exit `5` plus the raw state.
+
+```text
+$ cargo test --test rem_job_state_contract qcg_9_unfamiliar_state_precedes_error_and_survives_shell_capture -- --exact --nocapture --test-threads=1
+status=101
+BEGIN RECORDED RED
+compilation=success
+test=qcg_9_unfamiliar_state_precedes_error_and_survives_shell_capture
+result=0 passed; 1 failed; 9 filtered out
+shell_caller_exit=0
+command_substitution_expected_sno_exit=5
+command_substitution_observed_sno_exit=6
+command_substitution_observed_stdout=<empty>
+failure=command substitution observed the wrong sno exit: 6
+END RECORDED RED
+```
+
+Diagnosis:
+Genuine product RED. The ordinary `/bin/sh` caller remains alive, but the raw
+state is lost and the product returns the malformed-response exit before the
+later ordering/message assertions can pass.
+
+Frozen test SHA-256:
+8e8296590d48d9af57184e1c08c4480e114b26a1a98f5fd2c0b377c6af158f01  tests/rem_job_state_contract.rs
+
+Plan SHA-256:
+44b7a55003c9e8d27d63e7401a041e24bf7c877519aff81ea7be004e9c063f7e  openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/test-plan-section-3.md
+
+GREEN rerun after product handback
+
+```text
+$ cargo test --test rem_job_state_contract qcg_9_unfamiliar_state_precedes_error_and_survives_shell_capture -- --exact --nocapture --test-threads=1
+status=0
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s
+     Running tests/rem_job_state_contract.rs (target/debug/deps/rem_job_state_contract-71b5df54f1c7d44f)
+
+running 1 test
+test qcg_9_unfamiliar_state_precedes_error_and_survives_shell_capture ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.03s
+```
+
+The frozen assertions now prove both modes, byte-identical raw state,
+state-before-error ordering, job/state/version-skew message content,
+`rem_state_unrecognised` exit 5, and surviving `/bin/sh` command substitution.
+
+Frozen test SHA-256 verified before rerun:
+8e8296590d48d9af57184e1c08c4480e114b26a1a98f5fd2c0b377c6af158f01  tests/rem_job_state_contract.rs

@@ -12,9 +12,9 @@
 
 ## 3. Separate State Vocabulary from Response Validity
 
-- [ ] 3.1 Using `codex-coder`, implement the waiting and non-waiting state matrix: every non-empty unfamiliar state immediately emits `rem_state_unrecognised` with exit `5`, while invalid JSON and an absent or empty state emit `sidecar_response_invalid` with exit `6`.
-- [ ] 3.2 In both modes, print the unfamiliar raw state to stdout before the error and include the job identifier, byte-identical state, and version-skew explanation in the message, including through command substitution.
-- [ ] 3.3 Preserve the sidecar-provided error string in `rem_job_failed` messages.
+- [x] 3.1 Using `codex-coder`, implement the waiting and non-waiting state matrix: every non-empty unfamiliar state immediately emits `rem_state_unrecognised` with exit `5`, while invalid JSON and an absent or empty state emit `sidecar_response_invalid` with exit `6`. — evidence: `evidence/80-rem-job-state-contract/qcg-10.txt`, `test qcg_10_invalid_responses_are_distinct_from_unfamiliar_states ... ok`
+- [x] 3.2 In both modes, print the unfamiliar raw state to stdout before the error and include the job identifier, byte-identical state, and version-skew explanation in the message, including through command substitution. — evidence: `evidence/80-rem-job-state-contract/qcg-9.txt`, `test qcg_9_unfamiliar_state_precedes_error_and_survives_shell_capture ... ok`
+- [x] 3.3 Preserve the sidecar-provided error string in `rem_job_failed` messages. — evidence: `evidence/80-rem-job-state-contract/qcg-11.txt`, `test qcg_11_failed_job_preserves_only_the_supplied_sidecar_sentinel ... ok`
 - [ ] 3.4 Have the independent test owner rerun and freeze GREEN for QCG-5, QCG-8, QCG-9, QCG-10, and QCG-11.
 
 ## 4. Publish and Protect the CLI Contract

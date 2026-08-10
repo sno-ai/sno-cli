@@ -5,10 +5,10 @@ mod sno_service_server;
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
 use std::path::{Path, PathBuf};
-use std::process::Command;
+use std::process::{Command, Output};
 
 use serde_json::{Value, json};
-use sno_service_server::{ServiceResponse, SnoServiceServer};
+use sno_service_server::{CapturedRequest, ServiceResponse, SnoServiceServer};
 use tempfile::TempDir;
 
 #[derive(Clone, Debug)]
@@ -276,6 +276,111 @@ fn observe_rem_error(code: &'static str) -> (i32, String) {
     )
 }
 
+const SECTION_3_JOB_ID: &str = "job-019f8da3-section-3";
+
+enum FixtureResponse {
+    Json(u16, Value),
+    Raw(&'static str),
+}
+
+impl FixtureResponse {
+    fn render(&self) -> ServiceResponse {
+        match self {
+            Self::Json(status, value) => ServiceResponse::json(*status, value.clone()),
+            Self::Raw(body) => ServiceResponse {
+                status: 200,
+                body: (*body).to_owned(),
+            },
+        }
+    }
+}
+
+fn rem_job(state: &str, error: Option<&str>) -> Value {
+    json!({
+        "state": state,
+        "type": "noop",
+        "scope": "persona:test-rem-state-019f8da3",
+        "started_at": "2026-08-09T20:00:00Z",
+        "finished_at": if matches!(state, "done" | "failed") {
+            Some("2026-08-09T20:00:01Z")
+        } else {
+            None
+        },
+        "stats": if state == "done" { Some(json!({"operations": 0})) } else { None },
+        "error": error,
+        "correlation_id": null
+    })
+}
+
+fn rem_job_without_error(state: &str) -> Value {
+    let mut value = rem_job(state, None);
+    value
+        .as_object_mut()
+        .expect("REM job object")
+        .remove("error");
+    value
+}
+
+fn run_status(responses: Vec<FixtureResponse>, wait: bool, json_enabled: bool) -> Output {
+    let response_count = responses.len();
+    let handlers = responses
+        .into_iter()
+        .map(|response| {
+            Box::new(move |_: CapturedRequest| response.render())
+                as Box<dyn Fn(CapturedRequest) -> ServiceResponse + Send>
+        })
+        .collect();
+    let server = SnoServiceServer::start(handlers);
+    let profile = TempDir::new().expect("profile");
+    write_rem_discovery(profile.path(), &server);
+    let mut command = Command::new(env!("CARGO_BIN_EXE_sno"));
+    command.args(["station", "rem-status", SECTION_3_JOB_ID]);
+    if wait {
+        command.args(["--wait", "--timeout", "1"]);
+    }
+    if json_enabled {
+        command.arg("--json");
+    }
+    let output = command
+        .env("SNO_PROFILE_DIR", profile.path())
+        .env("OPENCLAW_STATE_DIR", profile.path())
+        .env("SNO_REM_TRACE", "0")
+        .output()
+        .expect("run sno REM status");
+    assert_eq!(server.finish().len(), response_count, "request count");
+    output
+}
+
+fn output_text(bytes: &[u8]) -> String {
+    String::from_utf8(bytes.to_vec()).expect("UTF-8 process output")
+}
+
+fn last_json_line(output: &Output) -> Value {
+    let text = output_text(&output.stdout);
+    serde_json::from_str(text.lines().last().expect("JSON output line"))
+        .unwrap_or_else(|error| panic!("invalid final JSON line ({error}): {text}"))
+}
+
+#[cfg(unix)]
+fn run_status_shell(response: Value, script: &str) -> Output {
+    let server = SnoServiceServer::start(vec![Box::new(move |_| {
+        ServiceResponse::json(200, response.clone())
+    })]);
+    let profile = TempDir::new().expect("profile");
+    write_rem_discovery(profile.path(), &server);
+    let output = Command::new("/bin/sh")
+        .args(["-c", script])
+        .env("SNO_BIN", env!("CARGO_BIN_EXE_sno"))
+        .env("JOB_ID", SECTION_3_JOB_ID)
+        .env("SNO_PROFILE_DIR", profile.path())
+        .env("OPENCLAW_STATE_DIR", profile.path())
+        .env("SNO_REM_TRACE", "0")
+        .output()
+        .expect("run shell REM status caller");
+    assert_eq!(server.finish().len(), 1, "shell request count");
+    output
+}
+
 #[test]
 fn qcg_1_single_declaration_owns_codes() {
     let manifest = Path::new(env!("CARGO_MANIFEST_DIR"));
@@ -391,5 +496,323 @@ fn qcg_7_exit_one_is_unclassified_only() {
         rows.iter()
             .filter(|row| row.name != "unclassified failure")
             .all(|row| row.exit != 1 && !row.errors.is_empty() || row.name == "success")
+    );
+}
+
+fn record_json_outcome(
+    repetition: usize,
+    label: &str,
+    output: &Output,
+    expected_exit: i32,
+    expected_key: &str,
+    expected_value: &str,
+    mismatches: &mut Vec<String>,
+) {
+    let value = last_json_line(output);
+    let observed_exit = output.status.code();
+    let observed_value = value[expected_key].as_str();
+    if observed_exit != Some(expected_exit) || observed_value != Some(expected_value) {
+        mismatches.push(format!(
+            "repetition {repetition} {label}: expected exit={expected_exit} {expected_key}={expected_value}; observed exit={observed_exit:?} value={value} stdout={} stderr={}",
+            output_text(&output.stdout),
+            output_text(&output.stderr),
+        ));
+    }
+}
+
+#[test]
+fn qcg_5_section_3_state_outcomes_do_not_interchange_across_ten_repetitions() {
+    let unfamiliar_state = "future state/β 019f8da3";
+    let mut mismatches = Vec::new();
+
+    for repetition in 1..=10 {
+        let done = run_status(
+            vec![FixtureResponse::Json(200, rem_job("done", None))],
+            false,
+            true,
+        );
+        record_json_outcome(
+            repetition,
+            "done",
+            &done,
+            0,
+            "state",
+            "done",
+            &mut mismatches,
+        );
+
+        let failed = run_status(
+            vec![FixtureResponse::Json(
+                200,
+                rem_job("failed", Some("sidecar_failure_019f8da3")),
+            )],
+            false,
+            true,
+        );
+        record_json_outcome(
+            repetition,
+            "failed",
+            &failed,
+            3,
+            "error",
+            "rem_job_failed",
+            &mut mismatches,
+        );
+
+        let timeout = run_status(
+            vec![
+                FixtureResponse::Json(200, rem_job("running", None)),
+                FixtureResponse::Json(200, rem_job("running", None)),
+                FixtureResponse::Json(200, rem_job("running", None)),
+            ],
+            true,
+            true,
+        );
+        record_json_outcome(
+            repetition,
+            "timeout",
+            &timeout,
+            4,
+            "error",
+            "rem_timeout",
+            &mut mismatches,
+        );
+
+        let unfamiliar = run_status(
+            vec![FixtureResponse::Json(200, rem_job(unfamiliar_state, None))],
+            false,
+            true,
+        );
+        record_json_outcome(
+            repetition,
+            "unfamiliar",
+            &unfamiliar,
+            5,
+            "error",
+            "rem_state_unrecognised",
+            &mut mismatches,
+        );
+
+        let invalid = run_status(vec![FixtureResponse::Raw("not-json")], false, true);
+        record_json_outcome(
+            repetition,
+            "invalid",
+            &invalid,
+            6,
+            "error",
+            "sidecar_response_invalid",
+            &mut mismatches,
+        );
+    }
+
+    assert!(
+        mismatches.is_empty(),
+        "QCG-5 local state outcomes interchanged:\n{}",
+        mismatches.join("\n")
+    );
+}
+
+#[test]
+fn qcg_8_waiting_and_nonwaiting_known_states_succeed() {
+    let queued = run_status(
+        vec![FixtureResponse::Json(200, rem_job("queued", None))],
+        false,
+        true,
+    );
+    assert_eq!(queued.status.code(), Some(0));
+    assert_eq!(last_json_line(&queued)["state"], "queued");
+
+    let waited = run_status(
+        vec![
+            FixtureResponse::Json(200, rem_job("queued", None)),
+            FixtureResponse::Json(200, rem_job("running", None)),
+            FixtureResponse::Json(200, rem_job("done", None)),
+        ],
+        true,
+        true,
+    );
+    assert_eq!(
+        waited.status.code(),
+        Some(0),
+        "stdout={} stderr={}",
+        output_text(&waited.stdout),
+        output_text(&waited.stderr)
+    );
+    assert_eq!(last_json_line(&waited)["state"], "done");
+}
+
+#[cfg(unix)]
+#[test]
+fn qcg_9_unfamiliar_state_precedes_error_and_survives_shell_capture() {
+    let state = "future state/β 019f8da3";
+    let direct_nonwait = run_status(
+        vec![FixtureResponse::Json(200, rem_job(state, None))],
+        false,
+        false,
+    );
+    let direct_wait = run_status(
+        vec![FixtureResponse::Json(200, rem_job(state, None))],
+        true,
+        false,
+    );
+    let machine = run_status(
+        vec![FixtureResponse::Json(200, rem_job(state, None))],
+        true,
+        true,
+    );
+    let merged = run_status_shell(
+        rem_job(state, None),
+        "exec \"$SNO_BIN\" station rem-status \"$JOB_ID\" --wait --timeout 1 2>&1",
+    );
+    let captured = run_status_shell(
+        rem_job(state, None),
+        "captured=$(\"$SNO_BIN\" station rem-status \"$JOB_ID\" --wait --timeout 1); status=$?; printf '%s\\n%s\\n' \"$status\" \"$captured\"",
+    );
+
+    assert_eq!(captured.status.code(), Some(0));
+    let captured_text = output_text(&captured.stdout);
+    let mut captured_lines = captured_text.lines();
+    assert_eq!(
+        captured_lines.next(),
+        Some("5"),
+        "command substitution observed the wrong sno exit: {captured_text}"
+    );
+    assert!(
+        captured_lines
+            .collect::<Vec<_>>()
+            .join("\n")
+            .contains(state),
+        "command substitution lost raw state: {captured_text}"
+    );
+
+    let expected_sentence = "sidecar reported a state this build does not know";
+    for (mode, output) in [("non-waiting", &direct_nonwait), ("waiting", &direct_wait)] {
+        assert_eq!(
+            output.status.code(),
+            Some(5),
+            "{mode}: stdout={} stderr={}",
+            output_text(&output.stdout),
+            output_text(&output.stderr)
+        );
+        let stdout = output_text(&output.stdout);
+        let stderr = output_text(&output.stderr);
+        assert!(
+            stdout.contains(state),
+            "{mode}: raw state missing: {stdout}"
+        );
+        for expected in [SECTION_3_JOB_ID, state, expected_sentence] {
+            assert!(
+                stderr.contains(expected),
+                "{mode}: missing `{expected}` in {stderr}"
+            );
+        }
+    }
+
+    let machine_json = last_json_line(&machine);
+    assert_eq!(machine.status.code(), Some(5));
+    assert_eq!(machine_json["error"], "rem_state_unrecognised");
+    assert_ne!(machine_json["error"], "sidecar_response_invalid");
+
+    assert_eq!(merged.status.code(), Some(5));
+    let merged_text = output_text(&merged.stdout);
+    let state_position = merged_text.find(state).expect("state in merged output");
+    let error_position = merged_text.find("error:").expect("error in merged output");
+    assert!(
+        state_position < error_position,
+        "state must precede error: {merged_text}"
+    );
+}
+
+#[test]
+fn qcg_10_invalid_responses_are_distinct_from_unfamiliar_states() {
+    for wait in [false, true] {
+        for (label, response) in [
+            ("invalid JSON", FixtureResponse::Raw("not-json")),
+            (
+                "missing state",
+                FixtureResponse::Json(
+                    200,
+                    json!({
+                        "type": "noop",
+                        "scope": "persona:test-rem-state-019f8da3",
+                        "started_at": "2026-08-09T20:00:00Z",
+                        "finished_at": null,
+                        "stats": null,
+                        "error": null,
+                        "correlation_id": null
+                    }),
+                ),
+            ),
+            ("empty state", FixtureResponse::Json(200, rem_job("", None))),
+        ] {
+            let output = run_status(vec![response], wait, true);
+            let value = last_json_line(&output);
+            assert_eq!(
+                output.status.code(),
+                Some(6),
+                "{label} wait={wait}: stdout={} stderr={}",
+                output_text(&output.stdout),
+                output_text(&output.stderr)
+            );
+            assert_eq!(
+                value["error"], "sidecar_response_invalid",
+                "{label} wait={wait}: {value}"
+            );
+        }
+    }
+
+    let unfamiliar = run_status(
+        vec![FixtureResponse::Json(
+            200,
+            rem_job("future state/β 019f8da3", None),
+        )],
+        false,
+        true,
+    );
+    let value = last_json_line(&unfamiliar);
+    assert_eq!(unfamiliar.status.code(), Some(5));
+    assert_eq!(value["error"], "rem_state_unrecognised");
+    assert_ne!(value["error"], "sidecar_response_invalid");
+}
+
+#[test]
+fn qcg_11_failed_job_preserves_only_the_supplied_sidecar_sentinel() {
+    let sentinel = "sidecar_owned_failure_β_019f8da3";
+    let provided = run_status(
+        vec![FixtureResponse::Json(
+            200,
+            rem_job("failed", Some(sentinel)),
+        )],
+        false,
+        true,
+    );
+    let omitted = run_status(
+        vec![FixtureResponse::Json(200, rem_job_without_error("failed"))],
+        false,
+        true,
+    );
+
+    for (label, output) in [("provided", &provided), ("omitted", &omitted)] {
+        let value = last_json_line(output);
+        assert_eq!(output.status.code(), Some(3), "{label}: {value}");
+        assert_eq!(value["error"], "rem_job_failed", "{label}: {value}");
+        assert!(
+            value["message"]
+                .as_str()
+                .is_some_and(|message| message.contains(SECTION_3_JOB_ID)),
+            "{label}: missing job id in {value}"
+        );
+    }
+    assert!(
+        last_json_line(&provided)["message"]
+            .as_str()
+            .is_some_and(|message| message.contains(sentinel)),
+        "provided sidecar sentinel was not preserved"
+    );
+    assert!(
+        last_json_line(&omitted)["message"]
+            .as_str()
+            .is_some_and(|message| !message.contains(sentinel)),
+        "omitted sidecar sentinel appeared in absent-field message"
     );
 }

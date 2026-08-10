@@ -1,0 +1,61 @@
+QCG-8 RED-phase freeze evidence
+
+Commands:
+cargo test --test rem_job_state_contract qcg_8_waiting_and_nonwaiting_known_states_succeed -- --exact --nocapture --test-threads=1
+cargo test --test cli rem_one_shot_status_reads_running_then_stable_done -- --exact --nocapture --test-threads=1
+
+Expected:
+Non-waiting queued/running/done and waiting queued -> running -> done remain
+successful and print the resulting state.
+
+Observed:
+Both commands passed. The new test proves non-waiting queued and the waiting
+transition sequence. The reused existing test proves non-waiting running/done.
+
+```text
+$ cargo test --test rem_job_state_contract qcg_8_waiting_and_nonwaiting_known_states_succeed -- --exact --nocapture --test-threads=1
+status=0
+BEGIN RECORDED RED-PHASE RESULT
+new_test_status=0
+new_test_result=1 passed; 0 failed; 9 filtered out
+reused_test_status=0
+reused_test_result=1 passed; 0 failed; 26 filtered out
+disposition=coverage-only GREEN; not claimed as genuine RED
+END RECORDED RED-PHASE RESULT
+```
+
+Frozen test SHA-256:
+8e8296590d48d9af57184e1c08c4480e114b26a1a98f5fd2c0b377c6af158f01  tests/rem_job_state_contract.rs
+
+Plan SHA-256:
+44b7a55003c9e8d27d63e7401a041e24bf7c877519aff81ea7be004e9c063f7e  openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/test-plan-section-3.md
+
+GREEN rerun after product handback
+
+```text
+$ cargo test --test rem_job_state_contract qcg_8_waiting_and_nonwaiting_known_states_succeed -- --exact --nocapture --test-threads=1
+status=0
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s
+     Running tests/rem_job_state_contract.rs (target/debug/deps/rem_job_state_contract-71b5df54f1c7d44f)
+
+running 1 test
+test qcg_8_waiting_and_nonwaiting_known_states_succeed ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 0.23s
+```
+
+```text
+$ cargo test --test cli rem_one_shot_status_reads_running_then_stable_done -- --exact --nocapture --test-threads=1
+status=0
+   Compiling sno v0.1.7 (/home/lh/code/sno-cli)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.34s
+     Running tests/cli.rs (target/debug/deps/cli-51598a64652e563c)
+
+running 1 test
+test rem_one_shot_status_reads_running_then_stable_done ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 26 filtered out; finished in 0.02s
+```
+
+Frozen test SHA-256 verified before rerun:
+8e8296590d48d9af57184e1c08c4480e114b26a1a98f5fd2c0b377c6af158f01  tests/rem_job_state_contract.rs
