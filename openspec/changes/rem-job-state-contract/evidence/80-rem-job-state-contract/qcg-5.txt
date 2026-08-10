@@ -10,11 +10,11 @@ Manifest:
   "boundary": "live-sidecar-backed fault injection",
   "productionSidecarNativeFaultClaim": false,
   "command": "bash tests/rem-status-exit-code-matrix.sh full",
-  "runtimeRoot": "/tmp/sno-qcg5-live-sidecar.DmfEdf",
+  "runtimeRoot": "/tmp/sno-qcg5-live-sidecar.DPzhSm",
   "runtimeRootCleanupRequired": true,
   "binary": {
     "path": "/home/lh/code/sno-cli/target/debug/sno",
-    "sha256": "907189b03d0453c7975947583bf015948dd59cbb57b33d50bfb1e78276626667"
+    "sha256": "e672158b54a190b9e71c4acb32f046c6d573e12b24b74efa31abb4b508b2f7f8"
   },
   "sidecar": {
     "entry": "/home/lh/code/sno-station-core-edge-rem-wave/apps/mem-claw/src/sidecar/main.ts",
@@ -39,7 +39,7 @@ Manifest:
       "sha256": "0661e72b74ac8fcb85f6b705093bacff4df71da62b7d0c412a98196a3ee21b0a"
     }
   },
-  "durationMs": 23712,
+  "durationMs": 23758,
   "observations": {
     "expected": 80,
     "passed": 80,
@@ -67,50 +67,47 @@ Summary:
 QCG-5 PASS
 boundary=live-sidecar-backed fault injection; production sidecar native fault claim=false
 command=bash tests/rem-status-exit-code-matrix.sh full
-duration_ms=23712
+duration_ms=23758
 observations=80/80 failures=0 sidecar_starts=6
 counts={"done":10,"failed":10,"timeout":10,"unrecognised":10,"truncated":10,"stopped":10,"profile":10,"unknown":10}
 fault_injections=20 upstream_gets_before_injection=20
-binary_sha256=907189b03d0453c7975947583bf015948dd59cbb57b33d50bfb1e78276626667
+binary_sha256=e672158b54a190b9e71c4acb32f046c6d573e12b24b74efa31abb4b508b2f7f8
 plan_sha256=b3986e6000c35b9d625cec6db22a7804233070e9246a8a0f5a0c76690fe1ba48
 no_interchange=true
 
-Fault injection events:
-{"kind":"unrecognised","path":"/rem/jobs/rem-wave-f5fa82c0-8b7c-4e9c-97ad-f30948481748","upstreamStatus":200,"upstreamSha256":"7b86440aa67c99ed0bacc3e2c811c29fd7b62b389c57b8fbdcd89517b2d2be9b","downstreamSha256":"a9b23c83b648cfa2981ff5353b299e912b1104034e7a005df406a5782aa8392e","upstreamBytes":650,"downstreamBytes":664}
-{"kind":"truncated","path":"/rem/jobs/rem-wave-f5fa82c0-8b7c-4e9c-97ad-f30948481748","upstreamStatus":200,"upstreamSha256":"7b86440aa67c99ed0bacc3e2c811c29fd7b62b389c57b8fbdcd89517b2d2be9b","downstreamSha256":"26d4829583b20ec422c8f4f31b85baf47c2c5645b0fbf0b4a649d00cf3070d63","upstreamBytes":650,"downstreamBytes":647}
-{"kind":"unrecognised","path":"/rem/jobs/rem-wave-2c3a072f-c901-4786-a4d6-c1db96ec269f","upstreamStatus":200,"upstreamSha256":"95d97f7268ed512102c4db7d6d09d7f09e256aadd49fe9678482a22d49f0e7cb","downstreamSha256":"17eab30857fb5fc2b1c29bf9f1e5f91a7fa8bd8e34de508cd25a9cec855a906a","upstreamBytes":650,"downstreamBytes":664}
-{"kind":"truncated","path":"/rem/jobs/rem-wave-2c3a072f-c901-4786-a4d6-c1db96ec269f","upstreamStatus":200,"upstreamSha256":"95d97f7268ed512102c4db7d6d09d7f09e256aadd49fe9678482a22d49f0e7cb","downstreamSha256":"9efadc46632cf2661de809334a33336f18f36b03d91c15b8ab54dcc4def0f813","upstreamBytes":650,"downstreamBytes":647}
-{"kind":"unrecognised","path":"/rem/jobs/rem-wave-a5fb9656-61af-4729-8509-5333e442e406","upstreamStatus":200,"upstreamSha256":"59f30560a1262ab088d00bd510e90a5bec2d384117196ab4a5b6ddf0e7ff3884","downstreamSha256":"ad68356260646aaedbdc515803dc06d0702ad0c4edc66ea838769d14e7af545d","upstreamBytes":650,"downstreamBytes":664}
-{"kind":"truncated","path":"/rem/jobs/rem-wave-a5fb9656-61af-4729-8509-5333e442e406","upstreamStatus":200,"upstreamSha256":"59f30560a1262ab088d00bd510e90a5bec2d384117196ab4a5b6ddf0e7ff3884","downstreamSha256":"b2b7489901a7fd3ba191606c1cc9f865c14665cf8b4cba83e72c5901439ca656","upstreamBytes":650,"downstreamBytes":647}
-{"kind":"unrecognised","path":"/rem/jobs/rem-wave-06abc5bb-0691-4cac-95ad-51bb5f028ebb","upstreamStatus":200,"upstreamSha256":"2971a4a792857078d7787acd8da1f7e53a890b2da449cee3bb89f4db969fb48f","downstreamSha256":"10bb4e185ca669f06d6e2d4956a64c9a473c141eeae6369c54daa87c4228584f","upstreamBytes":650,"downstreamBytes":664}
-{"kind":"truncated","path":"/rem/jobs/rem-wave-06abc5bb-0691-4cac-95ad-51bb5f028ebb","upstreamStatus":200,"upstreamSha256":"2971a4a792857078d7787acd8da1f7e53a890b2da449cee3bb89f4db969fb48f","downstreamSha256":"9b5d7d0a411cd1d3b4f072c0c04052a26a2a13f1ca678bcca25da6fbdc9acc09","upstreamBytes":650,"downstreamBytes":647}
-{"kind":"unrecognised","path":"/rem/jobs/rem-wave-5be2335c-2122-455c-ba94-b6e628ea7ad8","upstreamStatus":200,"upstreamSha256":"76e1847205255a3ab330d29cf8bc2d712ec8f897ec977b02080e75936faae566","downstreamSha256":"b81c18d12db89cde0b25456783450ac93a07b4ecfe17b72917857ebb0d3bdc26","upstreamBytes":650,"downstreamBytes":664}
-{"kind":"truncated","path":"/rem/jobs/rem-wave-5be2335c-2122-455c-ba94-b6e628ea7ad8","upstreamStatus":200,"upstreamSha256":"76e1847205255a3ab330d29cf8bc2d712ec8f897ec977b02080e75936faae566","downstreamSha256":"1447a20b33de2469fd44e398fbc2323d9900adfbc7e824538fedcebf4f1065a5","upstreamBytes":650,"downstreamBytes":647}
-{"kind":"unrecognised","path":"/rem/jobs/rem-wave-74fe33a3-bc62-4e0d-a7ee-76a5908c06ff","upstreamStatus":200,"upstreamSha256":"73114feb3801b504836975e53db9bd97a132e4e1c69a8bd42c0e7d538cdc42cc","downstreamSha256":"1a885fa56d121cc3461ac651cca71b5f6073721a32877c98d14e81bfc477ad93","upstreamBytes":650,"downstreamBytes":664}
-{"kind":"truncated","path":"/rem/jobs/rem-wave-74fe33a3-bc62-4e0d-a7ee-76a5908c06ff","upstreamStatus":200,"upstreamSha256":"73114feb3801b504836975e53db9bd97a132e4e1c69a8bd42c0e7d538cdc42cc","downstreamSha256":"67f583697fa696519688b677421b781ec049f3f0bcc603de9d274d7112bda8d5","upstreamBytes":650,"downstreamBytes":647}
-{"kind":"unrecognised","path":"/rem/jobs/rem-wave-0ae6ada6-defd-4018-b855-7634e40558b1","upstreamStatus":200,"upstreamSha256":"4564274053620739c286082027476a8d628fd0a1e6a54c5f7cf140d3cbaadf85","downstreamSha256":"2314fb712fbd3ff5f679f65bb5f0e53cfeacd21a536a8bf7b7612fda2d8448e3","upstreamBytes":650,"downstreamBytes":664}
-{"kind":"truncated","path":"/rem/jobs/rem-wave-0ae6ada6-defd-4018-b855-7634e40558b1","upstreamStatus":200,"upstreamSha256":"4564274053620739c286082027476a8d628fd0a1e6a54c5f7cf140d3cbaadf85","downstreamSha256":"e726540a37a29e29fe59a0c7b5c111c9e1a1778496ffafba186c7f23fe8dc7a6","upstreamBytes":650,"downstreamBytes":647}
-{"kind":"unrecognised","path":"/rem/jobs/rem-wave-788e262c-51e5-477d-83a2-91e3f60bccc1","upstreamStatus":200,"upstreamSha256":"9109ee10bd32c9c710ec62cc7eac908241e86e8e1c049efd52d20b6657820885","downstreamSha256":"f7565ec4f0a894edbb7a1c9a5457c3fd8d6389839c4c8943f6bf7fc8fcca3165","upstreamBytes":650,"downstreamBytes":664}
-{"kind":"truncated","path":"/rem/jobs/rem-wave-788e262c-51e5-477d-83a2-91e3f60bccc1","upstreamStatus":200,"upstreamSha256":"9109ee10bd32c9c710ec62cc7eac908241e86e8e1c049efd52d20b6657820885","downstreamSha256":"0fc63b2a89dffd6de61b2bc283545223f38fab8c1a697717c8fb2d8334568d2e","upstreamBytes":650,"downstreamBytes":647}
-{"kind":"unrecognised","path":"/rem/jobs/rem-wave-3fc9dbad-5e4a-4834-8a5b-81a5c8f7aaa3","upstreamStatus":200,"upstreamSha256":"7f76191be7571b2bc91c723b29c9a84cf8e0e59af72ed94d0d998159fa6fa02c","downstreamSha256":"3fb812642ed2ebb119c364864ad2f2369ee27b80636e54d57bb98cfe797af7c9","upstreamBytes":650,"downstreamBytes":664}
-{"kind":"truncated","path":"/rem/jobs/rem-wave-3fc9dbad-5e4a-4834-8a5b-81a5c8f7aaa3","upstreamStatus":200,"upstreamSha256":"7f76191be7571b2bc91c723b29c9a84cf8e0e59af72ed94d0d998159fa6fa02c","downstreamSha256":"9282c14b017a29eadd5a786a5ad57c19a4ad4a363615e72751f68f3d47f83488","upstreamBytes":650,"downstreamBytes":647}
-{"kind":"unrecognised","path":"/rem/jobs/rem-wave-d02a5ea4-e26d-4721-b336-14ba9c3d0e26","upstreamStatus":200,"upstreamSha256":"dac2ff3d2400de3ace90df6c0894867d695a276c551716173952169da7f663e5","downstreamSha256":"bb125d1da85042a1e1c2d59ee33c2d2a6680fc2ee27441742274cde2ccbbc2bb","upstreamBytes":653,"downstreamBytes":667}
-{"kind":"truncated","path":"/rem/jobs/rem-wave-d02a5ea4-e26d-4721-b336-14ba9c3d0e26","upstreamStatus":200,"upstreamSha256":"dac2ff3d2400de3ace90df6c0894867d695a276c551716173952169da7f663e5","downstreamSha256":"4c861ae5e6c3cb79b45306db427caf832b86e43454ab2e28c98abb05b2ba4b7b","upstreamBytes":653,"downstreamBytes":650}
-
-Recorded full-run transcript:
+Recorded command block for the live output above:
 
 ```text
 $ bash tests/rem-status-exit-code-matrix.sh full
 status=0
 QCG-5 PASS
-observations=80/80 failures=0
-done=10
-failed=10
-timeout=10
-unrecognised=10
-truncated=10
-stopped=10
-profile=10
-unknown=10
-runtime_root_cleaned=true path=/tmp/sno-qcg5-live-sidecar.DmfEdf
+boundary=live-sidecar-backed fault injection; production sidecar native fault claim=false
+command=bash tests/rem-status-exit-code-matrix.sh full
+duration_ms=23758
+observations=80/80 failures=0 sidecar_starts=6
+counts={"done":10,"failed":10,"timeout":10,"unrecognised":10,"truncated":10,"stopped":10,"profile":10,"unknown":10}
+fault_injections=20 upstream_gets_before_injection=20
+no_interchange=true
 ```
+
+Fault injection events:
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-5f3c0e03-0109-48d5-aa8a-96ee7c65ed1b","upstreamStatus":200,"upstreamSha256":"819c6fa41e6171416ba101714d0f74d72014e96602954ed4578aa38e50c0705f","downstreamSha256":"ab19d75bb624b82e3a9bbe9f57802c162cc9522eb3a92c882dbc36deda946004","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-5f3c0e03-0109-48d5-aa8a-96ee7c65ed1b","upstreamStatus":200,"upstreamSha256":"819c6fa41e6171416ba101714d0f74d72014e96602954ed4578aa38e50c0705f","downstreamSha256":"61ebcdc8f9e46c85e399000bb05071d715d61b28bc43d11e3c3f2a8ef3bc7014","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-99e3084d-e40c-40e0-996c-cdfd17b13ebf","upstreamStatus":200,"upstreamSha256":"5f03149a3d2732386eb7c74c01a1362e93d71dc68ae398e02f730e9b27f7b1d2","downstreamSha256":"089e7ed00000c08b63b58fae9c7599fc3d43754b9167cd943af748c6b24fd174","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-99e3084d-e40c-40e0-996c-cdfd17b13ebf","upstreamStatus":200,"upstreamSha256":"5f03149a3d2732386eb7c74c01a1362e93d71dc68ae398e02f730e9b27f7b1d2","downstreamSha256":"86b996e4b65b9194f95a434f4410d01e66d4c3d5375fa1dec33b82ecdfda78d0","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-58145ec9-ae67-4f44-a5d0-d5e5adf149c7","upstreamStatus":200,"upstreamSha256":"4e93b9ec20d0187536bb914f4248cbee73120b1b791db901a678f8d737123066","downstreamSha256":"50078c86075f6ba4c234a8f086f2137b65d8073d1b4eec7202ff692200df368e","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-58145ec9-ae67-4f44-a5d0-d5e5adf149c7","upstreamStatus":200,"upstreamSha256":"4e93b9ec20d0187536bb914f4248cbee73120b1b791db901a678f8d737123066","downstreamSha256":"d6e267334d282c223cab05fce8867d1297d43ea24699a6c327cb8fe59f0cb1bb","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-b668c8f8-f23a-42a8-a058-6ce47eaab910","upstreamStatus":200,"upstreamSha256":"98de74c90b7521a603c4c3c6de2962540fe856dd43969a7eb5002d9e59758637","downstreamSha256":"d702cfa6c3d6a06c692e77341c1c682b17732b769fc2a0a901d378052343c333","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-b668c8f8-f23a-42a8-a058-6ce47eaab910","upstreamStatus":200,"upstreamSha256":"98de74c90b7521a603c4c3c6de2962540fe856dd43969a7eb5002d9e59758637","downstreamSha256":"5ccc2e3ad2676635cf4b4af4584346261d090c88fdc031ac6b064db41acfe763","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-cb7e6d46-df31-4973-aa06-917e5f6df707","upstreamStatus":200,"upstreamSha256":"05eea506a4739e866258cacf41b688febf13faef77aef6f5caf49aae8c93bcd8","downstreamSha256":"a2e642a7d0ceca4aa3f3f0cac71d25323e89e0f628077705afe25433f56adc27","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-cb7e6d46-df31-4973-aa06-917e5f6df707","upstreamStatus":200,"upstreamSha256":"05eea506a4739e866258cacf41b688febf13faef77aef6f5caf49aae8c93bcd8","downstreamSha256":"87b32fbafcfa227e0ad90173537680ffddfb31a1180e3dd3dce5fcd9dc742f16","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-0dab427d-f57d-4ab0-9450-1ac622d0f8aa","upstreamStatus":200,"upstreamSha256":"e7bc42fb0a5d1ebd1d311e789fda59b5159b8bb0eaf40bf86f94d66f3e09c057","downstreamSha256":"10ebda9f8885404d01590a2f4dcf82d877a11eab508ea42903d5b20f013b75b3","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-0dab427d-f57d-4ab0-9450-1ac622d0f8aa","upstreamStatus":200,"upstreamSha256":"e7bc42fb0a5d1ebd1d311e789fda59b5159b8bb0eaf40bf86f94d66f3e09c057","downstreamSha256":"23660b27377669c43e228165cb7239dde9d8690aa7e36e53db48fcfc5a647c76","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-61c41b9e-4ae9-48a9-97a7-fefb6e60b533","upstreamStatus":200,"upstreamSha256":"4381081f2652ce848147a42c1053d02c8e74838b44fc12d8b7f1dfb94b63ffc2","downstreamSha256":"053515a45e90fe0a51c3a668f31d3a6c78572dba35678c3993f9961f942264c9","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-61c41b9e-4ae9-48a9-97a7-fefb6e60b533","upstreamStatus":200,"upstreamSha256":"4381081f2652ce848147a42c1053d02c8e74838b44fc12d8b7f1dfb94b63ffc2","downstreamSha256":"0b810920dddac4b4dc9f55b8e79cbc8ccf70562f3c5e96527826e725d069e8aa","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-c185ae03-c4dd-4d64-9571-3bc3ad90b0a6","upstreamStatus":200,"upstreamSha256":"76eda0f90eaf6350a2b4f6d2b7a0aff6f45bfd4be6add36b92e4ebd6f7aaa51e","downstreamSha256":"c8751dbca22cae1740690dcd81c218dbcd4565a299a7eaf2283b5f0193ca1f89","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-c185ae03-c4dd-4d64-9571-3bc3ad90b0a6","upstreamStatus":200,"upstreamSha256":"76eda0f90eaf6350a2b4f6d2b7a0aff6f45bfd4be6add36b92e4ebd6f7aaa51e","downstreamSha256":"c4425935c276d6d0e238abfb5ff510efb05af13b7e04d64b42d1a621136cd1a1","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-a069b510-6d41-4ecd-92f4-bc7fe316c135","upstreamStatus":200,"upstreamSha256":"7b4f472485196a72cb2034e01b41b40c7ebfb8f43b3081defa9dbc84a3ab809e","downstreamSha256":"1692d79c1c235d0dacea6cfdbc5fb002453b40be9ec3ca29d3770371ae11166c","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-a069b510-6d41-4ecd-92f4-bc7fe316c135","upstreamStatus":200,"upstreamSha256":"7b4f472485196a72cb2034e01b41b40c7ebfb8f43b3081defa9dbc84a3ab809e","downstreamSha256":"2d1ee9db216a2ca16a21679a9ce467fd00723d70c3776e9743bad7260101971c","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-1a9ba874-272d-4fe5-a815-7e6786217385","upstreamStatus":200,"upstreamSha256":"ad3b0d2ace7c8a084647fa4087888eebb8f2ad8ab7c45575ce3e49bac9a9169d","downstreamSha256":"03a44f53c8e4ac67e72f23cef16b14e0c7997c6b46b650396551d0f297d425bf","upstreamBytes":653,"downstreamBytes":667}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-1a9ba874-272d-4fe5-a815-7e6786217385","upstreamStatus":200,"upstreamSha256":"ad3b0d2ace7c8a084647fa4087888eebb8f2ad8ab7c45575ce3e49bac9a9169d","downstreamSha256":"8c363de16c0061c07eb8458e088a9625bb536ba0fc0a05434e582bf931ce5142","upstreamBytes":653,"downstreamBytes":650}
