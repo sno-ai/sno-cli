@@ -1,73 +1,116 @@
-QCG-5 Section 3 RED-freeze evidence
+QCG-5 live-sidecar exit-code matrix evidence
 
-Boundary:
-Real compiled `sno` child processes, real temporary profile/discovery files,
-and the existing real loopback TCP/HTTP fixture. This proves only the five
-Section 3 status-path rows. It is not the complete ten-class cross-repository
-live-sidecar E2E required to mark release-level QCG-5 GREEN.
+Boundary: live-sidecar-backed fault injection. The unfamiliar and truncated rows each forwarded the target GET to the live production sidecar before changing the response. This evidence does not claim that the production sidecar natively emits either fault.
 
-Command:
-cargo test --test rem_job_state_contract qcg_5_section_3_state_outcomes_do_not_interchange_across_ten_repetitions -- --exact --nocapture --test-threads=1
+Manifest:
+{
+  "schemaVersion": 1,
+  "gate": "QCG-5",
+  "mode": "full",
+  "boundary": "live-sidecar-backed fault injection",
+  "productionSidecarNativeFaultClaim": false,
+  "command": "bash tests/rem-status-exit-code-matrix.sh full",
+  "runtimeRoot": "/tmp/sno-qcg5-live-sidecar.DmfEdf",
+  "runtimeRootCleanupRequired": true,
+  "binary": {
+    "path": "/home/lh/code/sno-cli/target/debug/sno",
+    "sha256": "907189b03d0453c7975947583bf015948dd59cbb57b33d50bfb1e78276626667"
+  },
+  "sidecar": {
+    "entry": "/home/lh/code/sno-station-core-edge-rem-wave/apps/mem-claw/src/sidecar/main.ts",
+    "sha256": "74082e97f8a3b4fc99d9365f46aec154f73e2e7755b316ba3b1df386176ad6b6",
+    "starts": 6
+  },
+  "artifacts": {
+    "plan": {
+      "path": "/home/lh/code/sno-cli/tests/rem-status-exit-code-matrix.plan.md",
+      "sha256": "b3986e6000c35b9d625cec6db22a7804233070e9246a8a0f5a0c76690fe1ba48"
+    },
+    "planReceipt": {
+      "path": "/home/lh/code/sno-cli/tests/rem-status-exit-code-matrix.plan.sha256",
+      "sha256": "9f26ce921dd3b5ccb6aa2fafb36a5b99c10b5355eb323f96f9a680bdb43f4bec"
+    },
+    "shellRunner": {
+      "path": "/home/lh/code/sno-cli/tests/rem-status-exit-code-matrix.sh",
+      "sha256": "a66676a91fd42c2d8707ccdb419ee71a42329509a002b298fd9c872e8d52dbec"
+    },
+    "helper": {
+      "path": "/home/lh/code/sno-cli/tests/rem-status-exit-code-matrix.mts",
+      "sha256": "0661e72b74ac8fcb85f6b705093bacff4df71da62b7d0c412a98196a3ee21b0a"
+    }
+  },
+  "durationMs": 23712,
+  "observations": {
+    "expected": 80,
+    "passed": 80,
+    "failed": 0,
+    "counts": {
+      "done": 10,
+      "failed": 10,
+      "timeout": 10,
+      "unrecognised": 10,
+      "truncated": 10,
+      "stopped": 10,
+      "profile": 10,
+      "unknown": 10
+    }
+  },
+  "faultInjection": {
+    "observations": 20,
+    "upstreamGetsForwardedBeforeInjection": 20,
+    "responseHashesRetained": true
+  },
+  "noInterchange": true
+}
 
-Expected RED:
-Each of done/failed/timeout/unfamiliar/invalid runs ten times. The unfamiliar
-row must be `rem_state_unrecognised` exit 5 and must never exchange with the
-malformed-response row.
+Summary:
+QCG-5 PASS
+boundary=live-sidecar-backed fault injection; production sidecar native fault claim=false
+command=bash tests/rem-status-exit-code-matrix.sh full
+duration_ms=23712
+observations=80/80 failures=0 sidecar_starts=6
+counts={"done":10,"failed":10,"timeout":10,"unrecognised":10,"truncated":10,"stopped":10,"profile":10,"unknown":10}
+fault_injections=20 upstream_gets_before_injection=20
+binary_sha256=907189b03d0453c7975947583bf015948dd59cbb57b33d50bfb1e78276626667
+plan_sha256=b3986e6000c35b9d625cec6db22a7804233070e9246a8a0f5a0c76690fe1ba48
+no_interchange=true
 
-Observed:
-Compilation succeeded. Fifty real `sno` invocations completed in 10.29s.
-Done, failed, timeout, and invalid produced their expected rows. All ten
-unfamiliar-state repetitions instead produced `sidecar_response_invalid`
-exit 6.
+Fault injection events:
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-f5fa82c0-8b7c-4e9c-97ad-f30948481748","upstreamStatus":200,"upstreamSha256":"7b86440aa67c99ed0bacc3e2c811c29fd7b62b389c57b8fbdcd89517b2d2be9b","downstreamSha256":"a9b23c83b648cfa2981ff5353b299e912b1104034e7a005df406a5782aa8392e","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-f5fa82c0-8b7c-4e9c-97ad-f30948481748","upstreamStatus":200,"upstreamSha256":"7b86440aa67c99ed0bacc3e2c811c29fd7b62b389c57b8fbdcd89517b2d2be9b","downstreamSha256":"26d4829583b20ec422c8f4f31b85baf47c2c5645b0fbf0b4a649d00cf3070d63","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-2c3a072f-c901-4786-a4d6-c1db96ec269f","upstreamStatus":200,"upstreamSha256":"95d97f7268ed512102c4db7d6d09d7f09e256aadd49fe9678482a22d49f0e7cb","downstreamSha256":"17eab30857fb5fc2b1c29bf9f1e5f91a7fa8bd8e34de508cd25a9cec855a906a","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-2c3a072f-c901-4786-a4d6-c1db96ec269f","upstreamStatus":200,"upstreamSha256":"95d97f7268ed512102c4db7d6d09d7f09e256aadd49fe9678482a22d49f0e7cb","downstreamSha256":"9efadc46632cf2661de809334a33336f18f36b03d91c15b8ab54dcc4def0f813","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-a5fb9656-61af-4729-8509-5333e442e406","upstreamStatus":200,"upstreamSha256":"59f30560a1262ab088d00bd510e90a5bec2d384117196ab4a5b6ddf0e7ff3884","downstreamSha256":"ad68356260646aaedbdc515803dc06d0702ad0c4edc66ea838769d14e7af545d","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-a5fb9656-61af-4729-8509-5333e442e406","upstreamStatus":200,"upstreamSha256":"59f30560a1262ab088d00bd510e90a5bec2d384117196ab4a5b6ddf0e7ff3884","downstreamSha256":"b2b7489901a7fd3ba191606c1cc9f865c14665cf8b4cba83e72c5901439ca656","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-06abc5bb-0691-4cac-95ad-51bb5f028ebb","upstreamStatus":200,"upstreamSha256":"2971a4a792857078d7787acd8da1f7e53a890b2da449cee3bb89f4db969fb48f","downstreamSha256":"10bb4e185ca669f06d6e2d4956a64c9a473c141eeae6369c54daa87c4228584f","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-06abc5bb-0691-4cac-95ad-51bb5f028ebb","upstreamStatus":200,"upstreamSha256":"2971a4a792857078d7787acd8da1f7e53a890b2da449cee3bb89f4db969fb48f","downstreamSha256":"9b5d7d0a411cd1d3b4f072c0c04052a26a2a13f1ca678bcca25da6fbdc9acc09","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-5be2335c-2122-455c-ba94-b6e628ea7ad8","upstreamStatus":200,"upstreamSha256":"76e1847205255a3ab330d29cf8bc2d712ec8f897ec977b02080e75936faae566","downstreamSha256":"b81c18d12db89cde0b25456783450ac93a07b4ecfe17b72917857ebb0d3bdc26","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-5be2335c-2122-455c-ba94-b6e628ea7ad8","upstreamStatus":200,"upstreamSha256":"76e1847205255a3ab330d29cf8bc2d712ec8f897ec977b02080e75936faae566","downstreamSha256":"1447a20b33de2469fd44e398fbc2323d9900adfbc7e824538fedcebf4f1065a5","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-74fe33a3-bc62-4e0d-a7ee-76a5908c06ff","upstreamStatus":200,"upstreamSha256":"73114feb3801b504836975e53db9bd97a132e4e1c69a8bd42c0e7d538cdc42cc","downstreamSha256":"1a885fa56d121cc3461ac651cca71b5f6073721a32877c98d14e81bfc477ad93","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-74fe33a3-bc62-4e0d-a7ee-76a5908c06ff","upstreamStatus":200,"upstreamSha256":"73114feb3801b504836975e53db9bd97a132e4e1c69a8bd42c0e7d538cdc42cc","downstreamSha256":"67f583697fa696519688b677421b781ec049f3f0bcc603de9d274d7112bda8d5","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-0ae6ada6-defd-4018-b855-7634e40558b1","upstreamStatus":200,"upstreamSha256":"4564274053620739c286082027476a8d628fd0a1e6a54c5f7cf140d3cbaadf85","downstreamSha256":"2314fb712fbd3ff5f679f65bb5f0e53cfeacd21a536a8bf7b7612fda2d8448e3","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-0ae6ada6-defd-4018-b855-7634e40558b1","upstreamStatus":200,"upstreamSha256":"4564274053620739c286082027476a8d628fd0a1e6a54c5f7cf140d3cbaadf85","downstreamSha256":"e726540a37a29e29fe59a0c7b5c111c9e1a1778496ffafba186c7f23fe8dc7a6","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-788e262c-51e5-477d-83a2-91e3f60bccc1","upstreamStatus":200,"upstreamSha256":"9109ee10bd32c9c710ec62cc7eac908241e86e8e1c049efd52d20b6657820885","downstreamSha256":"f7565ec4f0a894edbb7a1c9a5457c3fd8d6389839c4c8943f6bf7fc8fcca3165","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-788e262c-51e5-477d-83a2-91e3f60bccc1","upstreamStatus":200,"upstreamSha256":"9109ee10bd32c9c710ec62cc7eac908241e86e8e1c049efd52d20b6657820885","downstreamSha256":"0fc63b2a89dffd6de61b2bc283545223f38fab8c1a697717c8fb2d8334568d2e","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-3fc9dbad-5e4a-4834-8a5b-81a5c8f7aaa3","upstreamStatus":200,"upstreamSha256":"7f76191be7571b2bc91c723b29c9a84cf8e0e59af72ed94d0d998159fa6fa02c","downstreamSha256":"3fb812642ed2ebb119c364864ad2f2369ee27b80636e54d57bb98cfe797af7c9","upstreamBytes":650,"downstreamBytes":664}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-3fc9dbad-5e4a-4834-8a5b-81a5c8f7aaa3","upstreamStatus":200,"upstreamSha256":"7f76191be7571b2bc91c723b29c9a84cf8e0e59af72ed94d0d998159fa6fa02c","downstreamSha256":"9282c14b017a29eadd5a786a5ad57c19a4ad4a363615e72751f68f3d47f83488","upstreamBytes":650,"downstreamBytes":647}
+{"kind":"unrecognised","path":"/rem/jobs/rem-wave-d02a5ea4-e26d-4721-b336-14ba9c3d0e26","upstreamStatus":200,"upstreamSha256":"dac2ff3d2400de3ace90df6c0894867d695a276c551716173952169da7f663e5","downstreamSha256":"bb125d1da85042a1e1c2d59ee33c2d2a6680fc2ee27441742274cde2ccbbc2bb","upstreamBytes":653,"downstreamBytes":667}
+{"kind":"truncated","path":"/rem/jobs/rem-wave-d02a5ea4-e26d-4721-b336-14ba9c3d0e26","upstreamStatus":200,"upstreamSha256":"dac2ff3d2400de3ace90df6c0894867d695a276c551716173952169da7f663e5","downstreamSha256":"4c861ae5e6c3cb79b45306db427caf832b86e43454ab2e28c98abb05b2ba4b7b","upstreamBytes":653,"downstreamBytes":650}
+
+Recorded full-run transcript:
 
 ```text
-$ cargo test --test rem_job_state_contract qcg_5_section_3_state_outcomes_do_not_interchange_across_ten_repetitions -- --exact --nocapture --test-threads=1
-status=101
-BEGIN RECORDED RED
-compilation=success
-test=qcg_5_section_3_state_outcomes_do_not_interchange_across_ten_repetitions
-result=0 passed; 1 failed; 9 filtered out
-repetitions=10
-expected_each=exit 5 error rem_state_unrecognised
-observed_each=exit 6 error sidecar_response_invalid
-observed_message=sidecar returned an invalid REM job state
-failure=QCG-5 local state outcomes interchanged
-END RECORDED RED
-```
-
-Diagnosis:
-Genuine product RED. The test compiled, reached the real status-state branch,
-and failed only because every non-empty unfamiliar state was assigned to the
-malformed-response outcome.
-
-Frozen test SHA-256:
-8e8296590d48d9af57184e1c08c4480e114b26a1a98f5fd2c0b377c6af158f01  tests/rem_job_state_contract.rs
-
-Plan SHA-256:
-44b7a55003c9e8d27d63e7401a041e24bf7c877519aff81ea7be004e9c063f7e  openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/test-plan-section-3.md
-
-External gate:
-UNINSTANTIATED. The real external REM sidecar and persona store are not in
-this repository, and this task did not edit or launch the external repository.
-
-GREEN rerun after product handback
-
-```text
-$ cargo test --test rem_job_state_contract qcg_5_section_3_state_outcomes_do_not_interchange_across_ten_repetitions -- --exact --nocapture --test-threads=1
+$ bash tests/rem-status-exit-code-matrix.sh full
 status=0
-    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.12s
-     Running tests/rem_job_state_contract.rs (target/debug/deps/rem_job_state_contract-71b5df54f1c7d44f)
-
-running 1 test
-test qcg_5_section_3_state_outcomes_do_not_interchange_across_ten_repetitions ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 9 filtered out; finished in 10.29s
+QCG-5 PASS
+observations=80/80 failures=0
+done=10
+failed=10
+timeout=10
+unrecognised=10
+truncated=10
+stopped=10
+profile=10
+unknown=10
+runtime_root_cleaned=true path=/tmp/sno-qcg5-live-sidecar.DmfEdf
 ```
-
-GREEN disposition:
-The frozen local loopback state matrix passed all fifty compiled-CLI
-invocations. This is local Section 3 GREEN only. The complete ten-class
-cross-repository live-sidecar QCG-5 gate remains UNINSTANTIATED.
-
-Frozen test SHA-256 verified before rerun:
-8e8296590d48d9af57184e1c08c4480e114b26a1a98f5fd2c0b377c6af158f01  tests/rem_job_state_contract.rs
