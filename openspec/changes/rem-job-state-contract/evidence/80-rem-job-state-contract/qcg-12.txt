@@ -1,0 +1,52 @@
+QCG-12 named acceptance entrypoint evidence
+
+Reviewed plan SHA-256:
+dd4eace80536f11c1d446a36c04bc604d4e5dbb4463d26ebf28f837fef9091ec  /tmp/rem-section7-test-plan-v4.md
+
+Section 5 GREEN prerequisite:
+```text
+commit=884e8c94b25b68853f6532367dc9407852236153
+artifact_sha256=db25eac132ad648b9cbe3e653b08bf68df9c20857393a3738161d6656a3f3e66
+receipt_sha256=db25eac132ad648b9cbe3e653b08bf68df9c20857393a3738161d6656a3f3e66
+working_tree_matches_committed_bytes=yes
+```
+
+Syntax and real-boundary baseline:
+```text
+$ bash -n tests/rem-routing-table-e2e.sh
+status=0
+$ bash tests/rem-routing-table-e2e.sh
+status=0
+Section5 mode=baseline expected_observations=24 estimated_rate_min=0.5_obs/s estimated_wall_max=90s hard_timeout=120s
+future-tool-build mutation_sha256=98cc2637b5fbe44946e31708599f38d3ecaf4160d37b84a887b91e2bf5caf0ad binary_sha256=196742d8abb3cdbe69a0c8835872a7e32f30008ecc25fcb7b09c96a58078935a
+progress_count=24
+progress 20/24 case=sibling-first-code-8 exit=8 rate=2.98_obs/s eta=1.3s
+progress 24/24 case=qcg16-rejected exit=21 rate=3.51_obs/s eta=0.0s
+Section5 boundary_reached observations=24/24 forwarded_requests=30 sidecar_pid=232267 store=/mnt/ramdisk/tmp/mem-claw-test-etwfD8/test.sqlite
+Section5 hashes plan=2b8aab7093536b3ee54a08b18db35b9ca9a6cc9938f3d8d93e65cfadaa3bbd69 fixture=9d1e734f43fadb5a65f477e79237fb122d94b94efe3e4a94b7219fdcf04a8bde current_cli=e672158b54a190b9e71c4acb32f046c6d573e12b24b74efa31abb4b508b2f7f8 future_cli=196742d8abb3cdbe69a0c8835872a7e32f30008ecc25fcb7b09c96a58078935a run_rem=36efcb14b5437f845370e2b9b3cf05e77d63943a447c4c615175d8971781dc6c run_rem_noop=c1f66c318e6b1fd9e16db2113480f399f4dd05dac6cb7ca4dfab836b5ac449e7
+Section5 PASS QCG-12 QCG-13 QCG-15 QCG-16 QCG-17
+NEGATIVE CONTROL RED QCG12: known code 3 was logged as unmatched
+reviewed_plan_sha256=dd4eace80536f11c1d446a36c04bc604d4e5dbb4463d26ebf28f837fef9091ec
+proof_execution_count=24
+proof_marker=qcg12_dual_runner_real_boundary_routing_table
+negative_control_red_observed=1
+```
+
+The baseline exercised the installed current CLI and a temporary real future
+CLI build through both ordinary runners. It reached one live sidecar over its
+real socket, forwarded 30 requests, and used the real encrypted persona store
+shown by the boundary line. Codes 0 through 9 and future code 10 were observed
+for both runners; the underlying frozen oracle checked exact runner/persona
+fates and unmatched-log presence or absence.
+
+Named-script negative control RED observed:
+```text
+$ bash tests/rem-routing-table-e2e.sh negative-control
+status=1
+Section5 mode=negative-qcg12 expected_observations=1 estimated_wall_max=5s hard_timeout=120s
+NEGATIVE CONTROL RED QCG12: known code 3 was logged as unmatched
+Section5 cleaned runtime_root=/tmp/sno-section5-runner-contract.KCeX8E status=1
+```
+
+The named entrypoint directly returned the underlying negative control's exit
+`1`; no `eval`, status rewriting, or expected-failure masking was used.
