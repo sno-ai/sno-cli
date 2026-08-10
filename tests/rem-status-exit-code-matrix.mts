@@ -122,7 +122,13 @@ async function main(): Promise<void> {
 	const normal = await startFixture({ configuration: switchedOff });
 	await runDoneAndUnknown(normal);
 
-	const failed = await startFixture({ configuration: switchedOff, grammar: "missing-accepted" });
+	// The failed row needs the operation to RUN and then fail on the grammar. With every
+	// operation switched off the job is refused first and finishes `done`, so the row can
+	// never observe exit 3 -- measured 2026-08-10, after the per-operation switches landed.
+	const failed = await startFixture({
+		configuration: createUpdateEnabledConfiguration(),
+		grammar: "missing-accepted",
+	});
 	await runFailed(failed);
 
 	const timeout = await withEnvironment("SNO_REM_TEST_HOLD_MS", "2000", () =>
@@ -484,6 +490,17 @@ function validatePreflight(): void {
 	if (receipt !== "b3986e6000c35b9d625cec6db22a7804233070e9246a8a0f5a0c76690fe1ba48") {
 		throw new Error(`unexpected admitted plan hash: ${receipt}`);
 	}
+}
+
+function createUpdateEnabledConfiguration(): Record<string, unknown> {
+	const configuration = createRemOwnerDecidedOperationalConfiguration();
+	configuration["operations"] = {
+		"rem-update": true,
+		"rem-replace": false,
+		"rem-distill": false,
+		"rem-retire": false,
+	};
+	return configuration;
 }
 
 function createSwitchedOffConfiguration(): Record<string, unknown> {
