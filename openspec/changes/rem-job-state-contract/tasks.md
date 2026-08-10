@@ -19,9 +19,9 @@
 
 ## 4. Publish and Protect the CLI Contract
 
-- [ ] 4.1 Using `codex-coder`, assign the exact ten outcome exit codes `0` through `9` and keep non-REM generic runtime failures at exit `1`.
-- [ ] 4.2 Update `README.md` with the `station rem-*` exit-code table and compare its normalized semantic rows with the declaration without depending on either source format.
-- [ ] 4.3 Have the independent test owner rerun and freeze GREEN for QCG-3 and QCG-4.
+- [x] 4.1 Using `codex-coder`, assign the exact ten outcome exit codes `0` through `9` and keep non-REM generic runtime failures at exit `1`. — evidence: `evidence/80-rem-job-state-contract/qcg-4.txt`, `test qcg_4_stopped_sidecar_moves_both_rem_commands_to_exit_seven ... ok`
+- [x] 4.2 Update `README.md` with the `station rem-*` exit-code table and compare its normalized semantic rows with the declaration without depending on either source format. — evidence: `evidence/80-rem-job-state-contract/qcg-3.txt`, `test qcg_3_readme_matches_declaration_semantic_rows_and_detects_drift ... ok`
+- [x] 4.3 Have the independent test owner rerun and freeze GREEN for QCG-3 and QCG-4. — evidence: `evidence/80-rem-job-state-contract/section-4-independent-green.md`, `test qcg_4_external_service_runtime_stays_exit_one ... ok`
 
 ## 5. Route Both Memora Consumers
 

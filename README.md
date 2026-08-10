@@ -40,7 +40,7 @@ sno station rem-start --type noop --scope <SCOPE>
 sno station rem-status <JOB_ID> [--wait [--timeout <SECONDS>]]
 ```
 
-Every built-in command accepts `--json`. Commands emit one JSON value except `sno account machine claim`, which emits newline-delimited JSON: an `authorization` record before waiting and a final `result` or `error` record. This lets users and automation receive the browser verification code before approval. Success is exit code `0`, runtime failure is `1`, and invalid usage is `2`.
+Every built-in command accepts `--json`. Commands emit one JSON value except `sno account machine claim`, which emits newline-delimited JSON: an `authorization` record before waiting and a final `result` or `error` record. This lets users and automation receive the browser verification code before approval. Success is exit code `0`, runtime failure is `1`, and command-line usage errors exit with `2`.
 
 ### Local REM jobs
 
@@ -59,12 +59,25 @@ sno station rem-status <JOB_ID> --wait --timeout 60
 ```
 
 Human-readable status output includes both the job id and state.
-The default wait timeout is 60 seconds. A completed job exits `0`.
-A failed job or timeout exits `1`; invalid flags or missing required values exit `2`.
+The default wait timeout is 60 seconds. The `station rem-*` family uses this exit-code contract:
+
+| Outcome class | Exit code | Machine-readable error codes |
+|---|---:|---|
+| success | `0` | — |
+| unclassified failure | `1` | Any error code absent from the declaration |
+| invalid usage | `2` | `usage_error` |
+| job failed | `3` | `rem_job_failed` |
+| wait deadline passed | `4` | `rem_timeout` |
+| state vocabulary mismatch | `5` | `rem_state_unrecognised` |
+| malformed or truncated response | `6` | `sidecar_response_invalid`, `sidecar_response_truncated` |
+| sidecar failure | `7` | `sidecar_not_running`, `sidecar_unauthorized`, `sidecar_client_error`, `sidecar_discovery_error`, `sidecar_discovery_invalid`, `sidecar_response_error` |
+| local environment failure | `8` | `profile_error`, `rem_trace_error` |
+| unknown job identifier | `9` | `rem_job_not_found` |
+
 Add `--json` to either command for stable JSON output. The CLI rereads local sidecar discovery on
 every request and poll, so an active wait can reconnect after a sidecar restart.
 If the audit stream is unavailable, the job remains non-terminal and the sidecar reports the
-write failure; `--wait` exits `1` when its timeout expires instead of claiming an unaudited result.
+write failure; `--wait` exits `4` when its timeout expires instead of claiming an unaudited result.
 
 REM JSON start output includes both `job_id` and `correlation_id`. The CLI sends the correlation
 id to the sidecar and writes a durable, token-free JSONL trace for each parsed command, discovery

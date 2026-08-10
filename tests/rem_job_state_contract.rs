@@ -4,6 +4,7 @@ mod sno_service_server;
 
 use std::collections::{BTreeMap, BTreeSet};
 use std::fs;
+use std::net::TcpListener;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
 
@@ -94,6 +95,73 @@ fn validate_rows(rows: &[ContractRow]) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+fn normalized_semantic_rows(
+    source: &str,
+) -> Result<BTreeMap<String, (i32, BTreeSet<String>)>, String> {
+    let expected = expected_rows();
+    let known_errors = expected
+        .iter()
+        .flat_map(|row| row.errors.iter().copied())
+        .collect::<BTreeSet<_>>();
+    let mut positions = expected
+        .iter()
+        .map(|row| {
+            source
+                .find(row.name)
+                .map(|position| (position, row.name))
+                .ok_or_else(|| format!("missing outcome name `{}`", row.name))
+        })
+        .collect::<Result<Vec<_>, _>>()?;
+    positions.sort_unstable();
+
+    let mut rows = BTreeMap::new();
+    for (index, (start, name)) in positions.iter().copied().enumerate() {
+        let next_name = positions
+            .get(index + 1)
+            .map_or(source.len(), |(position, _)| *position);
+        let paragraph_end = source[start..]
+            .find("\n\n")
+            .map_or(source.len(), |offset| start + offset);
+        let end = next_name
+            .min(paragraph_end)
+            .min(start.saturating_add(1_000));
+        let segment = &source[start..end];
+        let exits = segment
+            .split(|character: char| !character.is_ascii_digit())
+            .filter(|token| token.len() == 1)
+            .filter_map(|token| token.parse::<i32>().ok())
+            .collect::<BTreeSet<_>>();
+        if exits.len() != 1 {
+            return Err(format!(
+                "outcome `{name}` must document exactly one exit in 0..9; found {exits:?} in `{}`",
+                segment.trim()
+            ));
+        }
+        let errors = known_errors
+            .iter()
+            .filter(|error| segment.contains(**error))
+            .map(|error| (*error).to_owned())
+            .collect::<BTreeSet<_>>();
+        rows.insert(
+            name.to_owned(),
+            (*exits.iter().next().expect("one semantic exit"), errors),
+        );
+    }
+    Ok(rows)
+}
+
+fn semantic_document(rows: &BTreeMap<String, (i32, BTreeSet<String>)>) -> String {
+    rows.iter()
+        .map(|(name, (exit, errors))| {
+            format!(
+                "{name} exit {exit} errors {}",
+                errors.iter().cloned().collect::<Vec<_>>().join(", ")
+            )
+        })
+        .collect::<Vec<_>>()
+        .join("\n\n")
 }
 
 fn rust_sources() -> Vec<(PathBuf, String)> {
@@ -233,6 +301,26 @@ fn write_rem_discovery(profile: &Path, server: &SnoServiceServer) {
         json!({"port":port,"token":"rem-contract-token","pid":123}).to_string(),
     )
     .expect("REM discovery");
+}
+
+fn write_rem_discovery_port(profile: &Path, port: u16) {
+    let station = profile.join("station");
+    fs::create_dir_all(&station).expect("station directory");
+    fs::write(
+        station.join("sidecar.json"),
+        json!({"port":port,"token":"rem-contract-token","pid":123}).to_string(),
+    )
+    .expect("REM discovery");
+}
+
+fn run_rem(profile: &Path, arguments: &[&str]) -> Output {
+    Command::new(env!("CARGO_BIN_EXE_sno"))
+        .args(arguments)
+        .env("SNO_PROFILE_DIR", profile)
+        .env("OPENCLAW_STATE_DIR", profile)
+        .env("SNO_REM_TRACE", "0")
+        .output()
+        .expect("run sno REM command")
 }
 
 fn observe_rem_error(code: &'static str) -> (i32, String) {
@@ -440,6 +528,189 @@ fn qcg_2_duplicate_exit_and_error_are_rejected() {
             path.display()
         );
     }
+}
+
+#[test]
+fn qcg_3_readme_matches_declaration_semantic_rows_and_detects_drift() {
+    let (_, declaration_source) =
+        declaration_source().expect("QCG-3 product declaration is missing");
+    let declaration_rows = normalized_semantic_rows(&declaration_source)
+        .expect("QCG-3 declaration semantic rows are invalid");
+
+    let canonical_document = semantic_document(&declaration_rows);
+    let mutated_document = canonical_document.replacen("job failed exit 3", "job failed exit 4", 1);
+    assert_ne!(
+        mutated_document, canonical_document,
+        "mutation was not applied"
+    );
+    assert_ne!(
+        normalized_semantic_rows(&mutated_document)
+            .expect("test-owned documentation mutation must remain parseable"),
+        declaration_rows,
+        "QCG-3 documentation-only semantic drift was not detected"
+    );
+
+    let readme = fs::read_to_string(Path::new(env!("CARGO_MANIFEST_DIR")).join("README.md"))
+        .expect("README");
+    let readme_rows = normalized_semantic_rows(&readme)
+        .unwrap_or_else(|error| panic!("REQ-3 README semantic rows are invalid: {error}"));
+    assert_eq!(
+        readme_rows, declaration_rows,
+        "REQ-3 README and REM outcome declaration semantic rows drifted"
+    );
+}
+
+#[test]
+fn qcg_4_unreachable_account_runtime_stays_exit_one() {
+    let profile = TempDir::new().expect("profile");
+    let listener = TcpListener::bind("127.0.0.1:0").expect("reserve loopback endpoint");
+    let unreachable_url = format!(
+        "http://{}",
+        listener.local_addr().expect("loopback address")
+    );
+    drop(listener);
+
+    let output = Command::new(env!("CARGO_BIN_EXE_sno"))
+        .args(["account", "machine", "register", "--json"])
+        .env("SNO_PROFILE_DIR", profile.path())
+        .env("SNO_OBSERVE_BASE_URL", unreachable_url)
+        .output()
+        .expect("run unreachable account registration");
+    assert_eq!(
+        output.status.code(),
+        Some(1),
+        "stdout={} stderr={}",
+        output_text(&output.stdout),
+        output_text(&output.stderr)
+    );
+    let value: Value = serde_json::from_slice(&output.stdout).unwrap_or_else(|error| {
+        panic!(
+            "account runtime failure was not JSON ({error}): {}",
+            output_text(&output.stdout)
+        )
+    });
+    assert!(
+        value["error"]
+            .as_str()
+            .is_some_and(|error| !error.is_empty()),
+        "account runtime failure lost its machine error: {value}"
+    );
+}
+
+#[cfg(unix)]
+#[test]
+fn qcg_4_external_service_runtime_stays_exit_one() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let profile = TempDir::new().expect("profile");
+    let bin = TempDir::new().expect("external bin");
+    let executable = bin.path().join("sno-service");
+    fs::write(
+        &executable,
+        "#!/bin/sh\n[ \"$1\" = \"fail-runtime\" ] || exit 64\nprintf '%s\\n' qcg4-service-runtime >&2\nexit 1\n",
+    )
+    .expect("write sno-service executable");
+    fs::set_permissions(&executable, fs::Permissions::from_mode(0o755))
+        .expect("make sno-service executable");
+
+    let output = Command::new(env!("CARGO_BIN_EXE_sno"))
+        .args(["service", "fail-runtime"])
+        .env("SNO_PROFILE_DIR", profile.path())
+        .env("PATH", bin.path())
+        .output()
+        .expect("run external sno service failure");
+    assert_eq!(output.status.code(), Some(1));
+    assert_eq!(output_text(&output.stderr), "qcg4-service-runtime\n");
+}
+
+#[test]
+fn qcg_4_stopped_sidecar_moves_both_rem_commands_to_exit_seven() {
+    let profile = TempDir::new().expect("profile");
+    let stopped_listener = TcpListener::bind("127.0.0.1:0").expect("start sidecar listener");
+    let stopped_port = stopped_listener
+        .local_addr()
+        .expect("stopped sidecar address")
+        .port();
+    write_rem_discovery_port(profile.path(), stopped_port);
+    drop(stopped_listener);
+
+    let stopped_start = run_rem(
+        profile.path(),
+        &[
+            "station",
+            "rem-start",
+            "--type",
+            "noop",
+            "--scope",
+            "persona:qcg4-stopped-sidecar",
+            "--json",
+        ],
+    );
+    let stopped_status = run_rem(
+        profile.path(),
+        &[
+            "station",
+            "rem-status",
+            "job-qcg4-stopped-sidecar",
+            "--json",
+        ],
+    );
+    for (label, output) in [
+        ("rem-start", &stopped_start),
+        ("rem-status", &stopped_status),
+    ] {
+        assert_eq!(
+            output.status.code(),
+            Some(7),
+            "{label}: stdout={} stderr={}",
+            output_text(&output.stdout),
+            output_text(&output.stderr)
+        );
+        let value = last_json_line(output);
+        assert!(
+            expected_rows()
+                .into_iter()
+                .find(|row| row.exit == 7)
+                .expect("exit-seven declaration row")
+                .errors
+                .contains(&value["error"].as_str().unwrap_or("")),
+            "{label}: unexpected stopped-sidecar error {value}"
+        );
+    }
+
+    let restored = SnoServiceServer::start(vec![
+        Box::new(|_| ServiceResponse::json(202, json!({"job_id":"job-qcg4-restored-sidecar"}))),
+        Box::new(|_| ServiceResponse::json(200, rem_job("done", None))),
+    ]);
+    write_rem_discovery(profile.path(), &restored);
+    let restored_start = run_rem(
+        profile.path(),
+        &[
+            "station",
+            "rem-start",
+            "--type",
+            "noop",
+            "--scope",
+            "persona:qcg4-restored-sidecar",
+            "--json",
+        ],
+    );
+    let restored_status = run_rem(
+        profile.path(),
+        &[
+            "station",
+            "rem-status",
+            "job-qcg4-restored-sidecar",
+            "--json",
+        ],
+    );
+    assert_eq!(restored_start.status.code(), Some(0));
+    assert_eq!(restored_status.status.code(), Some(0));
+    assert_eq!(restored.finish().len(), 2, "restored sidecar requests");
+
+    let discovery = profile.path().join("station/sidecar.json");
+    fs::remove_file(&discovery).expect("clean temporary sidecar discovery");
+    assert!(!discovery.exists(), "temporary sidecar discovery remains");
 }
 
 #[test]
