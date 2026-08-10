@@ -16,13 +16,20 @@ tsx="$sidecar_repo/node_modules/.bin/tsx"
 tsx_config="$sidecar_repo/apps/mem-claw/tsconfig.json"
 helper="$repo_root/tests/rem-runner-routing-contract.mts"
 fixture="$repo_root/tests/fixtures/rem-runner-routing-cases.json"
-plan="$repo_root/openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/test-plan-section-5.md"
-receipt="$repo_root/openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/test-plan-section-5.sha256"
-owner_ruling="$repo_root/openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/test-plan-section-5-owner-ruling.md"
+plan="$repo_root/openspec/changes/archive/2026-08-10-rem-job-state-contract/evidence/80-rem-job-state-contract/test-plan-section-5.md"
+receipt="$repo_root/openspec/changes/archive/2026-08-10-rem-job-state-contract/evidence/80-rem-job-state-contract/test-plan-section-5.sha256"
+owner_ruling="$repo_root/openspec/changes/archive/2026-08-10-rem-job-state-contract/evidence/80-rem-job-state-contract/test-plan-section-5-owner-ruling.md"
 admitted_plan_sha256="2b8aab7093536b3ee54a08b18db35b9ca9a6cc9938f3d8d93e65cfadaa3bbd69"
 
 for required in "$tsx" "$helper" "$fixture" "$plan" "$receipt" "$owner_ruling" "$repo_root/target/debug/sno"; do
-    test -e "$required"
+    # Name the missing file. A bare `test -e` under `set -e` exits 1 with no output,
+    # so every caller up the chain reported a failing routing contract while the real
+    # cause was one moved path -- measured 2026-08-10, three commands deep before the
+    # trace showed it.
+    test -e "$required" || {
+        printf 'rem-runner-routing-contract: required input is missing: %s\n' "$required" >&2
+        exit 1
+    }
 done
 
 actual_plan_sha256="$(sha256sum "$plan" | awk '{print $1}')"

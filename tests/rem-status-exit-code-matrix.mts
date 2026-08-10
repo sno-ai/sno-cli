@@ -76,7 +76,7 @@ const plan = `${repoRoot}/tests/rem-status-exit-code-matrix.plan.md`;
 const planReceipt = `${repoRoot}/tests/rem-status-exit-code-matrix.plan.sha256`;
 const shellRunner = `${repoRoot}/tests/rem-status-exit-code-matrix.sh`;
 const helper = `${repoRoot}/tests/rem-status-exit-code-matrix.mts`;
-const evidencePath = `${repoRoot}/openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/qcg-5.txt`;
+const evidencePath = `${repoRoot}/openspec/changes/archive/2026-08-10-rem-job-state-contract/evidence/80-rem-job-state-contract/qcg-5.txt`;
 const runRoot = requiredEnvironment("QCG5_RUN_ROOT");
 const mode = process.argv[2];
 const repetitions = mode === "full" ? 10 : mode === "smoke" ? 1 : 0;

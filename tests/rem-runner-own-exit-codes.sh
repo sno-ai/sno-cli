@@ -4,8 +4,8 @@ set -Eeuo pipefail
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 readonly REPO_ROOT
 readonly BASE_RUNNER="$REPO_ROOT/tests/rem-runner-routing-contract.sh"
-readonly GREEN_ARTIFACT="$REPO_ROOT/openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/section-5-independent-green.md"
-readonly GREEN_RECEIPT="$REPO_ROOT/openspec/changes/rem-job-state-contract/evidence/80-rem-job-state-contract/section-5-independent-green.sha256"
+readonly GREEN_ARTIFACT="$REPO_ROOT/openspec/changes/archive/2026-08-10-rem-job-state-contract/evidence/80-rem-job-state-contract/section-5-independent-green.md"
+readonly GREEN_RECEIPT="$REPO_ROOT/openspec/changes/archive/2026-08-10-rem-job-state-contract/evidence/80-rem-job-state-contract/section-5-independent-green.sha256"
 readonly EXPECTED_GREEN_SHA256="db25eac132ad648b9cbe3e653b08bf68df9c20857393a3738161d6656a3f3e66"
 
 verify_green_receipt() {
