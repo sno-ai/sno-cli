@@ -25,10 +25,10 @@
 
 ## 5. Route Both Memora Consumers
 
-- [ ] 5.1 After section 4 is complete, use `codex-coder` to add the same enumerated routing table to `evals/memora/scripts/run_rem.sh` and `evals/memora/scripts/run_rem_noop.sh`, apply it to each runner's `rem-start` and `rem-status`, and fail closed while logging any unmatched code.
-- [ ] 5.2 Keep every existing `--json` argument and route both runners only on exit codes. In `run_rem.sh`, move its own usage and rejected-operation failures to exits `20` and `21`; do not originate `0` through `9`, and return a code in that range only by propagating the immediately captured result of a real `sno` invocation.
-- [ ] 5.3 In `run_rem.sh`, leave the sibling-owned accepted names and unknown-operation message byte-identical while changing the rejected-operation exit number, then prove that this change and `rem-operation-switches` work in either landing order against the same store.
-- [ ] 5.4 Have the independent test owner rerun and freeze GREEN for QCG-12, QCG-13, QCG-15, QCG-16, and QCG-17, with QCG-12 covering both runners.
+- [x] 5.1 After section 4 is complete, use `codex-coder` to add the same enumerated routing table to `evals/memora/scripts/run_rem.sh` and `evals/memora/scripts/run_rem_noop.sh`, apply it to each runner's `rem-start` and `rem-status`, and fail closed while logging any unmatched code. — evidence: `evidence/section-5-task-evidence.md`, `Section5 PASS QCG-12 QCG-13 QCG-15 QCG-16 QCG-17`
+- [x] 5.2 Keep every existing `--json` argument and route both runners only on exit codes. In `run_rem.sh`, move its own usage and rejected-operation failures to exits `20` and `21`; do not originate `0` through `9`, and return a code in that range only by propagating the immediately captured result of a real `sno` invocation. — evidence: `evidence/section-5-task-evidence.md`, `progress 24/24 case=qcg16-rejected exit=21 rate=3.58_obs/s eta=0.0s`
+- [x] 5.3 In `run_rem.sh`, leave the sibling-owned accepted names and unknown-operation message byte-identical while changing the rejected-operation exit number, then prove that this change and `rem-operation-switches` work in either landing order against the same store. — evidence: `evidence/section-5-task-evidence.md`, `Section5 boundary_reached observations=24/24 forwarded_requests=30 sidecar_pid=179473 store=/mnt/ramdisk/tmp/mem-claw-test-Ruphqn/test.sqlite`
+- [x] 5.4 Have the independent test owner rerun and freeze GREEN for QCG-12, QCG-13, QCG-15, QCG-16, and QCG-17, with QCG-12 covering both runners. — evidence: `evidence/section-5-task-evidence.md`, `Section5 PASS QCG-12 QCG-13 QCG-15 QCG-16 QCG-17`
 
 ## 6. Extend Existing Traces
 

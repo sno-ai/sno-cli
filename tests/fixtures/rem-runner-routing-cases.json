@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "known": [
+    { "exitCode": 0, "machineCode": null, "producer": "success" },
+    { "exitCode": 1, "machineCode": "future_unclassified", "producer": "start-error" },
+    { "exitCode": 2, "machineCode": "usage_error", "producer": "start-error" },
+    { "exitCode": 3, "machineCode": "rem_job_failed", "producer": "start-error" },
+    { "exitCode": 4, "machineCode": "rem_timeout", "producer": "start-error" },
+    { "exitCode": 5, "machineCode": "rem_state_unrecognised", "producer": "status-state" },
+    { "exitCode": 6, "machineCode": "sidecar_response_invalid", "producer": "start-error" },
+    { "exitCode": 7, "machineCode": "sidecar_client_error", "producer": "start-error" },
+    { "exitCode": 8, "machineCode": "profile_error", "producer": "start-error" },
+    { "exitCode": 9, "machineCode": "rem_job_not_found", "producer": "start-error" }
+  ],
+  "future": { "exitCode": 10, "producer": "future-tool-build" },
+  "runners": [
+    {
+      "name": "section-first",
+      "path": "/home/lh/code/sno-station-core/evals/memora/scripts/run_rem_noop.sh",
+      "operation": "noop",
+      "unfamiliarState": "unrelated snowman terminal/☃"
+    },
+    {
+      "name": "sibling-first",
+      "path": "/home/lh/code/sno-station-core-edge-rem-wave/evals/memora/scripts/run_rem.sh",
+      "operation": "rem-update",
+      "unfamiliarState": "future terminal/β"
+    }
+  ]
+}
