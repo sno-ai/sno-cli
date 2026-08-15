@@ -43,17 +43,15 @@ pub(crate) struct RemStartResponse {
     pub job_id: String,
 }
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Deserialize)]
 pub(crate) struct RemJob {
     pub state: String,
-    #[serde(rename = "type")]
-    pub rem_type: String,
-    pub scope: String,
-    pub started_at: Option<String>,
-    pub finished_at: Option<String>,
-    pub stats: Value,
     pub error: Option<String>,
-    pub correlation_id: Option<String>,
+}
+
+struct RemStatus {
+    job: RemJob,
+    raw: Value,
 }
 
 struct RemTrace {
@@ -237,15 +235,15 @@ pub(crate) fn run_status(
             "json": json_enabled,
         }),
     )?;
-    let job = poll_status_at(&profile_dir, job_id, wait, deadline, POLL_INTERVAL, &trace)?;
+    let status = poll_status_at(&profile_dir, job_id, wait, deadline, POLL_INTERVAL, &trace)?;
     trace.append(
         "command_emitted",
-        json!({ "command": "rem-status", "job_id": job_id, "state": job.state }),
+        json!({ "command": "rem-status", "job_id": job_id, "state": status.job.state }),
     )?;
     if json_enabled {
-        print_json(&serde_json::to_value(&job)?)?;
+        print_json(&status.raw)?;
     } else {
-        println!("{job_id}: {}", job.state);
+        println!("{job_id}: {}", status.job.state);
     }
     Ok(0)
 }
@@ -413,7 +411,7 @@ fn poll_status_at(
     deadline: Instant,
     interval: Duration,
     trace: &RemTrace,
-) -> Result<RemJob, CliError> {
+) -> Result<RemStatus, CliError> {
     let mut poll_index = 0;
     loop {
         if wait && Instant::now() >= deadline {
@@ -424,17 +422,17 @@ fn poll_status_at(
         }
         poll_index += 1;
         match fetch_status_at(profile_dir, job_id, poll_index, trace) {
-            Ok(job) => match job.state.as_str() {
-                "done" => return Ok(job),
+            Ok(status) => match status.job.state.as_str() {
+                "done" => return Ok(status),
                 "failed" => {
-                    let reason = job.error.as_deref().unwrap_or("unknown");
+                    let reason = status.job.error.as_deref().unwrap_or("unknown");
                     return Err(CliError::rem(
                         RemError::JobFailed,
                         format!("REM job {job_id} failed / {reason}"),
                     ));
                 }
                 "queued" | "running" if wait => {}
-                "queued" | "running" => return Ok(job),
+                "queued" | "running" => return Ok(status),
                 "" => {
                     return Err(CliError::rem(
                         RemError::ResponseInvalid,
@@ -490,7 +488,7 @@ fn fetch_status_at(
     job_id: &str,
     poll_index: usize,
     trace: &RemTrace,
-) -> Result<RemJob, CliError> {
+) -> Result<RemStatus, CliError> {
     let discovery = read_discovery(profile_dir, trace, poll_index)?;
     let path = format!("/rem/jobs/{job_id}");
     let endpoint = format!("http://127.0.0.1:{}", discovery.port);
@@ -560,12 +558,19 @@ fn fetch_status_at(
     let bytes = response
         .bytes()
         .map_err(|_| CliError::rem(RemError::ResponseTruncated, "sidecar not running"))?;
-    serde_json::from_slice::<RemJob>(&bytes).map_err(|_| {
+    let raw = serde_json::from_slice::<Value>(&bytes).map_err(|_| {
         CliError::rem(
             RemError::ResponseInvalid,
             "sidecar returned an invalid REM status response",
         )
-    })
+    })?;
+    let job = RemJob::deserialize(&raw).map_err(|_| {
+        CliError::rem(
+            RemError::ResponseInvalid,
+            "sidecar returned an invalid REM status response",
+        )
+    })?;
+    Ok(RemStatus { job, raw })
 }
 
 fn is_transient_wait_error(error: &CliError) -> bool {

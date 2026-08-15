@@ -1,14 +1,15 @@
 ---
-id: prd-project-ownership-membership
+name: "project-ownership-membership"
+title: "Project Ownership and Membership"
 version: "0.3"
-author: Sno.ai
-date: 2026-07-14
-status: draft
-mode: technical
-requires-clarification: true
+prd_status: "draft"
+project_status: "parked"
+updated: "2026-08-15"
+owner: "larry"
+pipeline: "mid"
 ---
 
-# PRD: Project Ownership and Membership
+# PRD — Project Ownership and Membership
 
 > Define the durable ownership, collaboration, and authorization boundary for every SNO Project and every Project-scoped memory.
 

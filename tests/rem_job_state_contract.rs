@@ -912,6 +912,40 @@ fn qcg_8_waiting_and_nonwaiting_known_states_succeed() {
     assert_eq!(last_json_line(&waited)["state"], "done");
 }
 
+#[test]
+fn rem_status_json_preserves_the_complete_sidecar_record() {
+    let response = json!({
+        "job_id": SECTION_3_JOB_ID,
+        "requested_operations": ["rem-replace", "rem-update"],
+        "state": "done",
+        "type": "rem-replace",
+        "scope": "persona:test-rem-state-019f8da3",
+        "started_at": "2026-08-13T20:00:00Z",
+        "finished_at": "2026-08-13T20:00:01Z",
+        "stats": {"operations": 1},
+        "error": null,
+        "correlation_id": null,
+        "by_operation": {
+            "rem-replace": {"decisions": 2, "applied": 1},
+            "rem-update": {"decisions": 3, "applied": 0}
+        }
+    });
+    let output = run_status(
+        vec![FixtureResponse::Json(200, response.clone())],
+        true,
+        true,
+    );
+
+    assert_eq!(
+        output.status.code(),
+        Some(0),
+        "stdout={} stderr={}",
+        output_text(&output.stdout),
+        output_text(&output.stderr)
+    );
+    assert_eq!(last_json_line(&output), response);
+}
+
 #[cfg(unix)]
 #[test]
 fn qcg_9_unfamiliar_state_precedes_error_and_survives_shell_capture() {
