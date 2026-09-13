@@ -1,0 +1,85 @@
+{
+  "prd": "sno-assemble-PRD.md",
+  "items": [
+    {
+      "id": "QCG-1",
+      "passes": false,
+      "verifier": null,
+      "evidence": null,
+      "date": null,
+      "flipped_by": null
+    },
+    {
+      "id": "QCG-2",
+      "passes": false,
+      "verifier": null,
+      "evidence": null,
+      "date": null,
+      "flipped_by": null
+    },
+    {
+      "id": "QCG-3",
+      "passes": false,
+      "verifier": null,
+      "evidence": null,
+      "date": null,
+      "flipped_by": null
+    },
+    {
+      "id": "QCG-4",
+      "passes": false,
+      "verifier": null,
+      "evidence": null,
+      "date": null,
+      "flipped_by": null
+    },
+    {
+      "id": "QCG-5",
+      "passes": false,
+      "verifier": null,
+      "evidence": null,
+      "date": null,
+      "flipped_by": null
+    },
+    {
+      "id": "QCG-6",
+      "passes": false,
+      "verifier": null,
+      "evidence": null,
+      "date": null,
+      "flipped_by": null
+    },
+    {
+      "id": "QCG-7",
+      "passes": false,
+      "verifier": null,
+      "evidence": null,
+      "date": null,
+      "flipped_by": null
+    },
+    {
+      "id": "QCG-10",
+      "passes": false,
+      "verifier": null,
+      "evidence": null,
+      "date": null,
+      "flipped_by": null
+    },
+    {
+      "id": "QCG-8",
+      "passes": false,
+      "verifier": null,
+      "evidence": null,
+      "date": null,
+      "flipped_by": null
+    },
+    {
+      "id": "QCG-9",
+      "passes": false,
+      "verifier": null,
+      "evidence": null,
+      "date": null,
+      "flipped_by": null
+    }
+  ]
+}

@@ -1,0 +1,127 @@
+{
+  "prd": "sno-assemble-PRD.md",
+  "items": [
+    {
+      "class": "first assemble, all sources reachable",
+      "source": "nine manual steps of 2026-09-11",
+      "rung": 1,
+      "input": "sno assemble",
+      "expected": "reach installed, skills placed, agents.json, hooks, manifest",
+      "emitted": "REQ-1..5",
+      "surprise": null
+    },
+    {
+      "class": "re-run with nothing newer",
+      "source": "same",
+      "rung": 2,
+      "input": "sno assemble",
+      "expected": "every piece current; no mtime change",
+      "emitted": "REQ-1",
+      "surprise": null
+    },
+    {
+      "class": "checksum mismatch",
+      "source": "altered .sha256 fixture",
+      "rung": 3,
+      "input": "sno assemble",
+      "expected": "exit 3, nothing written",
+      "emitted": "REQ-1 / REQ-9",
+      "surprise": null
+    },
+    {
+      "class": "skill requires a slot Hermes lacks",
+      "source": "requires: 2.pre-turn-context-injection preferred",
+      "rung": 4,
+      "input": "sno assemble",
+      "expected": "degraded for Hermes, installed for Claude",
+      "emitted": "REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "skill needs Reach newer than installed",
+      "source": "min_version > pinned",
+      "rung": 5,
+      "input": "sno assemble --reach-version old",
+      "expected": "skipped naming both versions",
+      "emitted": "REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "agents.json present and valid",
+      "source": "workstation file 2026-09-11",
+      "rung": 6,
+      "input": "sno assemble",
+      "expected": "bytes unchanged",
+      "emitted": "REQ-3",
+      "surprise": null
+    },
+    {
+      "class": "hook already present",
+      "source": "hand-written entries measured 2026-09-11",
+      "rung": 7,
+      "input": "sno assemble",
+      "expected": "not duplicated; hooks current",
+      "emitted": "REQ-4",
+      "surprise": null
+    },
+    {
+      "class": "hook file read-only mid-run",
+      "source": "chmod fixture",
+      "rung": 8,
+      "input": "sno assemble",
+      "expected": "exit 4, manifest untouched",
+      "emitted": "REQ-5",
+      "surprise": null
+    },
+    {
+      "class": "newer release published",
+      "source": "fixture v+1",
+      "rung": 9,
+      "input": "sno update",
+      "expected": "updated reach old -> new",
+      "emitted": "REQ-6",
+      "surprise": null
+    },
+    {
+      "class": "auto on/off",
+      "source": "systemd user timer",
+      "rung": 10,
+      "input": "sno update --auto on|off",
+      "expected": "timer ok / missing in doctor",
+      "emitted": "REQ-6 / REQ-7",
+      "surprise": null
+    },
+    {
+      "class": "current deleted",
+      "source": "rm current",
+      "rung": 11,
+      "input": "sno doctor",
+      "expected": "fail with fix command",
+      "emitted": "REQ-7",
+      "surprise": null
+    },
+    {
+      "class": "remove with unrelated file present",
+      "source": "manifest-driven",
+      "rung": 12,
+      "input": "sno remove",
+      "expected": "only manifest items removed; state kept",
+      "emitted": "REQ-8",
+      "surprise": null
+    },
+    {
+      "class": "starport typed",
+      "source": "retired name",
+      "rung": 13,
+      "input": "sno starport",
+      "expected": "exit 2, retired message",
+      "emitted": "REQ-11",
+      "surprise": null
+    }
+  ],
+  "incumbent": {
+    "who": "sno 0.1.7: account, station (telemetry/audit/doctor/rem), an empty starport, and external dispatch; installation of the communication stack done by hand in nine steps on 2026-09-11 (workshop deployer + manual config + manual hook edits)",
+    "edge": "one command installs, one updates, one checks, one removes; every decision comes from published contracts (VERSION, PROMOTED.json, requires:) instead of a person's memory; a crash cannot leave a manifest that lies; nothing is installed from an unpinned checkout",
+    "proof": "QCG-1 (checksum refusal, idempotent re-run), QCG-5 (manifest written last), QCG-8 (remove deletes exactly the manifest), QCG-9 E2E with the planted wrong `current` link that makes doctor fail and the seat journey not run"
+  }
+}
