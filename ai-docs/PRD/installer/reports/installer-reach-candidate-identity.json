@@ -1,0 +1,23 @@
+{
+  "host": "gpt1",
+  "repository": "/home/lh/code/sno-cli",
+  "archive": "/home/lh/code/sno-station-core/apps/reach/dist/reach-2.0.tar.gz",
+  "frozen_archive": "/home/lh/code/sno-station-core/apps/reach/dist/candidates/5eca401ea26763050c6abcc82cc68f74dc8ad48f/reach-2.0.tar.gz",
+  "sha256": "dc4f84e6b15ebabbd767a6eccdd0d87186d7ae636142aa0e20540fd727102939",
+  "checksum_file_sha256": "865c45f3edaf9977d3103d620d83893d3d2b4f0c0afe32c5ca1f01f2b7d8d304",
+  "source_commit": "5eca401ea26763050c6abcc82cc68f74dc8ad48f",
+  "version": "2.0",
+  "archive_roots": [
+    "LICENSE",
+    "NOTICE",
+    "VERSION",
+    "bin",
+    "guide",
+    "lib",
+    "spec",
+    "vendor"
+  ],
+  "release_state": "local candidate, not published",
+  "platform_limit": "Linux x86-64 only per core candidate receipt; no macOS proof",
+  "core_receipt": "/home/lh/code/sno-station-core/ai-doc/ACTIVE/PRD/reach/reports/candidate-5eca401ea.md"
+}

@@ -1,0 +1,37 @@
+usage: heartbeat --label NAME [--interval MINUTES] [--log PATH] [--until-file PATH]
+                 [--max-ticks N] [--max-hours H] [-- COMMAND [ARG ...]]
+       heartbeat --stop NAME
+       heartbeat --list
+
+Two shapes, and nothing else should ever be hand-written:
+
+  report every so often   heartbeat --interval 30 --label train --log L -- <hook command>
+  wait until it is done   heartbeat --label build --until-file out/result.json
+
+  --label       name for this heartbeat, written on every line (required)
+                (--name is accepted as the same flag)
+  --interval    time between ticks, in MINUTES (default: 10). A bare number is
+                minutes; a unit overrides it: 30s, 10m, 2h. A bare number above
+                120 is refused rather than guessed at — write 10 for ten minutes,
+                or 600s if you really mean seconds. (--every is accepted as the
+                same flag.) It does not change how fast --until-file is noticed;
+                that is checked every second either way
+  --log         file to append to (default: one under the heartbeat state directory,
+                whose path is printed when you arm)
+  --until-file  stop cleanly once this path holds content; checked every second. It must
+                NOT exist yet when you arm — an output file the job opens at the start is
+                not a completion marker. (--until is accepted as the same flag)
+  --max-ticks   stop after N ticks (default: unlimited)
+  --max-hours   stop after H hours (default: 24; 0 disables)
+  --            everything after this is the hook command, run once per tick. Optional when
+                --until-file is given: with no hook each tick writes "waiting"
+
+  --stop NAME   stop YOUR heartbeat with that label; another owner's is never reachable
+  --list        every heartbeat running on this machine, yours marked "you"
+
+Every ending says on stdout WHICH ending it was — FINISHED, NOT FINISHED, or STOPPED — so
+the notification that wakes you can never make "the job is done" look like "I gave up".
+
+The hook's exit status is recorded and never acted on. A tick happens even when the hook
+fails, hangs, or writes nothing. A heartbeat's owner comes from the session environment, not
+from an argument, so one agent can neither stop nor collide with another agent's heartbeat.

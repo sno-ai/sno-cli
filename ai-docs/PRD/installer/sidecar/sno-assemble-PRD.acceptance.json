@@ -9,12 +9,12 @@
       "verifier": "cargo test --test assemble -- --exact install_repeat_update_remove_preserves_user_content checksum_failure_preserves_the_committed_installation archive_link_escaping_staging_is_refused_before_install restrictive_umask_preserves_modes_across_update_and_rollback"
     },
     {
-      "date": null,
-      "evidence": null,
-      "flipped_by": null,
+      "date": "2026-09-13",
+      "evidence": "sidecar/sno-assemble-PRD.QCG-2.proof.json",
+      "flipped_by": "prd-proof.py",
       "id": "QCG-2",
-      "passes": false,
-      "verifier": null
+      "passes": true,
+      "verifier": "python3 tests/fixtures/assemble/verify-real-staged.py --inputs ai-docs/PRD/installer/reports/installer-real-staged-positive.json --gate /home/lh/code/sno-station-skills/scripts/validate-requirements.py --output ai-docs/PRD/installer/reports/installer-real-staged-verifier.json"
     },
     {
       "date": "2026-09-13",

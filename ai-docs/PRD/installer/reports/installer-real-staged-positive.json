@@ -1,0 +1,67 @@
+{
+  "host": "gpt1",
+  "cli_commit": "07362f87fe8cc4e18b8addac2c835e6a551dac44",
+  "driver": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/fixture-sno",
+  "driver_sha256": "9dc868c2f17ad167d8472a4fcb20b6d86bd444503d721b6ed5c447098f98bd26",
+  "compile_command": [
+    "rustc",
+    "--edition=2024",
+    "--crate-name=fixture_sno",
+    "/home/lh/code/sno-cli/tests/fixtures/assemble/driver.rs",
+    "-L",
+    "dependency=/home/lh/code/sno-cli/target/debug/deps",
+    "--extern",
+    "sno=/home/lh/code/sno-cli/target/debug/libsno.rlib",
+    "-o",
+    "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/fixture-sno"
+  ],
+  "home": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home",
+  "environment": {
+    "HOME": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home",
+    "PATH": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.local/bin:/home/lh/.local/bin:/home/lh/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/codex-path:/home/lh/.bun/bin:/home/lh/.local/bin:/home/lh/.local/bin:/home/lh/.local/bin:/home/lh/.codex/tmp/arg0/codex-arg0vvh59p:/home/lh/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/codex-path:/home/lh/.orca-relay/bin:/home/lh/.bun/bin:/home/lh/.local/bin:/home/lh/.local/bin:/home/lh/.local/bin:/home/lh/.cargo/bin:/home/lh/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/lh/.local/share/pnpm",
+    "XDG_CONFIG_HOME": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.config",
+    "SNO_PROFILE_DIR": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/station-profile"
+  },
+  "artifacts": [
+    {
+      "name": "reach",
+      "version": "2.0",
+      "path": "/home/lh/code/sno-station-core/apps/reach/dist/candidates/5eca401ea26763050c6abcc82cc68f74dc8ad48f/reach-2.0.tar.gz",
+      "sha256": "dc4f84e6b15ebabbd767a6eccdd0d87186d7ae636142aa0e20540fd727102939",
+      "entry_point": "bin/sno-reach"
+    },
+    {
+      "name": "heartbeat",
+      "version": "1.0",
+      "path": "/home/lh/code/sno-station-core/apps/heartbeat/dist/heartbeat-1.0.tar.gz",
+      "sha256": "29d1eb773df780b0f85b935549b90d05de0856411e82144f0331de8defd0cb53",
+      "entry_point": "bin/heartbeat"
+    },
+    {
+      "name": "subscription-quota-check",
+      "version": "1.0",
+      "path": "/home/lh/code/sno-station-core/apps/subscription-quota-check/dist/subscription-quota-check-1.0.tar.gz",
+      "sha256": "b857aef24ffc1216c2818469d17175823f388e3c57a4abb67866e2f9e5375505",
+      "entry_point": "bin/subscription-quota-check"
+    },
+    {
+      "name": "skills",
+      "version": "staged-8474baf96195",
+      "path": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195.tar.gz",
+      "sha256": "857e2f29f11bcce208823adc0b1a6bac33db417e09581e59069d898ec4b94627",
+      "entry_point": ""
+    }
+  ],
+  "command": [
+    "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/fixture-sno",
+    "assemble",
+    "--json"
+  ],
+  "exit_code": 0,
+  "stdout": "[{\"target\":\"reach\",\"result\":\"installed\",\"detail\":\"2.0\"},{\"target\":\"heartbeat\",\"result\":\"installed\",\"detail\":\"1.0\"},{\"target\":\"subscription-quota-check\",\"result\":\"installed\",\"detail\":\"1.0\"},{\"target\":\"skill handoff claude\",\"result\":\"installed\",\"detail\":\"\"},{\"target\":\"skill handoff codex\",\"result\":\"installed\",\"detail\":\"\"},{\"target\":\"skill handoff hermes\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill handoff openclaw\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill heartbeat claude\",\"result\":\"skipped\",\"detail\":\"claude 3.reader-to-agent-delivery unsupported or unverified\"},{\"target\":\"skill heartbeat codex\",\"result\":\"skipped\",\"detail\":\"codex 3.reader-to-agent-delivery unsupported or unverified\"},{\"target\":\"skill heartbeat hermes\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill heartbeat openclaw\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill reach claude\",\"result\":\"installed\",\"detail\":\"\"},{\"target\":\"skill reach codex\",\"result\":\"installed\",\"detail\":\"\"},{\"target\":\"skill reach hermes\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill reach openclaw\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill subscription-quota-check claude\",\"result\":\"skipped\",\"detail\":\"claude 3.reader-to-agent-delivery unsupported or unverified\"},{\"target\":\"skill subscription-quota-check codex\",\"result\":\"skipped\",\"detail\":\"codex 3.reader-to-agent-delivery unsupported or unverified\"},{\"target\":\"skill subscription-quota-check hermes\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill subscription-quota-check openclaw\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"hooks claude\",\"result\":\"installed\",\"detail\":\"\"},{\"target\":\"hooks codex\",\"result\":\"installed\",\"detail\":\"open Codex and press t to trust the new hook\"}]\n",
+  "stderr": "",
+  "manifest_present": true,
+  "reach_source_commit": "5eca401ea26763050c6abcc82cc68f74dc8ad48f",
+  "skills_source_commit": "8474baf96195bbf262adc261bb2c51cd74d7a631",
+  "skills_fixture_commit": "278dc6c4cf69abe7745b4b796229a97c6268c3a9"
+}
