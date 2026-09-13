@@ -14,7 +14,7 @@
       "flipped_by": "prd-proof.py",
       "id": "QCG-2",
       "passes": true,
-      "verifier": "python3 tests/fixtures/assemble/verify-real-staged.py --inputs ai-docs/PRD/installer/reports/installer-real-staged-inputs-9d473712a.json --gate /home/lh/code/sno-station-skills/scripts/validate-requirements.py --output ai-docs/PRD/installer/reports/installer-real-staged-verifier-9d473712a.json"
+      "verifier": "python3 tests/fixtures/assemble/verify-real-staged.py --inputs ai-docs/PRD/installer/reports/installer-real-staged-inputs-5340e2a11.json --gate /home/lh/code/sno-station-skills/scripts/validate-requirements.py --output ai-docs/PRD/installer/reports/installer-real-staged-verifier-5340e2a11.json"
     },
     {
       "date": "2026-09-13",

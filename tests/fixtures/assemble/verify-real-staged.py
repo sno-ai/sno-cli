@@ -15,9 +15,9 @@ import tempfile
 
 import yaml
 
-REACH_SOURCE = "5340e2a11b80f68b33066fade7196d9868e0e16f"
+REACH_SOURCE = "9d473712a8d6d7ce1f6e931e1d445f7d6392012e"
 PINS = {
-    "reach": "f2b95f4574f503d2b6802d990210334eabf2675bd201ac2c4220f13ec9e84e1f",
+    "reach": "00c882584fc05519a0b7aa2ceb2f8d2b16a4a5eb6bcfb72e75af1c1864a5bc22",
     "heartbeat": "29d1eb773df780b0f85b935549b90d05de0856411e82144f0331de8defd0cb53",
     "subscription-quota-check": "b857aef24ffc1216c2818469d17175823f388e3c57a4abb67866e2f9e5375505",
     "skills": "857e2f29f11bcce208823adc0b1a6bac33db417e09581e59069d898ec4b94627",
