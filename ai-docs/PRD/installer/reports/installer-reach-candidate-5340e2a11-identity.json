@@ -1,0 +1,12 @@
+{
+  "host": "gpt1",
+  "archive": "/home/lh/code/sno-station-core/apps/reach/dist/candidates/5340e2a11b80f68b33066fade7196d9868e0e16f/reach-2.0.tar.gz",
+  "sha256": "f2b95f4574f503d2b6802d990210334eabf2675bd201ac2c4220f13ec9e84e1f",
+  "checksum_file": "/home/lh/code/sno-station-core/apps/reach/dist/candidates/5340e2a11b80f68b33066fade7196d9868e0e16f/reach-2.0.tar.gz.sha256",
+  "checksum_sha256": "bf0979c739479c308857eaa7ff5a5405f7dba0e23c9104be5bbb7e3b8d9e3adf",
+  "source_commit": "5340e2a11b80f68b33066fade7196d9868e0e16f",
+  "state": "local Linux x86-64 candidate, not published",
+  "source_record": "/home/lh/code/sno-station-core/ai-doc/ACTIVE/PRD/reach/reports/candidate-5340e2a11.md",
+  "previous_canonical_proof": "installer-QCG-2-proof-75fa8d21a.json",
+  "previous_acceptance_snapshot": "installer-acceptance-75fa8d21a.json"
+}
