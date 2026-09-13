@@ -1,0 +1,40 @@
+#!/bin/sh
+# External scheduler substitute; the installer and its transaction remain real.
+printf '%s\n' "$*" >> "$HOME/scheduler-calls"
+refuse() { printf '%s\n' 'unsupported synthetic scheduler invocation' >&2; exit 2; }
+[ "$1" = --user ] || refuse
+shift
+operation="$1"
+shift
+if [ "$operation" = daemon-reload ]; then
+  [ "$#" -eq 0 ] || refuse
+  exit 0
+fi
+now=false
+unit=
+for arg in "$@"; do
+  case "$arg" in
+    --now) now=true ;;
+    --quiet) : ;;
+    sno-update.timer) [ -z "$unit" ] || refuse; unit="$arg" ;;
+    *) refuse ;;
+  esac
+done
+[ "$unit" = sno-update.timer ] || refuse
+case "$operation" in
+  enable)
+    if [ -f "$HOME/scheduler-fail-enable" ]; then
+      printf '%s\n' 'synthetic scheduler enable failure' >&2
+      exit 1
+    fi
+    : > "$HOME/scheduler-enabled"
+    if [ "$now" = true ]; then : > "$HOME/scheduler-active"; fi
+    ;;
+  disable)
+    /bin/rm -f "$HOME/scheduler-enabled"
+    if [ "$now" = true ]; then /bin/rm -f "$HOME/scheduler-active"; fi
+    ;;
+  is-active) [ -f "$HOME/scheduler-active" ] ;;
+  is-enabled) [ -f "$HOME/scheduler-enabled" ] ;;
+  *) refuse ;;
+esac

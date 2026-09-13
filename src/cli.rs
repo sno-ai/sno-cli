@@ -15,8 +15,9 @@ use crate::state::{self, ConsentValue};
 #[path = "rem.rs"]
 mod rem;
 
-const RETIRED_ROOT_COMMANDS: &[&str] =
-    &["consent", "observe", "register", "claim", "audit", "doctor", "starport"];
+const RETIRED_ROOT_COMMANDS: &[&str] = &[
+    "consent", "observe", "register", "claim", "audit", "starport",
+];
 
 #[derive(Debug, Parser)]
 #[command(
@@ -35,6 +36,17 @@ struct SnoCli {
 
 #[derive(Debug, Subcommand)]
 enum RootCommand {
+    #[command(about = "Install core programs and agent skills")]
+    Assemble(crate::assemble::InstallOptions),
+    #[command(about = "Update installed programs and skills")]
+    Update(crate::assemble::UpdateOptions),
+    #[command(about = "Check installed programs, skills and station state")]
+    Doctor,
+    #[command(about = "Remove installer-owned files")]
+    Remove {
+        #[arg(long)]
+        purge_state: bool,
+    },
     #[command(about = "Manage account and machine identity")]
     Account {
         #[command(subcommand)]
@@ -148,6 +160,15 @@ where
     I: IntoIterator<Item = T>,
     T: Into<OsString> + Clone,
 {
+    run_with_source(arguments, &crate::assemble::GithubSource)
+}
+
+/// Run the same CLI with an explicit release transport, including isolated fixture transports.
+pub fn run_with_source<I, T>(arguments: I, source: &dyn crate::assemble::ReleaseSource) -> i32
+where
+    I: IntoIterator<Item = T>,
+    T: Into<OsString> + Clone,
+{
     let arguments: Vec<OsString> = arguments.into_iter().map(Into::into).collect();
     let json_enabled = arguments.iter().any(|argument| argument == "--json");
     let parsed = match SnoCli::try_parse_from(arguments.clone()) {
@@ -156,7 +177,7 @@ where
     };
     let result = match parsed.command {
         None => return print_missing_command(parsed.json),
-        Some(command) => dispatch(command, parsed.json),
+        Some(command) => dispatch(command, parsed.json, source),
     };
     match result {
         Ok(exit_code) => exit_code,
@@ -164,8 +185,32 @@ where
     }
 }
 
-fn dispatch(command: RootCommand, json_enabled: bool) -> Result<i32, CliError> {
+fn dispatch(
+    command: RootCommand,
+    json_enabled: bool,
+    source: &dyn crate::assemble::ReleaseSource,
+) -> Result<i32, CliError> {
     match command {
+        RootCommand::Assemble(options) => Ok(crate::assemble::run(
+            crate::assemble::Action::Assemble(options),
+            json_enabled,
+            source,
+        )),
+        RootCommand::Update(options) => Ok(crate::assemble::run(
+            crate::assemble::Action::Update(options),
+            json_enabled,
+            source,
+        )),
+        RootCommand::Doctor => Ok(crate::assemble::run(
+            crate::assemble::Action::Doctor,
+            json_enabled,
+            source,
+        )),
+        RootCommand::Remove { purge_state } => Ok(crate::assemble::run(
+            crate::assemble::Action::Remove { purge_state },
+            json_enabled,
+            source,
+        )),
         RootCommand::Account { command } => dispatch_account(command, json_enabled),
         RootCommand::SnoStation { command } => dispatch_sno_station(command, json_enabled),
         RootCommand::External(arguments) => dispatch_external(arguments),

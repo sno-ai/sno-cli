@@ -1,3 +1,5 @@
+> Historical report for version 1.1. Superseded by the authorised repair in version 1.2; do not use its manifest-last, Hermes, fixed-root or fixture-readiness claims as current instructions. See `sno-assemble-peer-review-fixes.md` and the current PRD.
+
 # sno assemble PRD — 给你看的一页（2026-09-13）
 
 一句话：给 `sno` 加四个顶层动词——`assemble` 装、`update` 更新、`doctor` 体检、`remove` 卸载——把 Reach 程序和发布出去的技能文本装到这台机器上每一个 agent harness 里，写好 ACP 配置，接好进度提醒钩子；再跑一次就是更新；每天自动更新是系统自带的定时器。顺手把早就没用的 `sno starport` 砍掉。

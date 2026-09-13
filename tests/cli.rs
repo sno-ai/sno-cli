@@ -80,7 +80,6 @@ fn legacy_root_commands_are_rejected() {
         vec!["register"],
         vec!["claim"],
         vec!["audit", "verify", "evt_1"],
-        vec!["doctor"],
     ] {
         let output = sno(profile.path(), &arguments);
         assert_eq!(output.status.code(), Some(2), "{arguments:?}");

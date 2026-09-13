@@ -6,7 +6,7 @@
       "source": "nine manual steps of 2026-09-11",
       "rung": 1,
       "input": "sno assemble",
-      "expected": "reach installed, skills placed, agents.json, hooks, manifest",
+      "expected": "reach, eligible skill payloads and core programs installed; config/hooks tracked; transaction committed",
       "emitted": "REQ-1..5",
       "surprise": null
     },
@@ -15,7 +15,7 @@
       "source": "same",
       "rung": 2,
       "input": "sno assemble",
-      "expected": "every piece current; no mtime change",
+      "expected": "unchanged installed files/manifest unchanged; unmet prerequisites still reported",
       "emitted": "REQ-1",
       "surprise": null
     },
@@ -24,25 +24,25 @@
       "source": "altered .sha256 fixture",
       "rung": 3,
       "input": "sno assemble",
-      "expected": "exit 3, nothing written",
+      "expected": "exit 3; no installed-state change",
       "emitted": "REQ-1 / REQ-9",
       "surprise": null
     },
     {
-      "class": "skill requires a slot Hermes lacks",
-      "source": "requires: 2.pre-turn-context-injection preferred",
+      "class": "verified Hermes capability and separate unsupported fixture cell",
+      "source": "capability map perspective 2 and explicit unsupported test input",
       "rung": 4,
       "input": "sno assemble",
-      "expected": "degraded for Hermes, installed for Claude",
+      "expected": "Claude and Hermes support actual preferred pre-turn slot; separately unsupported fixture slot degrades/skips",
       "emitted": "REQ-2",
       "surprise": null
     },
     {
-      "class": "skill needs Reach newer than installed",
+      "class": "declared program missing or older than its own minimum",
       "source": "min_version > pinned",
       "rung": 5,
-      "input": "sno assemble --reach-version old",
-      "expected": "skipped naming both versions",
+      "input": "assemble with independent Reach/heartbeat/quota artifact versions",
+      "expected": "skip dependent unit naming its missing/too-old program; never compare all programs against Reach",
       "emitted": "REQ-2",
       "surprise": null
     },
@@ -60,16 +60,16 @@
       "source": "hand-written entries measured 2026-09-11",
       "rung": 7,
       "input": "sno assemble",
-      "expected": "not duplicated; hooks current",
+      "expected": "exact existing external hook preserved unowned; managed hook current; conflict refuses",
       "emitted": "REQ-4",
       "surprise": null
     },
     {
-      "class": "hook file read-only mid-run",
-      "source": "chmod fixture",
+      "class": "hook write failure or interruption before commit",
+      "source": "failure after Reach activation; deterministic fixture fault injection",
       "rung": 8,
       "input": "sno assemble",
-      "expected": "exit 4, manifest untouched",
+      "expected": "handled failure rolls back; interruption leaves recoverable pending record; doctor/retry/remove inspect it",
       "emitted": "REQ-5",
       "surprise": null
     },
@@ -87,7 +87,7 @@
       "source": "systemd user timer",
       "rung": 10,
       "input": "sno update --auto on|off",
-      "expected": "timer ok / missing in doctor",
+      "expected": "timer active / disabled; off works offline; scheduled command uses recorded roots",
       "emitted": "REQ-6 / REQ-7",
       "surprise": null
     },
@@ -105,7 +105,7 @@
       "source": "manifest-driven",
       "rung": 12,
       "input": "sno remove",
-      "expected": "only manifest items removed; state kept",
+      "expected": "owned unchanged files removed; unrelated files inside installed directories and mail state preserved",
       "emitted": "REQ-8",
       "surprise": null
     },
@@ -117,11 +117,92 @@
       "expected": "exit 2, retired message",
       "emitted": "REQ-11",
       "surprise": null
+    },
+    {
+      "class": "public command lifecycle",
+      "source": "S 1.4 section 5.7; each core utility release manifest",
+      "rung": 14,
+      "input": "assemble, command help/read, update, doctor, remove",
+      "expected": "both utility commands installed from their own core artifacts once with resources; checked and removed with ownership",
+      "emitted": "REQ-2 / REQ-6 / REQ-8",
+      "surprise": null
+    },
+    {
+      "class": "existing destination and later user edits",
+      "source": "existing skill trees; owner preservation contract",
+      "rung": 15,
+      "input": "assemble / update / remove",
+      "expected": "unowned collision refuses; changed owned content refuses; new unrelated content survives",
+      "emitted": "REQ-8 / REQ-9",
+      "surprise": null
+    },
+    {
+      "class": "custom root and shared aliases",
+      "source": "capability map perspective 5",
+      "rung": 16,
+      "input": "assemble and actual harness discovery",
+      "expected": "write once to active canonical roots; evaluate actual consumers; prove discovery",
+      "emitted": "REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "hook trust and real injection",
+      "source": "Codex trust gate; actual prompt boundary",
+      "rung": 17,
+      "input": "assemble / doctor / addressed prompt",
+      "expected": "no false execution pass; actual reminder enters context after trust",
+      "emitted": "REQ-4 / REQ-7",
+      "surprise": null
+    },
+    {
+      "class": "upstream release unavailable",
+      "source": "local probe; remote status not established",
+      "rung": 18,
+      "input": "release preflight",
+      "expected": "staged consumer proof can precede real S publication; actual publication remains required for final release acceptance",
+      "emitted": "REQ-1 / REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "uninitialised station and disabled timer",
+      "source": "src/doctor.rs and opt-in timer",
+      "rung": 19,
+      "input": "doctor",
+      "expected": "station warn semantics preserved; timer disabled; correct nonzero conditions",
+      "emitted": "REQ-7 / REQ-10",
+      "surprise": null
+    },
+    {
+      "class": "shared requirements parser",
+      "source": "S 1.4 and Reach 1.3 closure",
+      "rung": 20,
+      "input": "real four-unit declarations and pinned requirements-contract.json",
+      "expected": "gate and actual installer report identical fixture/contract hashes and declaration dispositions",
+      "emitted": "REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "empty sender and receiver identities",
+      "source": "S 1.4 and Reach 1.3 closure",
+      "rung": 21,
+      "input": "assemble then init both, spawn both, doctor both, send",
+      "expected": "no hidden seat setup; one terminal wait; accepted chain observed via export/state",
+      "emitted": "REQ-1 / REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "two evidence stages",
+      "source": "S 1.4 and Reach 1.3 closure",
+      "rung": 22,
+      "input": "gate-produced staged bytes then actual published releases",
+      "expected": "separate staged-consumer and published-release receipts; neither substitutes for the other",
+      "emitted": "REQ-1 / REQ-2",
+      "surprise": null
     }
   ],
   "incumbent": {
-    "who": "sno 0.1.7: account, station (telemetry/audit/doctor/rem), an empty starport, and external dispatch; installation of the communication stack done by hand in nine steps on 2026-09-11 (workshop deployer + manual config + manual hook edits)",
-    "edge": "one command installs, one updates, one checks, one removes; every decision comes from published contracts (VERSION, PROMOTED.json, requires:) instead of a person's memory; a crash cannot leave a manifest that lies; nothing is installed from an unpinned checkout",
-    "proof": "QCG-1 (checksum refusal, idempotent re-run), QCG-5 (manifest written last), QCG-8 (remove deletes exactly the manifest), QCG-9 E2E with the planted wrong `current` link that makes doctor fail and the seat journey not run"
+    "who": "Current CLI has account, station and external dispatch; starport is already retired. Communication installation is still manual.",
+    "edge": "One owned install lifecycle includes the public commands, active harness roots and recoverable transactions. It refuses user-content conflicts and does not confuse fixture evidence with real releases.",
+    "proof": "QCG-1/2 install and command placement; QCG-5 recovery; QCG-8 ownership-preserving removal; QCG-9 actual release, discovery, hook and seat boundaries. These are planned checks, not execution results."
   }
 }
