@@ -45,12 +45,17 @@ fn root_help_version_and_missing_command_are_stable() {
     let help = sno(profile.path(), &["--help"]);
     assert_eq!(help.status.code(), Some(0));
     let help_text = stdout(&help);
-    for expected in ["account", "station", "starport", "external subcommands"] {
+    for expected in ["account", "station", "external subcommands"] {
         assert!(
             help_text.contains(expected),
             "missing {expected} in {help_text}"
         );
     }
+
+    let retired = sno(profile.path(), &["starport"]);
+    assert_eq!(retired.status.code(), Some(2));
+    assert!(stderr(&retired).contains("is not a top-level command"));
+    assert!(!help_text.contains("starport"));
 
     let missing = sno(profile.path(), &[]);
     assert_eq!(missing.status.code(), Some(2));

@@ -16,7 +16,7 @@ use crate::state::{self, ConsentValue};
 mod rem;
 
 const RETIRED_ROOT_COMMANDS: &[&str] =
-    &["consent", "observe", "register", "claim", "audit", "doctor"];
+    &["consent", "observe", "register", "claim", "audit", "doctor", "starport"];
 
 #[derive(Debug, Parser)]
 #[command(
@@ -45,8 +45,6 @@ enum RootCommand {
         #[command(subcommand)]
         command: SnoStationCommand,
     },
-    #[command(name = "starport", about = "Manage SNO extensions")]
-    SnoStarport,
     #[command(external_subcommand)]
     External(Vec<OsString>),
 }
@@ -170,7 +168,6 @@ fn dispatch(command: RootCommand, json_enabled: bool) -> Result<i32, CliError> {
     match command {
         RootCommand::Account { command } => dispatch_account(command, json_enabled),
         RootCommand::SnoStation { command } => dispatch_sno_station(command, json_enabled),
-        RootCommand::SnoStarport => Err(CliError::usage("no starport verbs are released yet")),
         RootCommand::External(arguments) => dispatch_external(arguments),
     }
 }
