@@ -1,0 +1,9 @@
+error[E0463]: can't find crate for `sno`
+ --> /home/lh/code/sno-cli/tests/fixtures/assemble/driver.rs:3:5
+  |
+3 | use sno::assemble::{Artifact, InstallError, ReleaseSet, ReleaseSource};
+  |     ^^^ can't find crate
+
+error: aborting due to 1 previous error
+
+For more information about this error, try `rustc --explain E0463`.

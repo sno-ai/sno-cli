@@ -1,0 +1,9 @@
+   Compiling serde_json v1.0.150
+   Compiling serde_spanned v0.6.9
+   Compiling toml_datetime v0.6.11
+   Compiling serde_yaml v0.9.34+deprecated
+   Compiling toml_edit v0.22.27
+   Compiling reqwest v0.12.28
+   Compiling toml v0.8.23
+   Compiling sno v0.1.7 (/home/lh/code/sno-cli)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.50s
