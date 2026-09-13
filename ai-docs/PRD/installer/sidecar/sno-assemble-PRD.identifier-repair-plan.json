@@ -1,0 +1,30 @@
+{
+  "inputs": [
+    {
+      "bytes": 26447,
+      "path": "/home/lh/code/sno-cli/ai-docs/PRD/installer/sno-assemble-PRD.md",
+      "sha256": "418d976717cc27a992621cabfc323efb15734eab15ded63dafe4db9034a1e70e"
+    },
+    {
+      "bytes": 1401,
+      "path": "/home/lh/code/sno-cli/ai-docs/PRD/installer/sidecar/sno-assemble-PRD.acceptance.json",
+      "sha256": "786dcdea3a5c50c92a0b31cb80559b64930b7dd426cc16e00875e890699f5f9e"
+    }
+  ],
+  "item_count": 1,
+  "items": [
+    {
+      "details": [
+        "keep `QCG-9` at line 213: - `[QCG-9]` `[E2E]` On a clean user account with Claude Code and Codex installed and Chapter 0 green, `sno assemble` followed by `sno reach spawn codex --as executor.e2e@<host>` and one `sno reach send` ends with an `accepted` and a `comple",
+        "change line 240 to `QCG-10`: | User journey | One change-affected primary flow: assemble → seat journey → remove, mapped to `[QCG-9]` `[E2E]`; its planted defect (`current` linked at the previous release) makes the same journey red and restoration green. No other prima",
+        "related reference at line 243, ownership unresolved: | Stop conditions | If a fixture cannot be built (no Reach release yet): build the tarball from the core PRD's `make install` output and record its sha256 in the fixture directory; do not park. If a proof cannot run (no Codex login on the p"
+      ],
+      "kind": "duplicate-definition",
+      "title": "Duplicate definition: QCG-9"
+    }
+  ],
+  "next_action": "read-plan-before-edit",
+  "plan_sha256": "abdefd2771f94c2f8639b4637fb8fcc2fe5dfb0d3368568fae7d2f0e9fb0ba36",
+  "prd": "/home/lh/code/sno-cli/ai-docs/PRD/installer/sno-assemble-PRD.md",
+  "schema": 1
+}
