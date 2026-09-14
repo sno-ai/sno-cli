@@ -1,12 +1,12 @@
 {
   "items": [
     {
-      "date": "2026-09-14",
+      "date": "2026-09-13",
       "evidence": "sidecar/sno-assemble-PRD.QCG-1.proof.json",
       "flipped_by": "prd-proof.py",
       "id": "QCG-1",
       "passes": true,
-      "verifier": "bash -ec 'cargo test --lib platform_tests -- --nocapture\ncargo test --test assemble -- --exact install_repeat_update_remove_preserves_user_content checksum_failure_preserves_the_committed_installation archive_link_escaping_staging_is_refused_before_install restrictive_umask_preserves_modes_across_update_and_rollback'"
+      "verifier": "cargo test --test assemble -- --exact install_repeat_update_remove_preserves_user_content checksum_failure_preserves_the_committed_installation archive_link_escaping_staging_is_refused_before_install restrictive_umask_preserves_modes_across_update_and_rollback"
     },
     {
       "date": "2026-09-13",

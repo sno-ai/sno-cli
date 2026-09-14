@@ -1,0 +1,20 @@
+sno-assemble-PRD.md: E27: QCG-10 receipt is not current proof: the PRD body changed after this proof; every criterion is re-proved against the final text at delivery close
+    fix: rerun the criterion through prd-proof.py
+sno-assemble-PRD.md: E27: QCG-2 receipt is not current proof: the PRD body changed after this proof; every criterion is re-proved against the final text at delivery close
+    fix: rerun the criterion through prd-proof.py
+sno-assemble-PRD.md: E27: QCG-3 receipt is not current proof: the PRD body changed after this proof; every criterion is re-proved against the final text at delivery close
+    fix: rerun the criterion through prd-proof.py
+sno-assemble-PRD.md: E27: QCG-4 receipt is not current proof: the PRD body changed after this proof; every criterion is re-proved against the final text at delivery close
+    fix: rerun the criterion through prd-proof.py
+sno-assemble-PRD.md: E27: QCG-5 receipt is not current proof: the PRD body changed after this proof; every criterion is re-proved against the final text at delivery close
+    fix: rerun the criterion through prd-proof.py
+sno-assemble-PRD.md: E27: QCG-6 receipt is not current proof: the PRD body changed after this proof; every criterion is re-proved against the final text at delivery close
+    fix: rerun the criterion through prd-proof.py
+sno-assemble-PRD.md: E27: QCG-7 receipt is not current proof: the PRD body changed after this proof; every criterion is re-proved against the final text at delivery close
+    fix: rerun the criterion through prd-proof.py
+sno-assemble-PRD.md: E27: QCG-8 receipt is not current proof: the PRD body changed after this proof; every criterion is re-proved against the final text at delivery close
+    fix: rerun the criterion through prd-proof.py
+sno-assemble-PRD.md: E27: QCG-9 is not passing at delivery close
+    fix: run its verifier through prd-proof.py; if the criterion changed, revise the PRD first
+
+prd-lint: 9 error(s), 0 warning(s)

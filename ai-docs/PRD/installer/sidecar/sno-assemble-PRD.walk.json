@@ -198,6 +198,24 @@
       "expected": "separate staged-consumer and published-release receipts; neither substitutes for the other",
       "emitted": "REQ-1 / REQ-2",
       "surprise": null
+    },
+    {
+      "class": "platform-qualified Reach selection",
+      "source": "2026-09-14 owner ruling; DEC-3 patch",
+      "rung": 1,
+      "input": "release inventory containing all four platform pairs plus legacy Reach and unchanged utilities",
+      "expected": "use literal build OS/ARCH Reach pair and its exact checksum; utility names unchanged",
+      "emitted": "REQ-1 / QCG-1",
+      "surprise": null
+    },
+    {
+      "class": "unsupported architecture before download",
+      "source": "2026-09-14 owner ruling; DEC-3 patch",
+      "rung": 3,
+      "input": "resolve for linux-riscv64 or macos-riscv64",
+      "expected": "exit 2 naming pair before any release fetch",
+      "emitted": "REQ-1 / QCG-1",
+      "surprise": null
     }
   ],
   "incumbent": {

@@ -118,12 +118,180 @@ pub trait ReleaseSource {
     }
 }
 
+fn reach_archive_suffix(os: &str, arch: &str) -> Result<String> {
+    if !matches!(os, "linux" | "macos") {
+        return Err(InstallError::usage("installer requires Linux or macOS"));
+    }
+    if !matches!(arch, "x86_64" | "aarch64") {
+        return Err(InstallError::usage(format!(
+            "unsupported installer platform: {os}-{arch}"
+        )));
+    }
+    Ok(format!("-{os}-{arch}.tar.gz"))
+}
+
+fn core_asset_version<'a>(name: &str, filename: &'a str, reach_suffix: &str) -> Option<&'a str> {
+    filename
+        .strip_prefix(&format!("{name}-"))?
+        .strip_suffix(if name == "reach" {
+            reach_suffix
+        } else {
+            ".tar.gz"
+        })
+}
+
+fn asset_checksum_url(assets: &[Value], filename: &str) -> Option<String> {
+    assets
+        .iter()
+        .find(|a| a["name"].as_str() == Some(&format!("{filename}.sha256")))
+        .and_then(|a| a["browser_download_url"].as_str())
+        .map(str::to_owned)
+}
+
 pub struct GithubSource;
 impl GithubSource {
-    fn releases(&self, repo: &str) -> Result<Vec<Value>> {
+    fn releases(&self, repo: &str, fetch: &impl Fn(&str) -> Result<Vec<u8>>) -> Result<Vec<Value>> {
         let url = format!("https://api.github.com/repos/sno-ai/{repo}/releases?per_page=100");
-        serde_json::from_slice(&self.fetch(&url)?)
+        serde_json::from_slice(&fetch(&url)?)
             .map_err(|e| InstallError::source(format!("{url}: {e}")))
+    }
+    fn resolve_for_platform(
+        &self,
+        reach_version: Option<&str>,
+        skills_version: Option<&str>,
+        os: &str,
+        arch: &str,
+        fetch: impl Fn(&str) -> Result<Vec<u8>>,
+    ) -> Result<ReleaseSet> {
+        let reach_suffix = reach_archive_suffix(os, arch)?;
+        let core = self.releases("sno-station-core", &fetch)?;
+        let skills_releases = self.releases("sno-station-skills", &fetch)?;
+        let mut programs = Vec::new();
+        for name in PROGRAM_IDS {
+            let mut choices = Vec::new();
+            for release in &core {
+                if release["draft"].as_bool() != Some(false)
+                    || release["prerelease"].as_bool() != Some(false)
+                {
+                    continue;
+                }
+                let Some(assets) = release["assets"].as_array() else {
+                    continue;
+                };
+                for asset in assets {
+                    let Some(filename) = asset["name"].as_str() else {
+                        continue;
+                    };
+                    let Some(v) = core_asset_version(name, filename, &reach_suffix) else {
+                        continue;
+                    };
+                    let Ok(order) = version(v) else {
+                        continue;
+                    };
+                    if name == "reach" && reach_version.is_some_and(|pin| pin != v) {
+                        continue;
+                    }
+                    let checksum_url = asset_checksum_url(assets, filename);
+                    let url = asset["browser_download_url"]
+                        .as_str()
+                        .ok_or_else(|| InstallError::source("missing artifact URL"))?
+                        .to_owned();
+                    choices.push((
+                        order,
+                        Artifact {
+                            name: name.into(),
+                            version: v.into(),
+                            url,
+                            sha256: String::new(),
+                            entry_point: format!(
+                                "bin/{}",
+                                if name == "reach" { "sno-reach" } else { name }
+                            ),
+                        },
+                        checksum_url,
+                    ));
+                }
+            }
+            choices.sort_by_key(|(order, _, _)| *order);
+            if let Some((_, mut artifact, checksum_url)) = choices.pop() {
+                let url = checksum_url.ok_or_else(|| {
+                    InstallError::source(format!(
+                        "missing checksum: {} {}",
+                        artifact.name, artifact.version
+                    ))
+                })?;
+                let bytes = fetch(&url)?;
+                artifact.sha256 = std::str::from_utf8(&bytes)
+                    .map_err(|e| InstallError::source(e.to_string()))?
+                    .split_whitespace()
+                    .next()
+                    .ok_or_else(|| InstallError::source("empty checksum"))?
+                    .to_owned();
+                programs.push(artifact);
+            } else if name == "reach" {
+                return Err(InstallError::source(
+                    "no published Reach archive matches the selected version",
+                ));
+            }
+        }
+        let release = skills_releases
+            .iter()
+            .find(|r| {
+                r["draft"].as_bool() == Some(false)
+                    && r["prerelease"].as_bool() == Some(false)
+                    && skills_version.is_none_or(|pin| r["tag_name"].as_str() == Some(pin))
+            })
+            .ok_or_else(|| {
+                InstallError::source("no published skills release matches the selected tag")
+            })?;
+        let tag = release["tag_name"]
+            .as_str()
+            .ok_or_else(|| InstallError::source("missing skills tag"))?;
+        let ref_url = format!(
+            "https://api.github.com/repos/sno-ai/sno-station-skills/git/ref/tags/{}",
+            url::form_urlencoded::byte_serialize(tag.as_bytes()).collect::<String>()
+        );
+        let reference: Value = serde_json::from_slice(&fetch(&ref_url)?)
+            .map_err(|e| InstallError::source(e.to_string()))?;
+        let mut object = reference["object"].clone();
+        for _ in 0..8 {
+            if object["type"].as_str() == Some("commit") {
+                break;
+            }
+            if object["type"].as_str() != Some("tag") {
+                return Err(InstallError::source(
+                    "skills tag does not resolve to a commit",
+                ));
+            }
+            let tagged: Value = serde_json::from_slice(&fetch(
+                object["url"]
+                    .as_str()
+                    .ok_or_else(|| InstallError::source("tag object URL missing"))?,
+            )?)
+            .map_err(|e| InstallError::source(e.to_string()))?;
+            object = tagged["object"].clone();
+        }
+        let commit = object["sha"]
+            .as_str()
+            .filter(|s| s.len() == 40 && s.bytes().all(|b| b.is_ascii_hexdigit()))
+            .ok_or_else(|| InstallError::source("invalid skills commit"))?;
+        if object["type"].as_str() != Some("commit") {
+            return Err(InstallError::source("skills tag nesting exceeds limit"));
+        }
+        let archive_url =
+            format!("https://api.github.com/repos/sno-ai/sno-station-skills/tarball/{commit}");
+        let bytes = fetch(&archive_url)?;
+        Ok(ReleaseSet {
+            programs,
+            skills: Artifact {
+                name: "skills".into(),
+                version: tag.into(),
+                url: archive_url,
+                sha256: checksum(&bytes),
+                entry_point: String::new(),
+            },
+            contract_sha256: CONTRACT_SHA256.into(),
+        })
     }
 }
 impl ReleaseSource for GithubSource {
@@ -159,143 +327,13 @@ impl ReleaseSource for GithubSource {
         reach_version: Option<&str>,
         skills_version: Option<&str>,
     ) -> Result<ReleaseSet> {
-        let core = self.releases("sno-station-core")?;
-        let skills_releases = self.releases("sno-station-skills")?;
-        let mut programs = Vec::new();
-        for name in PROGRAM_IDS {
-            let mut choices = Vec::new();
-            for release in &core {
-                if release["draft"].as_bool() != Some(false)
-                    || release["prerelease"].as_bool() != Some(false)
-                {
-                    continue;
-                }
-                let Some(assets) = release["assets"].as_array() else {
-                    continue;
-                };
-                for asset in assets {
-                    let Some(filename) = asset["name"].as_str() else {
-                        continue;
-                    };
-                    let Some(v) = filename
-                        .strip_prefix(&format!("{name}-"))
-                        .and_then(|s| s.strip_suffix(".tar.gz"))
-                    else {
-                        continue;
-                    };
-                    let Ok(order) = version(v) else {
-                        continue;
-                    };
-                    if name == "reach" && reach_version.is_some_and(|pin| pin != v) {
-                        continue;
-                    }
-                    let checksum_url = assets
-                        .iter()
-                        .find(|a| a["name"].as_str() == Some(&format!("{filename}.sha256")))
-                        .and_then(|a| a["browser_download_url"].as_str())
-                        .map(str::to_owned);
-                    let url = asset["browser_download_url"]
-                        .as_str()
-                        .ok_or_else(|| InstallError::source("missing artifact URL"))?
-                        .to_owned();
-                    choices.push((
-                        order,
-                        Artifact {
-                            name: name.into(),
-                            version: v.into(),
-                            url,
-                            sha256: String::new(),
-                            entry_point: format!(
-                                "bin/{}",
-                                if name == "reach" { "sno-reach" } else { name }
-                            ),
-                        },
-                        checksum_url,
-                    ));
-                }
-            }
-            choices.sort_by_key(|(order, _, _)| *order);
-            if let Some((_, mut artifact, checksum_url)) = choices.pop() {
-                let url = checksum_url.ok_or_else(|| {
-                    InstallError::source(format!(
-                        "missing checksum: {} {}",
-                        artifact.name, artifact.version
-                    ))
-                })?;
-                let bytes = self.fetch(&url)?;
-                artifact.sha256 = std::str::from_utf8(&bytes)
-                    .map_err(|e| InstallError::source(e.to_string()))?
-                    .split_whitespace()
-                    .next()
-                    .ok_or_else(|| InstallError::source("empty checksum"))?
-                    .to_owned();
-                programs.push(artifact);
-            } else if name == "reach" {
-                return Err(InstallError::source(
-                    "no published Reach archive matches the selected version",
-                ));
-            }
-        }
-        let release = skills_releases
-            .iter()
-            .find(|r| {
-                r["draft"].as_bool() == Some(false)
-                    && r["prerelease"].as_bool() == Some(false)
-                    && skills_version.is_none_or(|pin| r["tag_name"].as_str() == Some(pin))
-            })
-            .ok_or_else(|| {
-                InstallError::source("no published skills release matches the selected tag")
-            })?;
-        let tag = release["tag_name"]
-            .as_str()
-            .ok_or_else(|| InstallError::source("missing skills tag"))?;
-        let ref_url = format!(
-            "https://api.github.com/repos/sno-ai/sno-station-skills/git/ref/tags/{}",
-            url::form_urlencoded::byte_serialize(tag.as_bytes()).collect::<String>()
-        );
-        let reference: Value = serde_json::from_slice(&self.fetch(&ref_url)?)
-            .map_err(|e| InstallError::source(e.to_string()))?;
-        let mut object = reference["object"].clone();
-        for _ in 0..8 {
-            if object["type"].as_str() == Some("commit") {
-                break;
-            }
-            if object["type"].as_str() != Some("tag") {
-                return Err(InstallError::source(
-                    "skills tag does not resolve to a commit",
-                ));
-            }
-            let tagged: Value = serde_json::from_slice(
-                &self.fetch(
-                    object["url"]
-                        .as_str()
-                        .ok_or_else(|| InstallError::source("tag object URL missing"))?,
-                )?,
-            )
-            .map_err(|e| InstallError::source(e.to_string()))?;
-            object = tagged["object"].clone();
-        }
-        let commit = object["sha"]
-            .as_str()
-            .filter(|s| s.len() == 40 && s.bytes().all(|b| b.is_ascii_hexdigit()))
-            .ok_or_else(|| InstallError::source("invalid skills commit"))?;
-        if object["type"].as_str() != Some("commit") {
-            return Err(InstallError::source("skills tag nesting exceeds limit"));
-        }
-        let archive_url =
-            format!("https://api.github.com/repos/sno-ai/sno-station-skills/tarball/{commit}");
-        let bytes = self.fetch(&archive_url)?;
-        Ok(ReleaseSet {
-            programs,
-            skills: Artifact {
-                name: "skills".into(),
-                version: tag.into(),
-                url: archive_url,
-                sha256: checksum(&bytes),
-                entry_point: String::new(),
-            },
-            contract_sha256: CONTRACT_SHA256.into(),
-        })
+        self.resolve_for_platform(
+            reach_version,
+            skills_version,
+            env::consts::OS,
+            env::consts::ARCH,
+            |url| self.fetch(url),
+        )
     }
 }
 
@@ -2037,3 +2075,7 @@ pub fn run(action: Action, json_enabled: bool, source: &dyn ReleaseSource) -> i3
         }
     }
 }
+
+#[cfg(test)]
+#[path = "../tests/fixtures/assemble/platform.rs"]
+mod platform_tests;

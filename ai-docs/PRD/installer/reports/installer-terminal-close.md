@@ -1,16 +1,16 @@
 # Installer local execution report
 
-PRD body SHA-256: 95cf60b9da9a29aa6a4b9208d44a3d8c273752b87b99bccd00994e1b8390cf99
+PRD body SHA-256: ce57abbc3df33800b659ad0172c5aadab9e5e4e87ba6753c7915be21eca3c647
 Verification: local fixture verification passed; external acceptance incomplete
 Acceptance: blocked
-Required work remaining: 1 published/live acceptance row
+Required work remaining: published/live acceptance and final-body refresh of 8 historical receipts
 Owner approval: execution authorized; final delivery not approved
 
 ## Result and scope
 
 The installer implements assemble, update, doctor and remove with release verification, strict shared requirements parsing, ownership-preserving transactions and crash recovery, reminder configuration and bounded execution, scheduler ownership, and explicit state purge. Existing station diagnostics remain available.
 
-Execution ran on **gpt1**, repository **/home/lh/code/sno-cli**, branch **feat/assemble-installer**. The captured baseline commit is **e65b04d840d3009f1f15af9972dd6fb22395f578**. [The final scope record](installer-final-scope.json) compares file hashes against that baseline, including untracked files. No out-of-scope file changed and openspec is unchanged. The PRD was narrowly revised to version 1.4 to permit removal of the obsolete root-doctor retirement assertion; other legacy assertions remain. Dependencies and README changes are restricted to the named surfaces.
+Execution ran on **gpt1**, repository **/home/lh/code/sno-cli**, branch **feat/assemble-installer**. The captured baseline commit is **e65b04d840d3009f1f15af9972dd6fb22395f578**. [The final scope record](installer-final-scope.json) compares file hashes against that baseline, including untracked files. No out-of-scope file changed and openspec is unchanged. The prior version 1.4 repair permitted removal of the obsolete root-doctor retirement assertion. Version 1.5 adds the owner-approved platform-qualified Reach naming and pre-download refusal; the sealed head is unchanged. [Platform patch evidence](installer-platform-close.md) records the affected tests and review. Dependencies and README changes are restricted to the named surfaces.
 
 ## Verification evidence
 
@@ -27,4 +27,4 @@ Canonical prd-proof receipts record nonempty passing verifiers for QCG-1/2/3/4/5
 - **QCG-2 now passes.** The replacement Reach candidate at source `9d473712a8d6d7ce1f6e931e1d445f7d6392012e` (SHA-256 `00c882584fc05519a0b7aa2ceb2f8d2b16a4a5eb6bcfb72e75af1c1864a5bc22`), real utility archives and gate-produced four-unit skills passed the complete local staged-consumer verifier on gpt1: 157 assertions, no failures. [The replacement staged close](installer-real-staged-close-9d473712a.md) records the exact artifacts, 30 mapped files/stamps, declaration/gate parity, numeric/program/capability rules, shared/custom roots, absolute installed commands, both utility doctor/repair checks and whole-tree negative snapshots. The canonical proof tool updated this row. Historical missing-input and negative-only reports describe earlier states.
 - **QCG-9 remains false/null.** Actual pinned published core and skills releases and the specified real harness/seat exchange, discovery, trust, prompt injection, utility execution and causal wrong-version journey remain unverified. [The readiness check](upstream-readiness.json) records unauthenticated GitHub API 404 responses; those responses do not establish whether releases exist. Local utility archives only prove the explicitly mixed-artifact test.
 
-The current delivery lint rejects only QCG-9; see [current gate output](installer-delivery-gate-9d473712a.log). The done command is attempted again with this truthful blocked report; its refusal is retained in installer-done-gate-9d473712a.log. The project is not marked done. This is the fixture-reachable execution result requested in the dispatch, not final acceptance or publication.
+After the version 1.5 platform patch, delivery lint rejects QCG-9 and eight unchanged historical receipts whose whole-body hashes predate the patch; see [current gate output](installer-platform-delivery-gate.log). Only affected QCG-1 was refreshed, as this dispatch explicitly limits reruns to affected tests. The other prior passing flags do not claim fresh final-body delivery proof. The done command is attempted again with this truthful blocked report; its refusal is retained in installer-platform-done-gate.log. The project is not marked done. This is the fixture-reachable execution result requested in the dispatch, not final acceptance or publication.
