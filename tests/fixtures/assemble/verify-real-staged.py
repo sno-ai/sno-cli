@@ -15,12 +15,12 @@ import tempfile
 
 import yaml
 
-REACH_SOURCE = "9d473712a8d6d7ce1f6e931e1d445f7d6392012e"
+REACH_SOURCE = "d2148b443b72b4097e2fef95c411d7ded698a3bd"
 PINS = {
-    "reach": "00c882584fc05519a0b7aa2ceb2f8d2b16a4a5eb6bcfb72e75af1c1864a5bc22",
-    "heartbeat": "29d1eb773df780b0f85b935549b90d05de0856411e82144f0331de8defd0cb53",
-    "subscription-quota-check": "b857aef24ffc1216c2818469d17175823f388e3c57a4abb67866e2f9e5375505",
-    "skills": "857e2f29f11bcce208823adc0b1a6bac33db417e09581e59069d898ec4b94627",
+    "reach": "b087a730097f16f7f115b33257da4783d0b7c927b91a17551fbc78245aafbc34",
+    "heartbeat": "5fbeb9222fd522d5fe3b7182712877b27d8d5a16d453aecc76a282a6b1597a96",
+    "subscription-quota-check": "e632a4cc3a4d40e18fdd6da1132a0544234034251851df932f6827b5bb79cd91",
+    "skills": "563b87bf64324f789cb47adcf7132dff351a4f0d552867caf5ca2c0391186ed7",
 }
 FIXTURE = "scripts/fixtures/s-category-requirements.json"
 CONTRACT = "scripts/requirements-contract.json"
@@ -66,7 +66,7 @@ class Verification:
         with tarfile.open(skills["path"]) as archive:
             archive.extractall(self.base, filter="data")
         self.fixture = json.loads((self.base / FIXTURE).read_text())
-        assert digest(self.base / FIXTURE) == "17eb722714548f71492d89d40ba09764bd2a24053c1c67f6ef70039dc3785d69"
+        assert digest(self.base / FIXTURE) == "a650dcadddd3fc1ed09fd4df728d88243011a813fcc95e405388c5a7e1df568a"
         assert digest(self.base / CONTRACT) == self.fixture["contract_sha256"]
         self.gate_path = args.gate.resolve()
         self.receipt = {

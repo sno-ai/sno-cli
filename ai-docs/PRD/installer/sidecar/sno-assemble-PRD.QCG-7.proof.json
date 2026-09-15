@@ -13,16 +13,16 @@
     "existing_agents_config_is_preserved_and_invalid_config_refused"
   ],
   "exit_code": 0,
-  "finished_at": "2026-09-13T06:46:08.316898+00:00",
+  "finished_at": "2026-09-15T03:51:14.947062+00:00",
   "interrupted_by": null,
   "prd": "sno-assemble-PRD.md",
-  "prd_body_sha256": "95cf60b9da9a29aa6a4b9208d44a3d8c273752b87b99bccd00994e1b8390cf99",
+  "prd_body_sha256": "7b4b5ef589359768f6e3a2d1cf498b84ba01108da3da7b7a7991cbd301eaf834",
   "qualified_id": "sno-assemble-PRD:QCG-7",
   "scope_sha256": "1caf276500d87522bceec19aef62f513ad122cf581728fa9cf1b377865145d8f",
-  "started_at": "2026-09-13T06:46:06.546811+00:00",
-  "stderr": "   Compiling sno v0.1.7 (/home/lh/code/sno-cli)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.61s\n     Running tests/assemble.rs (target/debug/deps/assemble-e94c45b372e470f4)\n",
+  "started_at": "2026-09-15T03:51:14.682809+00:00",
+  "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s\n     Running tests/assemble.rs (target/debug/deps/assemble-e94c45b372e470f4)\n",
   "stderr_truncated": false,
-  "stdout": "\nrunning 5 tests\ntest doctor_reports_installation_in_empty_home ... ok\ntest codex_untrusted_hook_requires_action_and_no_address_returns_no_context ... ok\ntest doctor_detects_missing_program_without_changing_station_checks ... ok\ntest existing_agents_config_is_preserved_and_invalid_config_refused ... ok\ntest codex_trust_is_read_only_and_bound_to_the_current_command ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.11s\n\n",
+  "stdout": "\nrunning 5 tests\ntest doctor_reports_installation_in_empty_home ... ok\ntest existing_agents_config_is_preserved_and_invalid_config_refused ... ok\ntest codex_untrusted_hook_requires_action_and_no_address_returns_no_context ... ok\ntest doctor_detects_missing_program_without_changing_station_checks ... ok\ntest codex_trust_is_read_only_and_bound_to_the_current_command ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 36 filtered out; finished in 0.11s\n\n",
   "stdout_truncated": false,
   "timed_out": false
 }

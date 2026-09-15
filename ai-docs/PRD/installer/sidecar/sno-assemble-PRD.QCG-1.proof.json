@@ -5,16 +5,16 @@
     "cargo test --lib platform_tests -- --nocapture\ncargo test --test assemble -- --exact install_repeat_update_remove_preserves_user_content checksum_failure_preserves_the_committed_installation archive_link_escaping_staging_is_refused_before_install restrictive_umask_preserves_modes_across_update_and_rollback"
   ],
   "exit_code": 0,
-  "finished_at": "2026-09-14T06:52:55.055889+00:00",
+  "finished_at": "2026-09-15T03:49:31.100670+00:00",
   "interrupted_by": null,
   "prd": "sno-assemble-PRD.md",
-  "prd_body_sha256": "ce57abbc3df33800b659ad0172c5aadab9e5e4e87ba6753c7915be21eca3c647",
+  "prd_body_sha256": "7b4b5ef589359768f6e3a2d1cf498b84ba01108da3da7b7a7991cbd301eaf834",
   "qualified_id": "sno-assemble-PRD:QCG-1",
   "scope_sha256": "ef5e3fa53b45dc3189265d51ecd4524ae0b395fee796b5f81f7f742dd3661439",
-  "started_at": "2026-09-14T06:52:51.569350+00:00",
-  "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.13s\n     Running unittests src/lib.rs (target/debug/deps/sno-00042c387b4ab241)\n   Compiling sno v0.1.7 (/home/lh/code/sno-cli)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 3.02s\n     Running tests/assemble.rs (target/debug/deps/assemble-e94c45b372e470f4)\n",
+  "started_at": "2026-09-15T03:49:28.080570+00:00",
+  "stderr": "   Compiling sno v0.1.7 (/home/lh/code/sno-cli)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.79s\n     Running unittests src/lib.rs (target/debug/deps/sno-00042c387b4ab241)\n   Compiling sno v0.1.7 (/home/lh/code/sno-cli)\n    Finished `test` profile [unoptimized + debuginfo] target(s) in 2.01s\n     Running tests/assemble.rs (target/debug/deps/assemble-e94c45b372e470f4)\n",
   "stderr_truncated": false,
-  "stdout": "\nrunning 5 tests\ntest assemble::platform_tests::supported_pairs_use_the_exact_release_suffix ... ok\ntest assemble::platform_tests::build_host_accepts_only_its_qualified_reach_archive ... ok\ntest assemble::platform_tests::host_archive_requires_its_own_exact_checksum_asset ... ok\ntest assemble::platform_tests::utility_names_remain_platform_independent ... ok\ntest assemble::platform_tests::unsupported_pairs_refuse_before_release_resolution ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.00s\n\n\nrunning 4 tests\ntest archive_link_escaping_staging_is_refused_before_install ... ok\ntest checksum_failure_preserves_the_committed_installation ... ok\ntest install_repeat_update_remove_preserves_user_content ... ok\ntest restrictive_umask_preserves_modes_across_update_and_rollback ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 35 filtered out; finished in 0.20s\n\n",
+  "stdout": "\nrunning 6 tests\ntest assemble::platform_tests::build_host_accepts_only_its_qualified_reach_archive ... ok\ntest assemble::platform_tests::host_archive_requires_its_own_exact_checksum_asset ... ok\ntest assemble::platform_tests::supported_pairs_use_the_exact_release_suffix ... ok\ntest assemble::platform_tests::unsupported_pairs_refuse_before_release_resolution ... ok\ntest assemble::platform_tests::utility_names_remain_platform_independent ... ok\ntest assemble::platform_tests::skills_release_requires_the_exact_distribution_asset ... ok\n\ntest result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 18 filtered out; finished in 0.00s\n\n\nrunning 4 tests\ntest archive_link_escaping_staging_is_refused_before_install ... ok\ntest checksum_failure_preserves_the_committed_installation ... ok\ntest install_repeat_update_remove_preserves_user_content ... ok\ntest restrictive_umask_preserves_modes_across_update_and_rollback ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 37 filtered out; finished in 0.14s\n\n",
   "stdout_truncated": false,
   "timed_out": false
 }

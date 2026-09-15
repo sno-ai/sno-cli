@@ -3,10 +3,11 @@ name: "sno-assemble"
 title: "sno assemble: install, update, check and remove the station"
 version: "1.5"
 prd_status: "released"
-project_status: "not_started"
-updated: "2026-09-14"
+project_status: "done"
+updated: "2026-09-15"
 owner: "larry"
 pipeline: "small"
+completion_report: "ai-docs/PRD/installer/reports/installer-final-close.md"
 ---
 
 # PRD — `sno assemble`: install, update, check and remove the station with one CLI
