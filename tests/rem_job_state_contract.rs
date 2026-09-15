@@ -100,6 +100,7 @@ fn validate_rows(rows: &[ContractRow]) -> Result<(), String> {
 fn normalized_semantic_rows(
     source: &str,
 ) -> Result<BTreeMap<String, (i32, BTreeSet<String>)>, String> {
+    let source = source.replace("\r\n", "\n");
     let expected = expected_rows();
     let known_errors = expected
         .iter()
@@ -557,6 +558,12 @@ fn qcg_3_readme_matches_declaration_semantic_rows_and_detects_drift() {
     assert_eq!(
         readme_rows, declaration_rows,
         "REQ-3 README and REM outcome declaration semantic rows drifted"
+    );
+    let crlf_readme = readme.replace("\r\n", "\n").replace('\n', "\r\n");
+    assert_eq!(
+        normalized_semantic_rows(&crlf_readme).expect("CRLF README semantic rows are invalid"),
+        readme_rows,
+        "README line endings changed semantic rows"
     );
 }
 
