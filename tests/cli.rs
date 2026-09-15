@@ -1231,6 +1231,7 @@ fn rem_wait_timeout_survives_a_stalled_trace_writer() {
     let trace_lock = fs::OpenOptions::new()
         .create(true)
         .append(true)
+        .read(cfg!(windows))
         .open(&trace_path)
         .expect("trace file");
     trace_lock.lock_exclusive().expect("hold trace lock");

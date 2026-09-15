@@ -97,6 +97,7 @@ struct Fixture {
     home: PathBuf,
     source: PathBuf,
     restrictive_umask: bool,
+    timeout_override: Option<Duration>,
 }
 
 impl Fixture {
@@ -110,6 +111,7 @@ impl Fixture {
             root,
             home,
             restrictive_umask: false,
+            timeout_override: None,
         };
         fixture.release("2.0");
         fixture
@@ -413,7 +415,10 @@ impl Fixture {
     }
 
     fn run(&self, args: &[&str]) -> Output {
-        bounded_output(&mut self.command(args))
+        bounded_output_with_timeout(
+            &mut self.command(args),
+            self.timeout_override.unwrap_or(Duration::from_secs(20)),
+        )
     }
 
     fn activation_checkpoint(&self) -> String {
@@ -424,15 +429,7 @@ impl Fixture {
     }
 
     fn pause(&self, args: &[&str], phase: &str) -> std::process::Child {
-        self.pause_with_timeout(args, phase, Duration::from_secs(10))
-    }
-
-    fn pause_with_timeout(
-        &self,
-        args: &[&str],
-        phase: &str,
-        timeout: Duration,
-    ) -> std::process::Child {
+        let timeout = self.timeout_override.unwrap_or(Duration::from_secs(10));
         let marker = self.root.path().join("checkpoint");
         let mut child = self
             .command(args)
@@ -605,18 +602,22 @@ fn isolated_command(executable: impl AsRef<std::ffi::OsStr>, home: &Path) -> Com
 }
 
 fn bounded_output(command: &mut Command) -> Output {
+    bounded_output_with_timeout(command, Duration::from_secs(20))
+}
+
+fn bounded_output_with_timeout(command: &mut Command, timeout: Duration) -> Output {
     let mut child = command
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
         .unwrap();
-    let deadline = Instant::now() + Duration::from_secs(20);
+    let deadline = Instant::now() + timeout;
     while child.try_wait().unwrap().is_none() {
         if Instant::now() >= deadline {
             child.kill().unwrap();
             let output = child.wait_with_output().unwrap();
             panic!(
-                "installer exceeded 20 second test bound: {}",
+                "installer exceeded {timeout:?} test bound: {}",
                 diagnostic(&output)
             );
         }
@@ -2077,6 +2078,7 @@ fn committed_remove_cleans_owned_directories_before_reassembly() {
 fn large_program_update_and_recovery_keep_payload_out_of_journal_metadata() {
     use rand::{RngCore, SeedableRng};
     let mut fixture = Fixture::new();
+    fixture.timeout_override = Some(Duration::from_secs(120));
     let mut body = vec![0u8; 20 * 1024 * 1024];
     rand::rngs::StdRng::seed_from_u64(937).fill_bytes(&mut body);
     fixture.large_reach_resource(&body);
@@ -2092,11 +2094,7 @@ fn large_program_update_and_recovery_keep_payload_out_of_journal_metadata() {
     fixture.release("2.1");
     rand::rngs::StdRng::seed_from_u64(938).fill_bytes(&mut body);
     fixture.large_reach_resource(&body);
-    let mut child = fixture.pause_with_timeout(
-        &["update"],
-        &fixture.activation_checkpoint(),
-        Duration::from_secs(120),
-    );
+    let mut child = fixture.pause(&["update"], &fixture.activation_checkpoint());
     let pending = fs::read(fixture.home.join(".config/sno/assemble.pending.json")).unwrap();
     child.kill().unwrap();
     child.wait().unwrap();
