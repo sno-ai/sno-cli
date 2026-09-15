@@ -152,6 +152,84 @@ fn asset_checksum_url(assets: &[Value], filename: &str) -> Option<String> {
         .map(str::to_owned)
 }
 
+fn exact_asset_url(assets: &[Value], filename: &str) -> Result<String> {
+    let mut matches = assets
+        .iter()
+        .filter(|asset| asset["name"].as_str() == Some(filename));
+    let asset = matches
+        .next()
+        .ok_or_else(|| InstallError::source(format!("missing release asset: {filename}")))?;
+    if matches.next().is_some() {
+        return Err(InstallError::source(format!(
+            "ambiguous release asset: {filename}"
+        )));
+    }
+    asset["url"]
+        .as_str()
+        .map(str::to_owned)
+        .ok_or_else(|| InstallError::source(format!("missing artifact URL: {filename}")))
+}
+
+fn skills_release_artifact(
+    release: &Value,
+    fetch: &impl Fn(&str) -> Result<Vec<u8>>,
+) -> Result<Artifact> {
+    const ARCHIVE: &str = "final-skills.tar.gz";
+    let tag = release["tag_name"]
+        .as_str()
+        .ok_or_else(|| InstallError::source("missing skills tag"))?;
+    let assets = release["assets"]
+        .as_array()
+        .ok_or_else(|| InstallError::source("skills release missing assets"))?;
+    let archive_url = exact_asset_url(assets, ARCHIVE)?;
+    let checksum_url = exact_asset_url(assets, &format!("{ARCHIVE}.sha256"))?;
+    let sha256 = std::str::from_utf8(&fetch(&checksum_url)?)
+        .map_err(|e| InstallError::source(e.to_string()))?
+        .split_whitespace()
+        .next()
+        .filter(|value| value.len() == 64 && value.bytes().all(|b| b.is_ascii_hexdigit()))
+        .ok_or_else(|| InstallError::source("invalid skills checksum"))?
+        .to_ascii_lowercase();
+    let ref_url = format!(
+        "https://api.github.com/repos/sno-ai/sno-station-skills/git/ref/tags/{}",
+        url::form_urlencoded::byte_serialize(tag.as_bytes()).collect::<String>()
+    );
+    let reference: Value = serde_json::from_slice(&fetch(&ref_url)?)
+        .map_err(|e| InstallError::source(e.to_string()))?;
+    let mut object = reference["object"].clone();
+    for _ in 0..8 {
+        if object["type"].as_str() == Some("commit") {
+            break;
+        }
+        if object["type"].as_str() != Some("tag") {
+            return Err(InstallError::source(
+                "skills tag does not resolve to a commit",
+            ));
+        }
+        let tagged: Value = serde_json::from_slice(&fetch(
+            object["url"]
+                .as_str()
+                .ok_or_else(|| InstallError::source("tag object URL missing"))?,
+        )?)
+        .map_err(|e| InstallError::source(e.to_string()))?;
+        object = tagged["object"].clone();
+    }
+    let _commit = object["sha"]
+        .as_str()
+        .filter(|value| value.len() == 40 && value.bytes().all(|b| b.is_ascii_hexdigit()))
+        .ok_or_else(|| InstallError::source("invalid skills commit"))?;
+    if object["type"].as_str() != Some("commit") {
+        return Err(InstallError::source("skills tag nesting exceeds limit"));
+    }
+    Ok(Artifact {
+        name: "skills".into(),
+        version: tag.into(),
+        url: archive_url,
+        sha256,
+        entry_point: String::new(),
+    })
+}
+
 pub struct GithubSource;
 impl GithubSource {
     fn releases(&self, repo: &str, fetch: &impl Fn(&str) -> Result<Vec<u8>>) -> Result<Vec<Value>> {
@@ -256,52 +334,9 @@ impl GithubSource {
             .ok_or_else(|| {
                 InstallError::source("no published skills release matches the selected tag")
             })?;
-        let tag = release["tag_name"]
-            .as_str()
-            .ok_or_else(|| InstallError::source("missing skills tag"))?;
-        let ref_url = format!(
-            "https://api.github.com/repos/sno-ai/sno-station-skills/git/ref/tags/{}",
-            url::form_urlencoded::byte_serialize(tag.as_bytes()).collect::<String>()
-        );
-        let reference: Value = serde_json::from_slice(&fetch(&ref_url)?)
-            .map_err(|e| InstallError::source(e.to_string()))?;
-        let mut object = reference["object"].clone();
-        for _ in 0..8 {
-            if object["type"].as_str() == Some("commit") {
-                break;
-            }
-            if object["type"].as_str() != Some("tag") {
-                return Err(InstallError::source(
-                    "skills tag does not resolve to a commit",
-                ));
-            }
-            let tagged: Value = serde_json::from_slice(&fetch(
-                object["url"]
-                    .as_str()
-                    .ok_or_else(|| InstallError::source("tag object URL missing"))?,
-            )?)
-            .map_err(|e| InstallError::source(e.to_string()))?;
-            object = tagged["object"].clone();
-        }
-        let commit = object["sha"]
-            .as_str()
-            .filter(|s| s.len() == 40 && s.bytes().all(|b| b.is_ascii_hexdigit()))
-            .ok_or_else(|| InstallError::source("invalid skills commit"))?;
-        if object["type"].as_str() != Some("commit") {
-            return Err(InstallError::source("skills tag nesting exceeds limit"));
-        }
-        let archive_url =
-            format!("https://api.github.com/repos/sno-ai/sno-station-skills/tarball/{commit}");
-        let bytes = fetch(&archive_url)?;
         Ok(ReleaseSet {
             programs,
-            skills: Artifact {
-                name: "skills".into(),
-                version: tag.into(),
-                url: archive_url,
-                sha256: checksum(&bytes),
-                entry_point: String::new(),
-            },
+            skills: skills_release_artifact(release, &fetch)?,
             contract_sha256: CONTRACT_SHA256.into(),
         })
     }
