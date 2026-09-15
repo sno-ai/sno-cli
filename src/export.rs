@@ -115,10 +115,10 @@ pub fn run(
             output["tarball_sha256"] = Value::String(hash);
         }
         print_json(&output)?;
-    } else if let Some(path) = &output_path
-        && format == ExportFormat::Tarball
-    {
-        println!("exported {} events to {path}", stats.event_count);
+    } else if format == ExportFormat::Tarball {
+        if let Some(path) = &output_path {
+            println!("exported {} events to {path}", stats.event_count);
+        }
     }
     Ok(0)
 }
