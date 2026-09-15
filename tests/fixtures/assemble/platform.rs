@@ -26,7 +26,7 @@ fn assert_platform_refusal(os: &str, arch: &str) {
 fn checked_build_host_suffix() -> Option<String> {
     let os = std::env::consts::OS;
     let arch = std::env::consts::ARCH;
-    if matches!(os, "linux" | "macos") && matches!(arch, "x86_64" | "aarch64") {
+    if matches!((os, arch), ("linux", "x86_64") | ("macos", "aarch64")) {
         Some(reach_archive_suffix(os, arch).expect("supported build platform"))
     } else {
         assert_platform_refusal(os, arch);
@@ -38,9 +38,7 @@ fn checked_build_host_suffix() -> Option<String> {
 fn supported_pairs_use_the_exact_release_suffix() {
     for (os, arch, expected) in [
         ("linux", "x86_64", "-linux-x86_64.tar.gz"),
-        ("linux", "aarch64", "-linux-aarch64.tar.gz"),
         ("macos", "aarch64", "-macos-aarch64.tar.gz"),
-        ("macos", "x86_64", "-macos-x86_64.tar.gz"),
     ] {
         assert_eq!(reach_archive_suffix(os, arch).unwrap(), expected);
     }
@@ -110,11 +108,11 @@ fn host_archive_requires_its_own_exact_checksum_asset() {
     let archive = format!("reach-2.10-{os}-{arch}.tar.gz");
     let other_os = if os == "linux" { "macos" } else { "linux" };
     let assets = vec![
-        json!({"name":"reach-2.10.tar.gz.sha256","browser_download_url":"https://example.invalid/legacy"}),
-        json!({"name":format!("reach-2.10-{other_os}-{arch}.tar.gz.sha256"),"browser_download_url":"https://example.invalid/other-platform"}),
-        json!({"name":format!("reach-2.9-{os}-{arch}.tar.gz.sha256"),"browser_download_url":"https://example.invalid/old-version"}),
-        json!({"name":archive,"browser_download_url":"https://example.invalid/host-archive"}),
-        json!({"name":format!("{archive}.sha256"),"browser_download_url":"https://example.invalid/host-checksum"}),
+        json!({"name":"reach-2.10.tar.gz.sha256","url":"https://example.invalid/legacy"}),
+        json!({"name":format!("reach-2.10-{other_os}-{arch}.tar.gz.sha256"),"url":"https://example.invalid/other-platform"}),
+        json!({"name":format!("reach-2.9-{os}-{arch}.tar.gz.sha256"),"url":"https://example.invalid/old-version"}),
+        json!({"name":archive,"url":"https://example.invalid/host-archive"}),
+        json!({"name":format!("{archive}.sha256"),"url":"https://example.invalid/host-checksum"}),
     ];
     assert_eq!(core_asset_version("reach", &archive, &suffix), Some("2.10"));
     assert_eq!(
@@ -130,6 +128,8 @@ fn host_archive_requires_its_own_exact_checksum_asset() {
 
 #[test]
 fn unsupported_pairs_refuse_before_release_resolution() {
+    assert_platform_refusal("linux", "aarch64");
+    assert_platform_refusal("macos", "x86_64");
     assert_platform_refusal("linux", "riscv64");
     assert_platform_refusal("windows", "x86_64");
 }

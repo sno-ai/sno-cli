@@ -122,7 +122,7 @@ fn reach_archive_suffix(os: &str, arch: &str) -> Result<String> {
     if !matches!(os, "linux" | "macos") {
         return Err(InstallError::usage("installer requires Linux or macOS"));
     }
-    if !matches!(arch, "x86_64" | "aarch64") {
+    if !matches!((os, arch), ("linux", "x86_64") | ("macos", "aarch64")) {
         return Err(InstallError::usage(format!(
             "unsupported installer platform: {os}-{arch}"
         )));
@@ -144,7 +144,7 @@ fn asset_checksum_url(assets: &[Value], filename: &str) -> Option<String> {
     assets
         .iter()
         .find(|a| a["name"].as_str() == Some(&format!("{filename}.sha256")))
-        .and_then(|a| a["browser_download_url"].as_str())
+        .and_then(|a| a["url"].as_str())
         .map(str::to_owned)
 }
 
@@ -192,7 +192,7 @@ impl GithubSource {
                         continue;
                     }
                     let checksum_url = asset_checksum_url(assets, filename);
-                    let url = asset["browser_download_url"]
+                    let url = asset["url"]
                         .as_str()
                         .ok_or_else(|| InstallError::source("missing artifact URL"))?
                         .to_owned();
@@ -306,9 +306,16 @@ impl ReleaseSource for GithubSource {
             .timeout(Duration::from_secs(30))
             .build()
             .map_err(|e| InstallError::source(e.to_string()))?;
-        let response = client
-            .get(url)
-            .header("User-Agent", "sno-installer")
+        let mut request = client.get(url).header("User-Agent", "sno-installer");
+        if parsed.host_str() == Some("api.github.com") {
+            if let Ok(token) = env::var("GH_TOKEN") {
+                request = request.bearer_auth(token);
+            }
+            if parsed.path().contains("/releases/assets/") {
+                request = request.header("Accept", "application/octet-stream");
+            }
+        }
+        let response = request
             .send()
             .and_then(|r| r.error_for_status())
             .map_err(|e| InstallError::source(format!("{url}: {e}")))?;
