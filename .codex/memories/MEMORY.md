@@ -8,6 +8,18 @@ Repository: `/home/lh/code/sno-cli`
 
 This file contains repository-scoped history only. Do not copy it into user-level memory or another repository.
 
+# Task Group: WSL2 Azure production test
+
+scope: Reuse the verified Azure Windows Server nested-virtualization path whenever `sno` needs a real WSL2 test.
+applies_to: WSL2 testing for `/home/lh/code/sno-cli`; read `ai-docs/PRD/installer/reports/wsl2-azure-runbook-2026-09-14.md` before creating, starting, testing, stopping, or deleting Azure resources.
+
+## Reusable knowledge
+
+- The complete account identifiers, VM configuration, commands, user-context rule, proof, failures, security handling, current resource state, and cleanup commands are in `ai-docs/PRD/installer/reports/wsl2-azure-runbook-2026-09-14.md`.
+- Verified on 2026-09-14 PDT: real WSL2 kernel `6.18.33.2-microsoft-standard-WSL2`; published `sno 0.1.9`; first production assemble exit `0`; repeat assemble exit `0`; Reach `2.0.2`, heartbeat `1.0`, and subscription-quota-check `1.0` installed.
+- WSL registration is Windows-user-specific. Use a Scheduled Task under `SNO-WSL2-TEST\\snoadmin`; Azure's system account and managed Run Command run-as context did not expose the installed Ubuntu distribution.
+- The VM is deallocated. The working resource group still contains storage and network resources until the owner confirms the exact destructive delete commands.
+
 
 
 # Task Group: /home/lh/code/sno-cli REM status JSON forward-field preservation
