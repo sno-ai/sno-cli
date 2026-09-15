@@ -133,6 +133,8 @@ fn append_trace_line(path: &Path, line: String) -> Result<(), CliError> {
     })?;
     let mut file = OpenOptions::new()
         .create(true)
+        // Windows byte-range locks need more than append-only access.
+        .read(cfg!(windows))
         .append(true)
         .open(path)
         .map_err(|error| {
@@ -648,6 +650,7 @@ mod tests {
         let lock_holder = OpenOptions::new()
             .create(true)
             .append(true)
+            .read(cfg!(windows))
             .open(&trace_path)
             .expect("trace lock file");
         lock_holder.lock_exclusive().expect("hold trace lock");

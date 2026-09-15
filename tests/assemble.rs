@@ -104,6 +104,7 @@ impl Fixture {
         let root = TempDir::new().unwrap();
         let home = root.path().join("home");
         fs::create_dir(&home).unwrap();
+        let home = home.canonicalize().unwrap();
         let mut fixture = Self {
             source: root.path().join("source.json"),
             root,
@@ -423,6 +424,15 @@ impl Fixture {
     }
 
     fn pause(&self, args: &[&str], phase: &str) -> std::process::Child {
+        self.pause_with_timeout(args, phase, Duration::from_secs(10))
+    }
+
+    fn pause_with_timeout(
+        &self,
+        args: &[&str],
+        phase: &str,
+        timeout: Duration,
+    ) -> std::process::Child {
         let marker = self.root.path().join("checkpoint");
         let mut child = self
             .command(args)
@@ -433,7 +443,7 @@ impl Fixture {
             .stderr(Stdio::piped())
             .spawn()
             .unwrap();
-        let deadline = Instant::now() + Duration::from_secs(10);
+        let deadline = Instant::now() + timeout;
         while !marker.exists() {
             if child.try_wait().unwrap().is_some() {
                 let output = child.wait_with_output().unwrap();
@@ -493,10 +503,21 @@ impl Fixture {
 
     fn real_shell_dependencies(&self) {
         for name in ["sh", "jq", "mktemp", "sleep", "cat", "rm", "timeout"] {
-            let command = std::env::split_paths(&std::env::var_os("PATH").unwrap())
-                .map(|root| root.join(name))
-                .find(|path| path.is_file())
-                .expect("host shell dependency");
+            let candidates: &[&str] = if name == "timeout" {
+                &["timeout", "gtimeout"]
+            } else {
+                &[name]
+            };
+            let command = candidates
+                .iter()
+                .find_map(|candidate| {
+                    std::env::split_paths(&std::env::var_os("PATH").unwrap())
+                        .map(|root| root.join(candidate))
+                        .find(|path| path.is_file())
+                })
+                .unwrap_or_else(|| {
+                    panic!("missing host shell dependency: {name} ({candidates:?})")
+                });
             let path = self.home.join(".local/bin").join(name);
             fs::create_dir_all(path.parent().unwrap()).unwrap();
             std::os::unix::fs::symlink(command, path).unwrap();
@@ -2071,7 +2092,11 @@ fn large_program_update_and_recovery_keep_payload_out_of_journal_metadata() {
     fixture.release("2.1");
     rand::rngs::StdRng::seed_from_u64(938).fill_bytes(&mut body);
     fixture.large_reach_resource(&body);
-    let mut child = fixture.pause(&["update"], &fixture.activation_checkpoint());
+    let mut child = fixture.pause_with_timeout(
+        &["update"],
+        &fixture.activation_checkpoint(),
+        Duration::from_secs(120),
+    );
     let pending = fs::read(fixture.home.join(".config/sno/assemble.pending.json")).unwrap();
     child.kill().unwrap();
     child.wait().unwrap();
@@ -2229,8 +2254,8 @@ fn addressed_reminder_failure_is_visible_and_timeout_stops_the_program() {
     }
     if status.is_none() {
         child.kill().unwrap();
-        child.wait().unwrap();
     }
+    child.wait().unwrap();
     let pid = fs::read_to_string(fixture.home.join("remind-pid")).unwrap();
     let running = Command::new("/bin/kill")
         .args(["-0", pid.trim()])

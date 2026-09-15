@@ -68,7 +68,7 @@ releases. Doctor reports installed files, hook configuration and trust, adapter 
 timer state, and the existing station checks separately. A configured hook does not prove
 that a real prompt has received its reminder. Codex trust is completed in Codex itself.
 
-Installer exit codes are `0` for success, `2` for usage, `3` for source/integrity errors,
+Installer exit codes are `0` on completion, `2` for usage, `3` for source/integrity errors,
 and `4` for filesystem, ownership, scheduler or recovery failures. Doctor exits `1` for
 unhealthy checks. Every installer verb accepts `--json`.
 

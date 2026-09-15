@@ -81,6 +81,13 @@ jobs:
       - name: Verify cargo-dist bootstrap on the native host
         shell: bash
         run: scripts/install-cargo-dist.sh
+      - name: Ensure real timeout tool for installer tests
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          if ! command -v timeout >/dev/null && ! command -v gtimeout >/dev/null; then
+            brew install coreutils
+          fi
       - run: cargo test --all-targets --all-features --locked
       - run: cargo build --profile dist --locked
       - name: Verify Unix host and binary
