@@ -57,6 +57,12 @@ The installer supports Linux x86_64 and macOS aarch64. Other platform pairs are 
 before downloads. For private repositories, set `GH_TOKEN` to a GitHub token with read
 access to both release repositories (for an existing GitHub CLI login, use
 `GH_TOKEN="$(gh auth token)" sno assemble`). The token is sent only to the GitHub API.
+For an explicitly staged first install before the skills release exists, use
+`--skills-archive /absolute/path/to/skills.tar.gz`. This conflicts with `--skills-version`,
+records a bootstrap archive digest, and still downloads published core programs. Normal
+archive, declaration, and ownership checks apply. Run `sno update` after the final skills
+release is published.
+
 Core programs are installed once per user; skill
 text goes to detected harness roots. Releases and the shared requirements contract are
 verified before placement. Unknown requirements reject the source; unavailable required

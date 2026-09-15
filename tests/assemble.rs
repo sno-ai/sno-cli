@@ -26,6 +26,7 @@ impl ReleaseSource for FileSource {
         &self,
         reach_version: Option<&str>,
         skills_version: Option<&str>,
+        skills_archive: Option<&Artifact>,
     ) -> Result<ReleaseSet, InstallError> {
         let data: Value = serde_json::from_slice(&fs::read(&self.0).unwrap()).unwrap();
         let artifact = |v: &Value| Artifact {
@@ -41,7 +42,9 @@ impl ReleaseSource for FileSource {
             .iter()
             .map(artifact)
             .collect();
-        let skills = artifact(&data["skills"]);
+        let skills = skills_archive
+            .cloned()
+            .unwrap_or_else(|| artifact(&data["skills"]));
         if let Some(version) = reach_version {
             assert_eq!(
                 programs.iter().find(|p| p.name == "reach").unwrap().version,
@@ -2385,4 +2388,42 @@ fn accepted_core_utilities_install_with_synthetic_reach_and_skills() {
         diagnostic(&doctor)
     );
     fixture.success(&["remove"]);
+}
+
+#[test]
+fn explicit_skills_archive_installs_and_records_its_identity() {
+    let fixture = Fixture::new();
+    let source: Value = serde_json::from_slice(&fs::read(&fixture.source).unwrap()).unwrap();
+    let archive = url::Url::parse(source["skills"]["url"].as_str().unwrap())
+        .unwrap()
+        .to_file_path()
+        .unwrap();
+    fixture.success(&["assemble", "--skills-archive", archive.to_str().unwrap()]);
+    let manifest = fs::read_to_string(fixture.home.join(".config/sno/assemble.json")).unwrap();
+    assert!(manifest.contains(&hex::encode(Sha256::digest(fs::read(&archive).unwrap()))));
+    assert!(manifest.contains("bootstrap-"));
+    assert!(fixture.home.join(".local/bin/sno-reach").exists());
+    let conflict = fixture.run(&[
+        "assemble",
+        "--skills-archive",
+        archive.to_str().unwrap(),
+        "--skills-version",
+        "1.0",
+    ]);
+    assert_eq!(conflict.status.code(), Some(2));
+    assert_eq!(
+        fs::read_to_string(fixture.home.join(".config/sno/assemble.json")).unwrap(),
+        manifest
+    );
+}
+
+#[test]
+fn invalid_skills_archive_leaves_programs_uninstalled() {
+    let fixture = Fixture::new();
+    let archive = fixture.root.path().join("invalid.tar.gz");
+    fs::write(&archive, b"not a skills archive").unwrap();
+    let output = fixture.run(&["assemble", "--skills-archive", archive.to_str().unwrap()]);
+    assert_eq!(output.status.code(), Some(3), "{}", diagnostic(&output));
+    assert!(!fixture.home.join(".local/bin/sno-reach").exists());
+    assert!(!fixture.home.join(".config/sno/assemble.json").exists());
 }

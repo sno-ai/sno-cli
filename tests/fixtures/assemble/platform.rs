@@ -4,7 +4,7 @@ use std::cell::Cell;
 fn assert_platform_refusal(os: &str, arch: &str) {
     let fetches = Cell::new(0);
     let error = GithubSource
-        .resolve_for_platform(None, None, os, arch, |_| {
+        .resolve_for_platform(None, None, os, arch, None, |_| {
             fetches.set(fetches.get() + 1);
             Ok(b"[]".to_vec())
         })

@@ -73,6 +73,9 @@ pub struct InstallOptions {
     pub reach_version: Option<String>,
     #[arg(long,value_parser=parse_skills_tag)]
     pub skills_version: Option<String>,
+    /// Use a local skills archive for the initial bootstrap; core releases remain published.
+    #[arg(long, conflicts_with = "skills_version")]
+    pub skills_archive: Option<PathBuf>,
 }
 #[derive(Debug, Args)]
 pub struct UpdateOptions {
@@ -111,6 +114,7 @@ pub trait ReleaseSource {
         &self,
         reach_version: Option<&str>,
         skills_version: Option<&str>,
+        skills_archive: Option<&Artifact>,
     ) -> Result<ReleaseSet>;
     fn fetch(&self, url: &str) -> Result<Vec<u8>>;
     fn checkpoint(&self, _phase: &str) -> Result<()> {
@@ -161,11 +165,11 @@ impl GithubSource {
         skills_version: Option<&str>,
         os: &str,
         arch: &str,
+        skills_archive: Option<&Artifact>,
         fetch: impl Fn(&str) -> Result<Vec<u8>>,
     ) -> Result<ReleaseSet> {
         let reach_suffix = reach_archive_suffix(os, arch)?;
         let core = self.releases("sno-station-core", &fetch)?;
-        let skills_releases = self.releases("sno-station-skills", &fetch)?;
         let mut programs = Vec::new();
         for name in PROGRAM_IDS {
             let mut choices = Vec::new();
@@ -234,6 +238,14 @@ impl GithubSource {
                 ));
             }
         }
+        if let Some(skills) = skills_archive {
+            return Ok(ReleaseSet {
+                programs,
+                skills: skills.clone(),
+                contract_sha256: CONTRACT_SHA256.into(),
+            });
+        }
+        let skills_releases = self.releases("sno-station-skills", &fetch)?;
         let release = skills_releases
             .iter()
             .find(|r| {
@@ -333,12 +345,14 @@ impl ReleaseSource for GithubSource {
         &self,
         reach_version: Option<&str>,
         skills_version: Option<&str>,
+        skills_archive: Option<&Artifact>,
     ) -> Result<ReleaseSet> {
         self.resolve_for_platform(
             reach_version,
             skills_version,
             env::consts::OS,
             env::consts::ARCH,
+            skills_archive,
             |url| self.fetch(url),
         )
     }
@@ -476,6 +490,10 @@ fn safe_relative(path: &Path) -> Result<()> {
 }
 fn unpack(source: &dyn ReleaseSource, artifact: &Artifact) -> Result<BTreeMap<PathBuf, Snapshot>> {
     let bytes = source.fetch(&artifact.url)?;
+    unpack_bytes(bytes, artifact)
+}
+
+fn unpack_bytes(bytes: Vec<u8>, artifact: &Artifact) -> Result<BTreeMap<PathBuf, Snapshot>> {
     if checksum(&bytes) != artifact.sha256 {
         return Err(InstallError::source(format!(
             "checksum mismatch: {}",
@@ -1031,16 +1049,48 @@ fn install(
     if let Some(v) = &options.reach_version {
         version(v)?;
     }
+    let local_skills = options
+        .skills_archive
+        .as_ref()
+        .map(|path| {
+            let path = fs::canonicalize(path).map_err(|e| InstallError::path(path, e))?;
+            let mut bytes = Vec::new();
+            fs::File::open(&path)
+                .map_err(|e| InstallError::path(&path, e))?
+                .take(MAX_BYTES + 1)
+                .read_to_end(&mut bytes)
+                .map_err(|e| InstallError::path(&path, e))?;
+            if bytes.len() as u64 > MAX_BYTES {
+                return Err(InstallError::source("release exceeds download limit"));
+            }
+            let sha256 = checksum(&bytes);
+            let artifact = Artifact {
+                name: "skills".into(),
+                version: format!("bootstrap-{sha256}"),
+                url: url::Url::from_file_path(&path)
+                    .map_err(|_| InstallError::source("invalid skills archive path"))?
+                    .to_string(),
+                sha256,
+                entry_point: String::new(),
+            };
+            Ok((artifact, bytes))
+        })
+        .transpose()?;
     let releases = source.resolve(
         options.reach_version.as_deref(),
         options.skills_version.as_deref(),
+        local_skills.as_ref().map(|(artifact, _)| artifact),
     )?;
     if releases.contract_sha256 != CONTRACT_SHA256 {
         return Err(InstallError::source(
             "unsupported requirements contract hash",
         ));
     }
-    let mut skill_files = unpack(source, &releases.skills)?;
+    let mut skill_files = if let Some((_, bytes)) = local_skills {
+        unpack_bytes(bytes, &releases.skills)?
+    } else {
+        unpack(source, &releases.skills)?
+    };
     if !skill_files.contains_key(Path::new("scripts/requirements-contract.json")) {
         let prefixes: std::collections::BTreeSet<_> = skill_files
             .keys()

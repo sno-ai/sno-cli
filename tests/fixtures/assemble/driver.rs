@@ -5,7 +5,7 @@ use sno::assemble::{Artifact, InstallError, ReleaseSet, ReleaseSource};
 struct Files;
 
 impl ReleaseSource for Files {
-    fn resolve(&self, _: Option<&str>, _: Option<&str>) -> Result<ReleaseSet, InstallError> {
+    fn resolve(&self, _: Option<&str>, _: Option<&str>, _: Option<&Artifact>) -> Result<ReleaseSet, InstallError> {
         let home = PathBuf::from(std::env::var_os("HOME").expect("isolated HOME"));
         let table = std::fs::read_to_string(home.join(".fixture-releases"))
             .map_err(|e| InstallError::source(e.to_string()))?;
