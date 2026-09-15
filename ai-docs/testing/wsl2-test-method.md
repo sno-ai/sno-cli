@@ -1,5 +1,10 @@
 # WSL2 test method for sno
 
+> **Ask the owner first.** A run of this method creates a paid cloud VM. Creating,
+> starting or renting any paid machine or cloud resource needs the owner's explicit
+> yes for that specific run, before anything is created. Read-only queries and
+> deleting what already exists do not need it.
+
 ## When to use this method
 
 Use this method whenever `sno` must be tested on real WSL2 without installing Windows on local hardware. It is a reusable procedure for locating a suitable cloud VM, creating it, installing WSL2, testing the published product, and deleting the resources.
