@@ -10,7 +10,15 @@ Code identifiers and package names always use compound SNO forms such as `sno_st
 
 ## Development checks
 
-Run the complete local gate before requesting review:
+GitHub Actions must not run builds, tests, or release jobs. Run the Linux gate on `ci-vm` before requesting review:
+
+```sh
+ssh ci-vm 'cd /home/lh/code/sno-cli && cargo fmt --all --check && cargo clippy --all-targets --all-features -- -D warnings && cargo test --all-targets --all-features --locked && cargo build --profile dist --locked && scripts/check-test-substitutes.sh && scripts/test-test-substitute-policy.sh && cargo package --locked --list'
+```
+
+Run the equivalent native build and CLI smoke checks on `labmba` for macOS Apple Silicon releases. WSL2 uses the Linux x86-64 release and follows [the WSL2 test method](ai-docs/testing/wsl2-test-method.md). GitHub remains the publication host; publish already-built archives with `gh release create` or `gh release upload`.
+
+The expanded local commands are:
 
 ```sh
 cargo fmt --all --check
@@ -37,4 +45,4 @@ Tests use real files, real SQLite databases, real child processes, and the allow
 
 ## Publishing
 
-Registry publication is irreversible. Inspect the exact package archive and pass `cargo publish --dry-run` before running an authorized `cargo publish`. Native binaries are released only through the hardened GitHub Release workflow: archives and local staged installers pass first, GitHub-downloaded draft assets pass before immutable publication, and anonymous public installers pass before the release is declared green. Do not add JavaScript or Python distribution wrappers.
+Registry publication is irreversible. Inspect the exact package archive and pass `cargo publish --dry-run` before running an authorized `cargo publish`. Build and verify native binaries on owned hosts, then publish the verified archives with the GitHub CLI. Do not run builds, tests, or release jobs on GitHub-hosted runners. Do not add JavaScript or Python distribution wrappers.
