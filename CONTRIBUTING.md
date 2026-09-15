@@ -13,7 +13,21 @@ Code identifiers and package names always use compound SNO forms such as `sno_st
 GitHub Actions must not run builds, tests, or release jobs. Run the Linux gate on `ci-vm` before requesting review:
 
 ```sh
-ssh ci-vm 'cd /home/lh/code/sno-cli && cargo fmt --all --check && cargo clippy --all-targets --all-features -- -D warnings && cargo test --all-targets --all-features --locked && cargo build --profile dist --locked && scripts/check-test-substitutes.sh && scripts/test-test-substitute-policy.sh && cargo package --locked --list'
+ssh ci-vm 'docker run --rm \
+  -v /home/lh/code/sno-cli:/work \
+  -w /work \
+  rust:1.85-bookworm \
+  bash -c "set -e; \
+    apt-get update -qq; \
+    apt-get install -y -qq jq ripgrep >/dev/null; \
+    rustup component add rustfmt clippy >/dev/null; \
+    cargo fmt --all --check; \
+    cargo clippy --all-targets --all-features -- -D warnings; \
+    cargo test --all-targets --all-features --locked; \
+    cargo build --profile dist --locked; \
+    scripts/check-test-substitutes.sh; \
+    scripts/test-test-substitute-policy.sh; \
+    cargo package --locked --list"'
 ```
 
 Run the equivalent native build and CLI smoke checks on `labmba` for macOS Apple Silicon releases. WSL2 uses the Linux x86-64 release and follows [the WSL2 test method](ai-docs/testing/wsl2-test-method.md). GitHub remains the publication host; publish already-built archives with `gh release create` or `gh release upload`.
