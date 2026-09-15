@@ -133,3 +133,46 @@ fn unsupported_pairs_refuse_before_release_resolution() {
     assert_platform_refusal("linux", "riscv64");
     assert_platform_refusal("windows", "x86_64");
 }
+
+#[test]
+fn skills_release_requires_the_exact_distribution_asset() {
+    let release = json!({
+        "tag_name": "skills-v1.0",
+        "assets": [
+            {"name":"final-skills.tar.gz","url":"https://api.github.com/assets/final"},
+            {"name":"final-skills.tar.gz.sha256","url":"https://api.github.com/assets/checksum"},
+            {"name":"source.tar.gz","url":"https://api.github.com/assets/source"}
+        ]
+    });
+    let artifact = skills_release_artifact(&release, &|url| match url {
+        "https://api.github.com/assets/checksum" => Ok(b"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  final-skills.tar.gz\n".to_vec()),
+        url if url.contains("/git/ref/tags/skills-v1.0") => Ok(br#"{"object":{"type":"commit","sha":"1111111111111111111111111111111111111111"}}"#.to_vec()),
+        other => panic!("unexpected fetch: {other}"),
+    }).unwrap();
+    assert_eq!(artifact.version, "skills-v1.0");
+    assert_eq!(artifact.url, "https://api.github.com/assets/final");
+    assert_eq!(artifact.sha256, "a".repeat(64));
+
+    let missing = json!({"tag_name":"skills-v1.0","assets":[]});
+    assert!(
+        skills_release_artifact(&missing, &|_| unreachable!())
+            .unwrap_err()
+            .message
+            .contains("missing release asset: final-skills.tar.gz")
+    );
+
+    let ambiguous = json!({
+        "tag_name":"skills-v1.0",
+        "assets":[
+            {"name":"final-skills.tar.gz","url":"https://api.github.com/assets/one"},
+            {"name":"final-skills.tar.gz","url":"https://api.github.com/assets/two"},
+            {"name":"final-skills.tar.gz.sha256","url":"https://api.github.com/assets/checksum"}
+        ]
+    });
+    assert!(
+        skills_release_artifact(&ambiguous, &|_| unreachable!())
+            .unwrap_err()
+            .message
+            .contains("ambiguous release asset: final-skills.tar.gz")
+    );
+}
