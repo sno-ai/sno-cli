@@ -1689,10 +1689,17 @@ fn timer(environment: &Environment, enable: bool, source: &dyn ReleaseSource) ->
                 .replace('>', "&gt;")
                 .replace('"', "&quot;")
         }
-        let vars = variables
-            .iter()
-            .map(|(k, v)| format!("<key>{}</key><string>{}</string>", xml(k), xml(v)))
-            .collect::<String>();
+        use std::fmt::Write as _;
+        let mut vars = String::new();
+        for (key, value) in &variables {
+            write!(
+                vars,
+                "<key>{}</key><string>{}</string>",
+                xml(key),
+                xml(value)
+            )
+            .expect("writing to a String cannot fail");
+        }
         let text = format!(
             "<?xml version=\"1.0\"?><plist version=\"1.0\"><dict><key>Label</key><string>ai.sno.update</string><key>ProgramArguments</key><array><string>{}</string><string>update</string><string>--quiet</string></array><key>EnvironmentVariables</key><dict>{}</dict><key>StartInterval</key><integer>86400</integer></dict></plist>",
             xml(exe),
@@ -1714,10 +1721,12 @@ fn timer(environment: &Environment, enable: bool, source: &dyn ReleaseSource) ->
                     .replace('\n', "\\n")
             )
         }
-        let vars = variables
-            .iter()
-            .map(|(k, v)| format!("Environment={}\n", systemd(&format!("{k}={v}"))))
-            .collect::<String>();
+        use std::fmt::Write as _;
+        let mut vars = String::new();
+        for (key, value) in &variables {
+            writeln!(vars, "Environment={}", systemd(&format!("{key}={value}")))
+                .expect("writing to a String cannot fail");
+        }
         let service = format!(
             "[Unit]\nDescription=SNO daily update\n[Service]\nType=oneshot\nExecStart={} update --quiet\n{}",
             systemd(exe),

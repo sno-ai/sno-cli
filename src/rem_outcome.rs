@@ -41,116 +41,120 @@ pub(crate) struct ResolvedRemError {
     pub(crate) outcome: &'static RemOutcome,
 }
 
-pub(crate) const REM_OUTCOMES: &[RemOutcome] = &[
-    RemOutcome {
-        name: "success",
-        exit_code: 0,
-        error_codes: &[],
-    },
-    RemOutcome {
-        name: "unclassified failure",
-        exit_code: 1,
-        error_codes: &[],
-    },
-    RemOutcome {
-        name: "invalid usage",
-        exit_code: 2,
-        error_codes: &[RemErrorCode {
-            kind: RemError::Usage,
-            code: "usage_error",
-        }],
-    },
-    RemOutcome {
-        name: "job failed",
-        exit_code: 3,
-        error_codes: &[RemErrorCode {
-            kind: RemError::JobFailed,
-            code: "rem_job_failed",
-        }],
-    },
-    RemOutcome {
-        name: "wait deadline passed",
-        exit_code: 4,
-        error_codes: &[RemErrorCode {
-            kind: RemError::Timeout,
-            code: "rem_timeout",
-        }],
-    },
-    RemOutcome {
-        name: "state vocabulary mismatch",
-        exit_code: 5,
-        error_codes: &[RemErrorCode {
-            kind: RemError::StateUnrecognised,
-            code: "rem_state_unrecognised",
-        }],
-    },
-    RemOutcome {
-        name: "malformed or truncated response",
-        exit_code: 6,
-        error_codes: &[
-            RemErrorCode {
-                kind: RemError::ResponseInvalid,
-                code: "sidecar_response_invalid",
-            },
-            RemErrorCode {
-                kind: RemError::ResponseTruncated,
-                code: "sidecar_response_truncated",
-            },
-        ],
-    },
-    RemOutcome {
-        name: "sidecar failure",
-        exit_code: 7,
-        error_codes: &[
-            RemErrorCode {
-                kind: RemError::SidecarNotRunning,
-                code: "sidecar_not_running",
-            },
-            RemErrorCode {
-                kind: RemError::SidecarUnauthorized,
-                code: "sidecar_unauthorized",
-            },
-            RemErrorCode {
-                kind: RemError::SidecarClient,
-                code: "sidecar_client_error",
-            },
-            RemErrorCode {
-                kind: RemError::SidecarDiscovery,
-                code: "sidecar_discovery_error",
-            },
-            RemErrorCode {
-                kind: RemError::SidecarDiscoveryInvalid,
-                code: "sidecar_discovery_invalid",
-            },
-            RemErrorCode {
-                kind: RemError::SidecarResponse,
-                code: "sidecar_response_error",
-            },
-        ],
-    },
-    RemOutcome {
-        name: "local environment failure",
-        exit_code: 8,
-        error_codes: &[
-            RemErrorCode {
-                kind: RemError::Profile,
-                code: "profile_error",
-            },
-            RemErrorCode {
-                kind: RemError::Trace,
-                code: "rem_trace_error",
-            },
-        ],
-    },
-    RemOutcome {
-        name: "unknown job identifier",
-        exit_code: 9,
-        error_codes: &[RemErrorCode {
-            kind: RemError::JobNotFound,
-            code: "rem_job_not_found",
-        }],
-    },
-];
+pub(crate) const REM_OUTCOMES: &[RemOutcome] = {
+    const OUTCOMES: &[RemOutcome] = &[
+        RemOutcome {
+            name: "success",
+            exit_code: 0,
+            error_codes: &[],
+        },
+        RemOutcome {
+            name: "unclassified failure",
+            exit_code: 1,
+            error_codes: &[],
+        },
+        RemOutcome {
+            name: "invalid usage",
+            exit_code: 2,
+            error_codes: &[RemErrorCode {
+                kind: RemError::Usage,
+                code: "usage_error",
+            }],
+        },
+        RemOutcome {
+            name: "job failed",
+            exit_code: 3,
+            error_codes: &[RemErrorCode {
+                kind: RemError::JobFailed,
+                code: "rem_job_failed",
+            }],
+        },
+        RemOutcome {
+            name: "wait deadline passed",
+            exit_code: 4,
+            error_codes: &[RemErrorCode {
+                kind: RemError::Timeout,
+                code: "rem_timeout",
+            }],
+        },
+        RemOutcome {
+            name: "state vocabulary mismatch",
+            exit_code: 5,
+            error_codes: &[RemErrorCode {
+                kind: RemError::StateUnrecognised,
+                code: "rem_state_unrecognised",
+            }],
+        },
+        RemOutcome {
+            name: "malformed or truncated response",
+            exit_code: 6,
+            error_codes: &[
+                RemErrorCode {
+                    kind: RemError::ResponseInvalid,
+                    code: "sidecar_response_invalid",
+                },
+                RemErrorCode {
+                    kind: RemError::ResponseTruncated,
+                    code: "sidecar_response_truncated",
+                },
+            ],
+        },
+        RemOutcome {
+            name: "sidecar failure",
+            exit_code: 7,
+            error_codes: &[
+                RemErrorCode {
+                    kind: RemError::SidecarNotRunning,
+                    code: "sidecar_not_running",
+                },
+                RemErrorCode {
+                    kind: RemError::SidecarUnauthorized,
+                    code: "sidecar_unauthorized",
+                },
+                RemErrorCode {
+                    kind: RemError::SidecarClient,
+                    code: "sidecar_client_error",
+                },
+                RemErrorCode {
+                    kind: RemError::SidecarDiscovery,
+                    code: "sidecar_discovery_error",
+                },
+                RemErrorCode {
+                    kind: RemError::SidecarDiscoveryInvalid,
+                    code: "sidecar_discovery_invalid",
+                },
+                RemErrorCode {
+                    kind: RemError::SidecarResponse,
+                    code: "sidecar_response_error",
+                },
+            ],
+        },
+        RemOutcome {
+            name: "local environment failure",
+            exit_code: 8,
+            error_codes: &[
+                RemErrorCode {
+                    kind: RemError::Profile,
+                    code: "profile_error",
+                },
+                RemErrorCode {
+                    kind: RemError::Trace,
+                    code: "rem_trace_error",
+                },
+            ],
+        },
+        RemOutcome {
+            name: "unknown job identifier",
+            exit_code: 9,
+            error_codes: &[RemErrorCode {
+                kind: RemError::JobNotFound,
+                code: "rem_job_not_found",
+            }],
+        },
+    ];
+    validate_outcomes(OUTCOMES);
+    OUTCOMES
+};
 
 pub(crate) fn resolve(error: RemError) -> ResolvedRemError {
     for outcome in REM_OUTCOMES {
@@ -229,5 +233,3 @@ const fn validate_outcomes(outcomes: &[RemOutcome]) {
         outcome_index += 1;
     }
 }
-
-const _: () = validate_outcomes(REM_OUTCOMES);
