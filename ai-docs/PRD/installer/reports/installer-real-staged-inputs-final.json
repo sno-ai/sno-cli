@@ -1,0 +1,36 @@
+{
+  "reach_source_commit": "d2148b443b72b4097e2fef95c411d7ded698a3bd",
+  "skills_source_commit": "325bb416cf6e5ad7eed9ca0e7971687d72b40161",
+  "skills_fixture_commit": "278dc6c4cf69abe7745b4b796229a97c6268c3a9",
+  "artifacts": [
+    {
+      "name": "reach",
+      "version": "2.0",
+      "path": "/tmp/s-category-finish/releases/reach/reach-2.0-linux-x86_64.tar.gz",
+      "sha256": "b087a730097f16f7f115b33257da4783d0b7c927b91a17551fbc78245aafbc34",
+      "entry_point": "bin/sno-reach",
+      "source_commit": "d2148b443b72b4097e2fef95c411d7ded698a3bd"
+    },
+    {
+      "name": "heartbeat",
+      "version": "1.0",
+      "path": "/tmp/s-category-finish/releases/utility/heartbeat-1.0.tar.gz",
+      "sha256": "5fbeb9222fd522d5fe3b7182712877b27d8d5a16d453aecc76a282a6b1597a96",
+      "entry_point": "bin/heartbeat"
+    },
+    {
+      "name": "subscription-quota-check",
+      "version": "1.0",
+      "path": "/tmp/s-category-finish/releases/utility/subscription-quota-check-1.0.tar.gz",
+      "sha256": "e632a4cc3a4d40e18fdd6da1132a0544234034251851df932f6827b5bb79cd91",
+      "entry_point": "bin/subscription-quota-check"
+    },
+    {
+      "name": "skills",
+      "version": "staged-325bb41",
+      "path": "/tmp/s-category-finish/final-skills.tar.gz",
+      "sha256": "563b87bf64324f789cb47adcf7132dff351a4f0d552867caf5ca2c0391186ed7",
+      "entry_point": ""
+    }
+  ]
+}

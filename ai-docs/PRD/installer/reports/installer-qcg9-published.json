@@ -1,0 +1,115 @@
+{
+  "host": "gpt1",
+  "tag": "s-category-v1.0.0",
+  "tag_object": {
+    "sha": "7010cebb6dbea559de2a3f6e8962b0222c790c90",
+    "type": "commit",
+    "url": "https://api.github.com/repos/sno-ai/sno-station-skills/git/commits/7010cebb6dbea559de2a3f6e8962b0222c790c90"
+  },
+  "skills_sha256": "563b87bf64324f789cb47adcf7132dff351a4f0d552867caf5ca2c0391186ed7",
+  "acceptance_home": "/mnt/ramdisk/tmp/sno-published-acceptance.KLPcdW",
+  "reach_root": "/mnt/ramdisk/tmp/sno-qcg9-reach.rjJR2u",
+  "checks": [
+    {
+      "name": "published tag selected",
+      "passed": true
+    },
+    {
+      "name": "exact distribution assets published",
+      "passed": true
+    },
+    {
+      "name": "published tag has immutable object",
+      "passed": true
+    },
+    {
+      "name": "published bytes equal tested distribution",
+      "passed": true
+    },
+    {
+      "name": "clean install placed reach",
+      "passed": true
+    },
+    {
+      "name": "clean install placed heartbeat",
+      "passed": true
+    },
+    {
+      "name": "clean install placed subscription-quota-check",
+      "passed": true
+    },
+    {
+      "name": "real installation records published skills tag",
+      "passed": true
+    },
+    {
+      "name": "real reach identity",
+      "passed": true
+    },
+    {
+      "name": "real heartbeat identity",
+      "passed": true
+    },
+    {
+      "name": "real subscription-quota-check identity",
+      "passed": true
+    },
+    {
+      "name": "installed Reach entry runs",
+      "passed": true
+    },
+    {
+      "name": "installed utility entries run",
+      "passed": true
+    },
+    {
+      "name": "receiver accepted before completion",
+      "passed": true
+    },
+    {
+      "name": "one question and nonce remained in one thread",
+      "passed": true
+    },
+    {
+      "name": "sender wait returned terminal answer",
+      "passed": true
+    },
+    {
+      "name": "sender acknowledged both reports",
+      "passed": true
+    },
+    {
+      "name": "Codex explicitly trusted the installed hook",
+      "passed": true
+    },
+    {
+      "name": "addressed real prompt received reminder context",
+      "passed": true
+    },
+    {
+      "name": "wrong current fails Reach before seat setup",
+      "passed": true
+    },
+    {
+      "name": "remove deleted all owned commands",
+      "passed": true
+    },
+    {
+      "name": "remove preserved user Reach state",
+      "passed": true
+    },
+    {
+      "name": "actual Claude and Codex roots discovered",
+      "passed": true
+    },
+    {
+      "name": "Hermes and custom OpenClaw roots discovered",
+      "passed": true
+    },
+    {
+      "name": "Reach work remains completed",
+      "passed": true
+    }
+  ],
+  "passed": true
+}
