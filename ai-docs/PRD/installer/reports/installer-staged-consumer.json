@@ -1,0 +1,145 @@
+{
+  "host": "gpt1",
+  "repository": "/home/lh/code/sno-cli",
+  "cli_commit": "f06908b400bbd1f2ebc190128010c6367153111b",
+  "driver_source": "/home/lh/code/sno-cli/tests/fixtures/assemble/driver.rs",
+  "driver_source_sha256": "fcc0f88c48a50b86c305782f7ff24bb45f77ff4ccf30f7a581a900155dd50131",
+  "library": "/home/lh/code/sno-cli/target/debug/libsno.rlib",
+  "library_sha256": "d960ff151606ed3772e75979d88add6948b45cb923cc6d4c27fdf2124da0b478",
+  "compile_command": [
+    "rustc",
+    "--edition=2024",
+    "--crate-name=fixture_sno",
+    "/home/lh/code/sno-cli/tests/fixtures/assemble/driver.rs",
+    "-L",
+    "dependency=/home/lh/code/sno-cli/target/debug/deps",
+    "--extern",
+    "sno=/home/lh/code/sno-cli/target/debug/libsno.rlib",
+    "-o",
+    "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/fixture-sno"
+  ],
+  "driver": "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/fixture-sno",
+  "driver_sha256": "9dc868c2f17ad167d8472a4fcb20b6d86bd444503d721b6ed5c447098f98bd26",
+  "work_directory": "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav",
+  "input_hashes": {
+    "archive": "857e2f29f11bcce208823adc0b1a6bac33db417e09581e59069d898ec4b94627",
+    "fixture": "17eb722714548f71492d89d40ba09764bd2a24053c1c67f6ef70039dc3785d69",
+    "contract": "5c29a218bd7c3d43003fad6f0e3939914a3f82ede18eb60f2e5f31a3b9a11b92"
+  },
+  "original_inputs_unchanged": true,
+  "negative_mutation_files": [
+    "scripts/fixtures/s-category-requirements.json"
+  ],
+  "results": [
+    {
+      "case": "unmodified",
+      "command": [
+        "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/fixture-sno",
+        "assemble",
+        "--json"
+      ],
+      "environment": {
+        "HOME": "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/unmodified/home",
+        "PATH": "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/unmodified/home/.local/bin",
+        "XDG_CONFIG_HOME": "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/unmodified/home/.config",
+        "SNO_PROFILE_DIR": "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/unmodified/home/station-profile"
+      },
+      "exit_code": 3,
+      "stdout": {
+        "error": "source_error",
+        "message": "selected release has no Reach program"
+      },
+      "stdout_file": "/home/lh/code/sno-cli/ai-docs/PRD/installer/reports/installer-staged-unmodified.stdout.json",
+      "stderr_file": "/home/lh/code/sno-cli/ai-docs/PRD/installer/reports/installer-staged-unmodified.stderr.log",
+      "selected_artifacts": [
+        {
+          "name": "heartbeat",
+          "version": "1.0",
+          "url": "file:///home/lh/code/sno-station-core/apps/heartbeat/dist/heartbeat-1.0.tar.gz",
+          "sha256": "29d1eb773df780b0f85b935549b90d05de0856411e82144f0331de8defd0cb53",
+          "entry_point": "bin/heartbeat"
+        },
+        {
+          "name": "subscription-quota-check",
+          "version": "1.0",
+          "url": "file:///home/lh/code/sno-station-core/apps/subscription-quota-check/dist/subscription-quota-check-1.0.tar.gz",
+          "sha256": "b857aef24ffc1216c2818469d17175823f388e3c57a4abb67866e2f9e5375505",
+          "entry_point": "bin/subscription-quota-check"
+        },
+        {
+          "name": "skills",
+          "version": "staged-8474baf96195",
+          "url": "file:///home/lh/code/sno-station-skills/staging/s-category-8474baf96195.tar.gz",
+          "sha256": "857e2f29f11bcce208823adc0b1a6bac33db417e09581e59069d898ec4b94627",
+          "entry_point": ""
+        }
+      ],
+      "installed_state": {
+        "manifest": false,
+        "pending": false,
+        "program_roots": {
+          "reach": false,
+          "heartbeat": false,
+          "subscription-quota-check": false
+        }
+      }
+    },
+    {
+      "case": "mutated-fixture-hash",
+      "command": [
+        "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/fixture-sno",
+        "assemble",
+        "--json"
+      ],
+      "environment": {
+        "HOME": "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/mutated-fixture-hash/home",
+        "PATH": "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/mutated-fixture-hash/home/.local/bin",
+        "XDG_CONFIG_HOME": "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/mutated-fixture-hash/home/.config",
+        "SNO_PROFILE_DIR": "/mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/mutated-fixture-hash/home/station-profile"
+      },
+      "exit_code": 3,
+      "stdout": {
+        "error": "source_error",
+        "message": "fixture skill hash/declaration mismatch: reach"
+      },
+      "stdout_file": "/home/lh/code/sno-cli/ai-docs/PRD/installer/reports/installer-staged-mutated-fixture-hash.stdout.json",
+      "stderr_file": "/home/lh/code/sno-cli/ai-docs/PRD/installer/reports/installer-staged-mutated-fixture-hash.stderr.log",
+      "selected_artifacts": [
+        {
+          "name": "heartbeat",
+          "version": "1.0",
+          "url": "file:///home/lh/code/sno-station-core/apps/heartbeat/dist/heartbeat-1.0.tar.gz",
+          "sha256": "29d1eb773df780b0f85b935549b90d05de0856411e82144f0331de8defd0cb53",
+          "entry_point": "bin/heartbeat"
+        },
+        {
+          "name": "subscription-quota-check",
+          "version": "1.0",
+          "url": "file:///home/lh/code/sno-station-core/apps/subscription-quota-check/dist/subscription-quota-check-1.0.tar.gz",
+          "sha256": "b857aef24ffc1216c2818469d17175823f388e3c57a4abb67866e2f9e5375505",
+          "entry_point": "bin/subscription-quota-check"
+        },
+        {
+          "name": "skills",
+          "version": "staged-8474baf96195",
+          "url": "file:///mnt/ramdisk/tmp/sno-staged-consumer-hxa1pzav/fixture-hash-mutated.tar.gz",
+          "sha256": "a7fee0beb021e3225a3867329c9bdc567821200ed346677dc9be0d2bf2b66d06",
+          "entry_point": ""
+        }
+      ],
+      "installed_state": {
+        "manifest": false,
+        "pending": false,
+        "program_roots": {
+          "reach": false,
+          "heartbeat": false,
+          "subscription-quota-check": false
+        }
+      }
+    }
+  ],
+  "positive_installation_proven": false,
+  "qcg2_complete": false,
+  "blocking_input": "No existing real Reach release archive found in sno-station-core; source VERSION is 2.0. No synthetic Reach used.",
+  "harness_adjustment": "Initial rustc dependency lookup was corrected from target/debug to target/debug/deps; production source was not changed."
+}

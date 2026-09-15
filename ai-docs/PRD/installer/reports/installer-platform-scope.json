@@ -1,0 +1,35 @@
+{
+  "baseline_head": "7e7ac954ed5ccbe233fef315f4db0c409f0ff061",
+  "changed_sha256": {
+    "ai-docs/PRD/installer/reports/installer-QCG-1-before-platform.json": "5fe95d33c20aee109c1d7e368673a2a6182c29ab16f4f9df5795ff332fccb89b",
+    "ai-docs/PRD/installer/reports/installer-acceptance-before-platform.json": "e8a4d9c3568ed9c53fd7a43e1bdbc37e43b5b939e06509e5219f2c28902b590b",
+    "ai-docs/PRD/installer/reports/installer-platform-baseline.json": "b01ceea98889b5b8c11685e0e1df699af69ff3ed2adbb82ce2d5fe70e4799667",
+    "ai-docs/PRD/installer/reports/installer-platform-canonical.log": "05d30a867aa40df41208a225379a5ebbed6c7e276edca95e70c7d606c1b672c0",
+    "ai-docs/PRD/installer/reports/installer-platform-clippy.log": "e6a10864f0cdb43cb9b23f9633bdb6fbc016a4c7e892f9da854723fd6b8c5f97",
+    "ai-docs/PRD/installer/reports/installer-platform-close.md": "5e94029e75af0f6d0a58d575438246fde4266bcef6bce9a49e7159b9a886bccf",
+    "ai-docs/PRD/installer/reports/installer-platform-code-review.md": "1738eace8c224b574006cc32aea52f39828a85c2f6e80c02171f7791a845bddd",
+    "ai-docs/PRD/installer/reports/installer-platform-delivery-gate.log": "0401852574e1ff0c03cddb9f6faa2d103bf987a1107cb93607d09b14423254d7",
+    "ai-docs/PRD/installer/reports/installer-platform-done-gate.log": "efb0fa679aac87e2b7ab2140d8f19bede17368f77824f56ef4a585ed2afe534e",
+    "ai-docs/PRD/installer/reports/installer-platform-format.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "ai-docs/PRD/installer/reports/installer-platform-prd-lint.log": "dce72af8bda6102e716aa064d8c7e22237e5a4ce372d615799678141f2444dab",
+    "ai-docs/PRD/installer/reports/installer-platform-release-build.log": "2fd256cfd2c7cf5ee1dc2f831ac39a464a0edb04642c49536ae30213ea5c50e8",
+    "ai-docs/PRD/installer/reports/installer-platform-review-context.md": "9e5668449b9b70582981ca5bcc7db72e305387f572cb31ab81f2e74fa57554c0",
+    "ai-docs/PRD/installer/reports/installer-platform-targets.json": "d4408471811d680fe510437b9761d17cc2399cbb779e839dcd5cf9ae3c4455ad",
+    "ai-docs/PRD/installer/reports/installer-platform-test-review.md": "c87a5cc524ac4fbbd03fcb33f3b589b37aa8f59ad42e0827bf284fa89a08380b",
+    "tests/fixtures/assemble/platform.rs": "e4b18cdcbdd017eba211c568fdd4fea82e31299f1cd0a8d7916940cd95a3f14d",
+    "ai-docs/PRD/installer/reports/installer-terminal-close.md": "27f9296f412f50015c7f00da1e1f0210a579682f4f705a590690f1d7fd28787a",
+    "ai-docs/PRD/installer/sidecar/sno-assemble-PRD.QCG-1.proof.json": "6dae285281d2ef342e0c3e605dcb76541c3c9c5eb25307a8cf28be128d706bbf",
+    "ai-docs/PRD/installer/sidecar/sno-assemble-PRD.acceptance.json": "c27c75e496013dc9996f2ea8df69f110527125e1269b227c57f914c0d48d57fe",
+    "ai-docs/PRD/installer/sidecar/sno-assemble-PRD.walk.json": "ad1060fee9a515eecf7b9e694a4f6a3da25e16b1ff2b60054e674b798546bf0f",
+    "ai-docs/PRD/installer/sno-assemble-PRD.md": "7c1a13c63f9849c117297257c13b2afcda47701aa1fb4cd05631849cd05b8a50",
+    "src/assemble.rs": "4be3f9b6e3b3afa2d0640706ebc1faacb07b865ce9f82921c49adc4ff5026771"
+  },
+  "sealed_head_unchanged": {
+    "ai-docs/PRD/installer/sidecar/sno-assemble-PRD-head.md": true,
+    "ai-docs/PRD/installer/sidecar/sno-assemble-PRD-head.md.sha256": true
+  },
+  "manifest_windows_refusal_unchanged": true,
+  "openspec_unchanged": true,
+  "outside_scope": [],
+  "scope_record_excluded_from_own_hashes": true
+}

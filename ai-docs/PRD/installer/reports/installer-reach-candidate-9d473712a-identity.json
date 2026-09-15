@@ -1,0 +1,12 @@
+{
+  "host": "gpt1",
+  "archive": "/home/lh/code/sno-station-core/apps/reach/dist/candidates/9d473712a8d6d7ce1f6e931e1d445f7d6392012e/reach-2.0.tar.gz",
+  "sha256": "00c882584fc05519a0b7aa2ceb2f8d2b16a4a5eb6bcfb72e75af1c1864a5bc22",
+  "checksum_file": "/home/lh/code/sno-station-core/apps/reach/dist/candidates/9d473712a8d6d7ce1f6e931e1d445f7d6392012e/reach-2.0.tar.gz.sha256",
+  "checksum_sha256": "ad08c43c6927e324df878337a04e6f602152c760ade2616ca7f1078efd0e3a69",
+  "source_commit": "9d473712a8d6d7ce1f6e931e1d445f7d6392012e",
+  "state": "local Linux x86-64 candidate, not published",
+  "handoff_message_id": "<reach-forward-4-sno-cli-1789296237@gpt1>",
+  "previous_canonical_proof": "installer-QCG-2-proof-5340e2a11.json",
+  "previous_acceptance_snapshot": "installer-acceptance-5340e2a11.json"
+}

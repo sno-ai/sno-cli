@@ -1,0 +1,30 @@
+{
+  "argv": [
+    "cargo",
+    "test",
+    "--test",
+    "assemble",
+    "--",
+    "--exact",
+    "unowned_command_and_skill_are_never_adopted",
+    "install_repeat_update_remove_preserves_user_content",
+    "user_changes_refuse_update_and_remove",
+    "existing_agents_config_is_preserved_and_invalid_config_refused",
+    "interrupted_remove_recovers_then_finishes_with_timer_disabled",
+    "interrupted_explicit_purge_resumes_after_manifest_removal",
+    "committed_remove_cleans_owned_directories_before_reassembly"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-09-13T06:44:11.348210+00:00",
+  "interrupted_by": null,
+  "prd": "sno-assemble-PRD.md",
+  "prd_body_sha256": "95cf60b9da9a29aa6a4b9208d44a3d8c273752b87b99bccd00994e1b8390cf99",
+  "qualified_id": "sno-assemble-PRD:QCG-8",
+  "scope_sha256": "4e316bceb56de3a9f0c0d086822cf8b3269e67a3e166e51dac9d656f18ed9c0e",
+  "started_at": "2026-09-13T06:44:10.933774+00:00",
+  "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s\n     Running tests/assemble.rs (target/debug/deps/assemble-e94c45b372e470f4)\n",
+  "stderr_truncated": false,
+  "stdout": "\nrunning 7 tests\ntest unowned_command_and_skill_are_never_adopted ... ok\ntest interrupted_explicit_purge_resumes_after_manifest_removal ... ok\ntest existing_agents_config_is_preserved_and_invalid_config_refused ... ok\ntest user_changes_refuse_update_and_remove ... ok\ntest committed_remove_cleans_owned_directories_before_reassembly ... ok\ntest install_repeat_update_remove_preserves_user_content ... ok\ntest interrupted_remove_recovers_then_finishes_with_timer_disabled ... ok\n\ntest result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 32 filtered out; finished in 0.26s\n\n",
+  "stdout_truncated": false,
+  "timed_out": false
+}

@@ -1,0 +1,157 @@
+PASS original-gate-reach exit
+PASS original-gate-reach contract binding
+PASS original-gate-handoff exit
+PASS original-gate-handoff contract binding
+PASS original-gate-heartbeat exit
+PASS original-gate-heartbeat contract binding
+PASS original-gate-subscription-quota-check exit
+PASS original-gate-subscription-quota-check contract binding
+PASS original-install-custom-roots exit
+PASS original fixture hash recorded
+PASS original contract hash recorded
+PASS aliased consumers written together once
+PASS Hermes real pre-turn slot not degraded
+PASS OpenClaw unsupported preferred slot degrades
+PASS custom roots exclude default directories
+PASS real nested payload and stamps copied to resolved roots
+PASS claude,codex heartbeat unverified delivery skipped
+PASS claude,codex subscription-quota-check unverified delivery skipped
+PASS hermes heartbeat unverified delivery skipped
+PASS hermes subscription-quota-check unverified delivery skipped
+PASS openclaw heartbeat unverified delivery skipped
+PASS openclaw subscription-quota-check unverified delivery skipped
+PASS Reach entry belongs to this installed release
+PASS real Reach version
+PASS doctor-real-reach exit
+PASS installed Reach is healthy
+PASS heartbeat real help
+PASS doctor-before-heartbeat exit
+PASS heartbeat healthy before removal
+PASS doctor-missing-heartbeat exit
+PASS heartbeat missing detected
+PASS same-release-update-heartbeat exit
+PASS heartbeat owned link changed by update
+PASS heartbeat restored help
+PASS subscription-quota-check real help
+PASS doctor-before-subscription-quota-check exit
+PASS subscription-quota-check healthy before removal
+PASS doctor-missing-subscription-quota-check exit
+PASS subscription-quota-check missing detected
+PASS same-release-update-subscription-quota-check exit
+PASS subscription-quota-check owned link changed by update
+PASS subscription-quota-check restored help
+PASS gate-unknown-program exit
+PASS gate-unknown-program field error
+PASS installer-unknown-program exit
+PASS unknown-program intended parser refusal
+PASS unknown-program only excluded artifact is regular empty lock
+PASS unknown-program complete target tree unchanged
+PASS gate-unknown-slot exit
+PASS gate-unknown-slot field error
+PASS installer-unknown-slot exit
+PASS unknown-slot intended parser refusal
+PASS unknown-slot only excluded artifact is regular empty lock
+PASS unknown-slot complete target tree unchanged
+PASS gate-invalid-need exit
+PASS gate-invalid-need field error
+PASS installer-invalid-need exit
+PASS invalid-need intended parser refusal
+PASS invalid-need only excluded artifact is regular empty lock
+PASS invalid-need complete target tree unchanged
+PASS gate-invalid-version exit
+PASS gate-invalid-version field error
+PASS installer-invalid-version exit
+PASS invalid-version intended parser refusal
+PASS invalid-version only excluded artifact is regular empty lock
+PASS invalid-version complete target tree unchanged
+PASS gate-wrong-version-type exit
+PASS gate-wrong-version-type field error
+PASS installer-wrong-version-type exit
+PASS wrong-version-type intended parser refusal
+PASS wrong-version-type only excluded artifact is regular empty lock
+PASS wrong-version-type complete target tree unchanged
+PASS gate-wrong-list-type exit
+PASS gate-wrong-list-type field error
+PASS installer-wrong-list-type exit
+PASS wrong-list-type intended parser refusal
+PASS wrong-list-type only excluded artifact is regular empty lock
+PASS wrong-list-type complete target tree unchanged
+PASS gate-duplicate-entry exit
+PASS gate-duplicate-entry field error
+PASS installer-duplicate-entry exit
+PASS duplicate-entry intended parser refusal
+PASS duplicate-entry only excluded artifact is regular empty lock
+PASS duplicate-entry complete target tree unchanged
+PASS gate-duplicate-key exit
+PASS gate-duplicate-key field error
+PASS installer-duplicate-key exit
+PASS duplicate-key intended parser refusal
+PASS duplicate-key only excluded artifact is regular empty lock
+PASS duplicate-key complete target tree unchanged
+PASS gate-missing-requires exit
+PASS gate-missing-requires field error
+PASS installer-missing-requires exit
+PASS missing-requires intended parser refusal
+PASS missing-requires only excluded artifact is regular empty lock
+PASS missing-requires complete target tree unchanged
+PASS gate-invalid-overlay exit
+PASS gate-invalid-overlay field error
+PASS installer-invalid-overlay exit
+PASS invalid-overlay intended parser refusal
+PASS invalid-overlay only excluded artifact is regular empty lock
+PASS invalid-overlay complete target tree unchanged
+PASS gate-reader-required exit
+PASS gate-reader-required contract binding
+PASS installer-reader-required exit
+PASS reader-required disposition and reason
+PASS reader-required placement matches disposition
+PASS gate-reader-preferred exit
+PASS gate-reader-preferred contract binding
+PASS installer-reader-preferred exit
+PASS reader-preferred disposition and reason
+PASS reader-preferred placement matches disposition
+PASS gate-reader-optional exit
+PASS gate-reader-optional contract binding
+PASS installer-reader-optional exit
+PASS reader-optional disposition and reason
+PASS reader-optional placement matches disposition
+PASS gate-numeric-2.0.0 exit
+PASS gate-numeric-2.0.0 contract binding
+PASS installer-numeric-2.0.0 exit
+PASS numeric-2.0.0 disposition and reason
+PASS numeric-2.0.0 placement matches disposition
+PASS gate-numeric-02.00 exit
+PASS gate-numeric-02.00 contract binding
+PASS installer-numeric-02.00 exit
+PASS numeric-02.00 disposition and reason
+PASS numeric-02.00 placement matches disposition
+PASS gate-numeric-2.1 exit
+PASS gate-numeric-2.1 contract binding
+PASS installer-numeric-2.1 exit
+PASS numeric-2.1 disposition and reason
+PASS numeric-2.1 placement matches disposition
+PASS gate-heartbeat-too-old-with-current-reach exit
+PASS gate-heartbeat-too-old-with-current-reach contract binding
+PASS installer-heartbeat-too-old-with-current-reach exit
+PASS heartbeat-too-old-with-current-reach disposition and reason
+PASS heartbeat-too-old-with-current-reach placement matches disposition
+PASS gate-quota-needs-subscription-quota-check exit
+PASS gate-quota-needs-subscription-quota-check contract binding
+PASS installer-quota-needs-subscription-quota-check exit
+PASS quota-needs-subscription-quota-check disposition and reason
+PASS quota-needs-subscription-quota-check placement matches disposition
+PASS gate-quota-needs-heartbeat exit
+PASS gate-quota-needs-heartbeat contract binding
+PASS installer-quota-needs-heartbeat exit
+PASS quota-needs-heartbeat disposition and reason
+PASS quota-needs-heartbeat placement matches disposition
+PASS gate-valid-overlay exit
+PASS gate-valid-overlay contract binding
+PASS installer-valid-overlay exit
+PASS valid overlay actually copied
+PASS installer-missing-heartbeat exit
+PASS heartbeat missing program precedes slot decision
+PASS subscription-quota-check missing program precedes slot decision
+PASS omitted real program not fabricated
+PASS original artifacts unchanged
+PASS gate source unchanged

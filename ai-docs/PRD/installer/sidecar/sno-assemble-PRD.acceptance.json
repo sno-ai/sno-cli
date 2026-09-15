@@ -1,0 +1,85 @@
+{
+  "items": [
+    {
+      "date": "2026-09-14",
+      "evidence": "sidecar/sno-assemble-PRD.QCG-1.proof.json",
+      "flipped_by": "prd-proof.py",
+      "id": "QCG-1",
+      "passes": true,
+      "verifier": "bash -ec 'cargo test --lib platform_tests -- --nocapture\ncargo test --test assemble -- --exact install_repeat_update_remove_preserves_user_content checksum_failure_preserves_the_committed_installation archive_link_escaping_staging_is_refused_before_install restrictive_umask_preserves_modes_across_update_and_rollback'"
+    },
+    {
+      "date": "2026-09-13",
+      "evidence": "sidecar/sno-assemble-PRD.QCG-2.proof.json",
+      "flipped_by": "prd-proof.py",
+      "id": "QCG-2",
+      "passes": true,
+      "verifier": "python3 tests/fixtures/assemble/verify-real-staged.py --inputs ai-docs/PRD/installer/reports/installer-real-staged-inputs-9d473712a.json --gate /home/lh/code/sno-station-skills/scripts/validate-requirements.py --output ai-docs/PRD/installer/reports/installer-real-staged-verifier-9d473712a.json"
+    },
+    {
+      "date": "2026-09-13",
+      "evidence": "sidecar/sno-assemble-PRD.QCG-3.proof.json",
+      "flipped_by": "prd-proof.py",
+      "id": "QCG-3",
+      "passes": true,
+      "verifier": "cargo test --test assemble -- --exact install_repeat_update_remove_preserves_user_content existing_agents_config_is_preserved_and_invalid_config_refused"
+    },
+    {
+      "date": "2026-09-13",
+      "evidence": "sidecar/sno-assemble-PRD.QCG-4.proof.json",
+      "flipped_by": "prd-proof.py",
+      "id": "QCG-4",
+      "passes": true,
+      "verifier": "cargo test --test assemble -- --exact install_repeat_update_remove_preserves_user_content externally_owned_exact_reminder_survives_remove conflicting_external_reminder_is_preserved_on_refusal codex_untrusted_hook_requires_action_and_no_address_returns_no_context codex_trust_is_read_only_and_bound_to_the_current_command addressed_reminder_failure_is_visible_and_timeout_stops_the_program"
+    },
+    {
+      "date": "2026-09-13",
+      "evidence": "sidecar/sno-assemble-PRD.QCG-5.proof.json",
+      "flipped_by": "prd-proof.py",
+      "id": "QCG-5",
+      "passes": true,
+      "verifier": "cargo test --test assemble -- --exact handled_activation_failure_restores_first_install_and_update killed_install_recovers_before_remove_and_refuses_concurrent_mutation killed_after_manifest_commit_keeps_the_new_generation recovery_conflict_keeps_pending_record_and_user_bytes committed_remove_cleans_owned_directories_before_reassembly"
+    },
+    {
+      "date": "2026-09-13",
+      "evidence": "sidecar/sno-assemble-PRD.QCG-6.proof.json",
+      "flipped_by": "prd-proof.py",
+      "id": "QCG-6",
+      "passes": true,
+      "verifier": "cargo test --test assemble -- --exact install_repeat_update_remove_preserves_user_content scheduler_enable_disable_is_owned_and_disable_works_offline scheduler_enable_failure_restores_files_and_manifest interrupted_scheduler_change_restores_external_state_and_manifest generated_scheduler_command_runs_the_actual_cli_and_updates_the_selected_home"
+    },
+    {
+      "date": "2026-09-13",
+      "evidence": "sidecar/sno-assemble-PRD.QCG-7.proof.json",
+      "flipped_by": "prd-proof.py",
+      "id": "QCG-7",
+      "passes": true,
+      "verifier": "cargo test --test assemble -- --exact doctor_reports_installation_in_empty_home doctor_detects_missing_program_without_changing_station_checks codex_untrusted_hook_requires_action_and_no_address_returns_no_context codex_trust_is_read_only_and_bound_to_the_current_command existing_agents_config_is_preserved_and_invalid_config_refused"
+    },
+    {
+      "date": "2026-09-13",
+      "evidence": "sidecar/sno-assemble-PRD.QCG-10.proof.json",
+      "flipped_by": "prd-proof.py",
+      "id": "QCG-10",
+      "passes": true,
+      "verifier": "cargo test --test assemble -- --exact assemble_has_real_help"
+    },
+    {
+      "date": "2026-09-13",
+      "evidence": "sidecar/sno-assemble-PRD.QCG-8.proof.json",
+      "flipped_by": "prd-proof.py",
+      "id": "QCG-8",
+      "passes": true,
+      "verifier": "cargo test --test assemble -- --exact unowned_command_and_skill_are_never_adopted install_repeat_update_remove_preserves_user_content user_changes_refuse_update_and_remove existing_agents_config_is_preserved_and_invalid_config_refused interrupted_remove_recovers_then_finishes_with_timer_disabled interrupted_explicit_purge_resumes_after_manifest_removal committed_remove_cleans_owned_directories_before_reassembly"
+    },
+    {
+      "date": null,
+      "evidence": null,
+      "flipped_by": null,
+      "id": "QCG-9",
+      "passes": false,
+      "verifier": null
+    }
+  ],
+  "prd": "sno-assemble-PRD.md"
+}

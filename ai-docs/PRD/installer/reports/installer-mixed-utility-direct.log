@@ -1,0 +1,10 @@
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s
+     Running tests/assemble.rs (target/debug/deps/assemble-e94c45b372e470f4)
+
+running 1 test
+mixed fixture source heartbeat path=/home/lh/code/sno-station-core/apps/heartbeat/dist/heartbeat-1.0.tar.gz sha256=29d1eb773df780b0f85b935549b90d05de0856411e82144f0331de8defd0cb53
+mixed fixture source subscription-quota-check path=/home/lh/code/sno-station-core/apps/subscription-quota-check/dist/subscription-quota-check-1.0.tar.gz sha256=b857aef24ffc1216c2818469d17175823f388e3c57a4abb67866e2f9e5375505
+test accepted_core_utilities_install_with_synthetic_reach_and_skills ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 38 filtered out; finished in 0.10s
+

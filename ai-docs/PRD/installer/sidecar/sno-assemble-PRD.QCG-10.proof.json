@@ -1,0 +1,24 @@
+{
+  "argv": [
+    "cargo",
+    "test",
+    "--test",
+    "assemble",
+    "--",
+    "--exact",
+    "assemble_has_real_help"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-09-13T06:44:11.633308+00:00",
+  "interrupted_by": null,
+  "prd": "sno-assemble-PRD.md",
+  "prd_body_sha256": "95cf60b9da9a29aa6a4b9208d44a3d8c273752b87b99bccd00994e1b8390cf99",
+  "qualified_id": "sno-assemble-PRD:QCG-10",
+  "scope_sha256": "c865137444680d46255e6c4a45082e02160c5e9bb7191fba3cb1b83fe8bb746e",
+  "started_at": "2026-09-13T06:44:11.469124+00:00",
+  "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s\n     Running tests/assemble.rs (target/debug/deps/assemble-e94c45b372e470f4)\n",
+  "stderr_truncated": false,
+  "stdout": "\nrunning 1 test\ntest assemble_has_real_help ... ok\n\ntest result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 38 filtered out; finished in 0.03s\n\n",
+  "stdout_truncated": false,
+  "timed_out": false
+}

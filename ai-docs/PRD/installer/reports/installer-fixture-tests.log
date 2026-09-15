@@ -1,0 +1,47 @@
+   Compiling sno v0.1.7 (/home/lh/code/sno-cli)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1.04s
+     Running tests/assemble.rs (target/debug/deps/assemble-e94c45b372e470f4)
+
+running 39 tests
+test accepted_core_utilities_install_with_synthetic_reach_and_skills ... ignored, requires explicitly supplied accepted local core utility archives; not published-release proof
+test fixture_dispatch ... ok
+test doctor_reports_installation_in_empty_home ... ok
+test remove_empty_home_is_a_usage_result_without_installation_changes ... ok
+test conflicting_external_reminder_is_preserved_on_refusal ... ok
+test assemble_has_real_help ... ok
+test update_has_real_help ... ok
+test disabling_auto_update_does_not_require_release_access ... ok
+test recovery_conflict_keeps_pending_record_and_user_bytes ... ok
+test manifest_records_the_exact_shared_fixture_digest ... ok
+test archive_link_escaping_staging_is_refused_before_install ... ok
+test unowned_command_and_skill_are_never_adopted ... ok
+test checksum_failure_preserves_the_committed_installation ... ok
+test codex_untrusted_hook_requires_action_and_no_address_returns_no_context ... ok
+test killed_install_recovers_before_remove_and_refuses_concurrent_mutation ... ok
+test interrupted_explicit_purge_resumes_after_manifest_removal ... ok
+test doctor_detects_missing_program_without_changing_station_checks ... ok
+test existing_agents_config_is_preserved_and_invalid_config_refused ... ok
+test shared_fixture_must_match_contract_skill_bytes_and_declarations ... ok
+test committed_remove_cleans_owned_directories_before_reassembly ... ok
+test killed_after_manifest_commit_keeps_the_new_generation ... ok
+test program_versions_compare_numerically_per_program ... ok
+test codex_trust_is_read_only_and_bound_to_the_current_command ... ok
+test user_changes_refuse_update_and_remove ... ok
+test externally_owned_exact_reminder_survives_remove ... ok
+test known_unverified_capability_obeys_required_preferred_optional ... ok
+test utility_release_manifest_must_match_program_version_and_contract ... ok
+test install_repeat_update_remove_preserves_user_content ... ok
+test handled_activation_failure_restores_first_install_and_update ... ok
+test restrictive_umask_preserves_modes_across_update_and_rollback ... ok
+test remove_disables_active_timer_and_removes_owned_units ... ok
+test scheduler_enable_failure_restores_files_and_manifest ... ok
+test invalid_skill_declarations_refuse_all_installation_changes ... ok
+test scheduler_enable_disable_is_owned_and_disable_works_offline ... ok
+test interrupted_remove_recovers_then_finishes_with_timer_disabled ... ok
+test interrupted_scheduler_change_restores_external_state_and_manifest ... ok
+test generated_scheduler_command_runs_the_actual_cli_and_updates_the_selected_home ... ok
+test addressed_reminder_failure_is_visible_and_timeout_stops_the_program ... ok
+test large_program_update_and_recovery_keep_payload_out_of_journal_metadata ... ok
+
+test result: ok. 38 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 48.18s
+

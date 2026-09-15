@@ -1,0 +1,4 @@
+sno-assemble-PRD.md: E27: QCG-9 is not passing at delivery close
+    fix: run its verifier through prd-proof.py; if the criterion changed, revise the PRD first
+
+prd-lint: 1 error(s), 0 warning(s)

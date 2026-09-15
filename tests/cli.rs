@@ -45,12 +45,17 @@ fn root_help_version_and_missing_command_are_stable() {
     let help = sno(profile.path(), &["--help"]);
     assert_eq!(help.status.code(), Some(0));
     let help_text = stdout(&help);
-    for expected in ["account", "station", "starport", "external subcommands"] {
+    for expected in ["account", "station", "external subcommands"] {
         assert!(
             help_text.contains(expected),
             "missing {expected} in {help_text}"
         );
     }
+
+    let retired = sno(profile.path(), &["starport"]);
+    assert_eq!(retired.status.code(), Some(2));
+    assert!(stderr(&retired).contains("is not a top-level command"));
+    assert!(!help_text.contains("starport"));
 
     let missing = sno(profile.path(), &[]);
     assert_eq!(missing.status.code(), Some(2));
@@ -75,7 +80,6 @@ fn legacy_root_commands_are_rejected() {
         vec!["register"],
         vec!["claim"],
         vec!["audit", "verify", "evt_1"],
-        vec!["doctor"],
     ] {
         let output = sno(profile.path(), &arguments);
         assert_eq!(output.status.code(), Some(2), "{arguments:?}");
@@ -1227,6 +1231,7 @@ fn rem_wait_timeout_survives_a_stalled_trace_writer() {
     let trace_lock = fs::OpenOptions::new()
         .create(true)
         .append(true)
+        .read(cfg!(windows))
         .open(&trace_path)
         .expect("trace file");
     trace_lock.lock_exclusive().expect("hold trace lock");

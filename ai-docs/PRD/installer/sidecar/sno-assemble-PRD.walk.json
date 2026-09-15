@@ -1,0 +1,226 @@
+{
+  "prd": "sno-assemble-PRD.md",
+  "items": [
+    {
+      "class": "first assemble, all sources reachable",
+      "source": "nine manual steps of 2026-09-11",
+      "rung": 1,
+      "input": "sno assemble",
+      "expected": "reach, eligible skill payloads and core programs installed; config/hooks tracked; transaction committed",
+      "emitted": "REQ-1..5",
+      "surprise": null
+    },
+    {
+      "class": "re-run with nothing newer",
+      "source": "same",
+      "rung": 2,
+      "input": "sno assemble",
+      "expected": "unchanged installed files/manifest unchanged; unmet prerequisites still reported",
+      "emitted": "REQ-1",
+      "surprise": null
+    },
+    {
+      "class": "checksum mismatch",
+      "source": "altered .sha256 fixture",
+      "rung": 3,
+      "input": "sno assemble",
+      "expected": "exit 3; no installed-state change",
+      "emitted": "REQ-1 / REQ-9",
+      "surprise": null
+    },
+    {
+      "class": "verified Hermes capability and separate unsupported fixture cell",
+      "source": "capability map perspective 2 and explicit unsupported test input",
+      "rung": 4,
+      "input": "sno assemble",
+      "expected": "Claude and Hermes support actual preferred pre-turn slot; separately unsupported fixture slot degrades/skips",
+      "emitted": "REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "declared program missing or older than its own minimum",
+      "source": "min_version > pinned",
+      "rung": 5,
+      "input": "assemble with independent Reach/heartbeat/quota artifact versions",
+      "expected": "skip dependent unit naming its missing/too-old program; never compare all programs against Reach",
+      "emitted": "REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "agents.json present and valid",
+      "source": "workstation file 2026-09-11",
+      "rung": 6,
+      "input": "sno assemble",
+      "expected": "bytes unchanged",
+      "emitted": "REQ-3",
+      "surprise": null
+    },
+    {
+      "class": "hook already present",
+      "source": "hand-written entries measured 2026-09-11",
+      "rung": 7,
+      "input": "sno assemble",
+      "expected": "exact existing external hook preserved unowned; managed hook current; conflict refuses",
+      "emitted": "REQ-4",
+      "surprise": null
+    },
+    {
+      "class": "hook write failure or interruption before commit",
+      "source": "failure after Reach activation; deterministic fixture fault injection",
+      "rung": 8,
+      "input": "sno assemble",
+      "expected": "handled failure rolls back; interruption leaves recoverable pending record; doctor/retry/remove inspect it",
+      "emitted": "REQ-5",
+      "surprise": null
+    },
+    {
+      "class": "newer release published",
+      "source": "fixture v+1",
+      "rung": 9,
+      "input": "sno update",
+      "expected": "updated reach old -> new",
+      "emitted": "REQ-6",
+      "surprise": null
+    },
+    {
+      "class": "auto on/off",
+      "source": "systemd user timer",
+      "rung": 10,
+      "input": "sno update --auto on|off",
+      "expected": "timer active / disabled; off works offline; scheduled command uses recorded roots",
+      "emitted": "REQ-6 / REQ-7",
+      "surprise": null
+    },
+    {
+      "class": "current deleted",
+      "source": "rm current",
+      "rung": 11,
+      "input": "sno doctor",
+      "expected": "fail with fix command",
+      "emitted": "REQ-7",
+      "surprise": null
+    },
+    {
+      "class": "remove with unrelated file present",
+      "source": "manifest-driven",
+      "rung": 12,
+      "input": "sno remove",
+      "expected": "owned unchanged files removed; unrelated files inside installed directories and mail state preserved",
+      "emitted": "REQ-8",
+      "surprise": null
+    },
+    {
+      "class": "starport typed",
+      "source": "retired name",
+      "rung": 13,
+      "input": "sno starport",
+      "expected": "exit 2, retired message",
+      "emitted": "REQ-11",
+      "surprise": null
+    },
+    {
+      "class": "public command lifecycle",
+      "source": "S 1.4 section 5.7; each core utility release manifest",
+      "rung": 14,
+      "input": "assemble, command help/read, update, doctor, remove",
+      "expected": "both utility commands installed from their own core artifacts once with resources; checked and removed with ownership",
+      "emitted": "REQ-2 / REQ-6 / REQ-8",
+      "surprise": null
+    },
+    {
+      "class": "existing destination and later user edits",
+      "source": "existing skill trees; owner preservation contract",
+      "rung": 15,
+      "input": "assemble / update / remove",
+      "expected": "unowned collision refuses; changed owned content refuses; new unrelated content survives",
+      "emitted": "REQ-8 / REQ-9",
+      "surprise": null
+    },
+    {
+      "class": "custom root and shared aliases",
+      "source": "capability map perspective 5",
+      "rung": 16,
+      "input": "assemble and actual harness discovery",
+      "expected": "write once to active canonical roots; evaluate actual consumers; prove discovery",
+      "emitted": "REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "hook trust and real injection",
+      "source": "Codex trust gate; actual prompt boundary",
+      "rung": 17,
+      "input": "assemble / doctor / addressed prompt",
+      "expected": "no false execution pass; actual reminder enters context after trust",
+      "emitted": "REQ-4 / REQ-7",
+      "surprise": null
+    },
+    {
+      "class": "upstream release unavailable",
+      "source": "local probe; remote status not established",
+      "rung": 18,
+      "input": "release preflight",
+      "expected": "staged consumer proof can precede real S publication; actual publication remains required for final release acceptance",
+      "emitted": "REQ-1 / REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "uninitialised station and disabled timer",
+      "source": "src/doctor.rs and opt-in timer",
+      "rung": 19,
+      "input": "doctor",
+      "expected": "station warn semantics preserved; timer disabled; correct nonzero conditions",
+      "emitted": "REQ-7 / REQ-10",
+      "surprise": null
+    },
+    {
+      "class": "shared requirements parser",
+      "source": "S 1.4 and Reach 1.3 closure",
+      "rung": 20,
+      "input": "real four-unit declarations and pinned requirements-contract.json",
+      "expected": "gate and actual installer report identical fixture/contract hashes and declaration dispositions",
+      "emitted": "REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "empty sender and receiver identities",
+      "source": "S 1.4 and Reach 1.3 closure",
+      "rung": 21,
+      "input": "assemble then init both, spawn both, doctor both, send",
+      "expected": "no hidden seat setup; one terminal wait; accepted chain observed via export/state",
+      "emitted": "REQ-1 / REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "two evidence stages",
+      "source": "S 1.4 and Reach 1.3 closure",
+      "rung": 22,
+      "input": "gate-produced staged bytes then actual published releases",
+      "expected": "separate staged-consumer and published-release receipts; neither substitutes for the other",
+      "emitted": "REQ-1 / REQ-2",
+      "surprise": null
+    },
+    {
+      "class": "platform-qualified Reach selection",
+      "source": "2026-09-14 owner ruling; DEC-3 patch",
+      "rung": 1,
+      "input": "release inventory containing all four platform pairs plus legacy Reach and unchanged utilities",
+      "expected": "use literal build OS/ARCH Reach pair and its exact checksum; utility names unchanged",
+      "emitted": "REQ-1 / QCG-1",
+      "surprise": null
+    },
+    {
+      "class": "unsupported architecture before download",
+      "source": "2026-09-14 owner ruling; DEC-3 patch",
+      "rung": 3,
+      "input": "resolve for linux-riscv64 or macos-riscv64",
+      "expected": "exit 2 naming pair before any release fetch",
+      "emitted": "REQ-1 / QCG-1",
+      "surprise": null
+    }
+  ],
+  "incumbent": {
+    "who": "Current CLI has account, station and external dispatch; starport is already retired. Communication installation is still manual.",
+    "edge": "One owned install lifecycle includes the public commands, active harness roots and recoverable transactions. It refuses user-content conflicts and does not confuse fixture evidence with real releases.",
+    "proof": "QCG-1/2 install and command placement; QCG-5 recovery; QCG-8 ownership-preserving removal; QCG-9 actual release, discovery, hook and seat boundaries. These are planned checks, not execution results."
+  }
+}

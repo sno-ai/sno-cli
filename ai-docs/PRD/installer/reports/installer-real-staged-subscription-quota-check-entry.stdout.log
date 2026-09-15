@@ -1,0 +1,39 @@
+subscription-quota-check — read Codex / Claude Code subscription quota without
+spending anything. Reports whether work can start now.
+
+Usage:
+  subscription-quota-check [--vendor codex|claude|both] [--json|--human] [--quiet]
+
+Options:
+  --vendor <v>   Which vendor to read. Default: both.
+  --json         One JSON object on stdout (default when stdout is not a terminal).
+  --human        One line per vendor on stdout (default when stdout is a terminal).
+  --quiet        Suppress the stderr progress note.
+  -h, --help     This text.
+
+Exit codes:
+  0  all requested vendors usable now
+  1  at least one blocked by quota
+  2  usage or argument error
+  3  at least one unreadable (state unknown)
+  4  at least one needs credentials refreshed
+
+Verdict, per vendor and overall:
+  go          the tightest window still has headroom
+  short_only  usable, but the tightest window has less than the configured headroom left
+  wait        blocked now; seconds_to_reset says for how long
+  owner_action blocked by a workspace limit; contact the workspace owner
+  unknown     could not be read, or the numbers could not be shown to be current
+  needs_auth  credentials need refreshing
+  n/a         not a subscription-limited session (API key / Bedrock / Vertex)
+
+Notes:
+  Reads only. This never invokes a model and never redeems a rate-limit reset credit.
+  Run it when a decision needs it, or after something was actually blocked. It is not
+  built to be polled: the Claude usage endpoint is itself rate limited.
+  To wait for a reset, arm the `heartbeat` skill using seconds_to_reset of the BLOCKING
+  window and re-run this probe in the hook — the reset instant is the server's to move,
+  so only a fresh read proves a block is gone.
+  This reads the credentials the two CLIs own. It does not measure accounts behind
+  OPENAI_BASE_URL or on another machine.
+  using the harness's own endpoint; quota describes only the CLIs.

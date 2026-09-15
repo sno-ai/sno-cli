@@ -1,0 +1,331 @@
+{
+  "host": "gpt1",
+  "cli_commit": "07362f87fe8cc4e18b8addac2c835e6a551dac44",
+  "driver": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/fixture-sno",
+  "driver_sha256": "9dc868c2f17ad167d8472a4fcb20b6d86bd444503d721b6ed5c447098f98bd26",
+  "home": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home",
+  "environment": {
+    "HOME": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home",
+    "PATH": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.local/bin:/home/lh/.local/bin:/home/lh/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/codex-path:/home/lh/.bun/bin:/home/lh/.local/bin:/home/lh/.local/bin:/home/lh/.local/bin:/home/lh/.codex/tmp/arg0/codex-arg0vvh59p:/home/lh/.codex/packages/standalone/releases/0.153.4-x86_64-unknown-linux-musl/codex-path:/home/lh/.orca-relay/bin:/home/lh/.bun/bin:/home/lh/.local/bin:/home/lh/.local/bin:/home/lh/.local/bin:/home/lh/.cargo/bin:/home/lh/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin:/home/lh/.local/share/pnpm",
+    "XDG_CONFIG_HOME": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.config",
+    "SNO_PROFILE_DIR": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/station-profile"
+  },
+  "input_receipt": "installer-real-staged-positive.json",
+  "artifacts": [
+    {
+      "name": "reach",
+      "version": "2.0",
+      "path": "/home/lh/code/sno-station-core/apps/reach/dist/candidates/5eca401ea26763050c6abcc82cc68f74dc8ad48f/reach-2.0.tar.gz",
+      "sha256": "dc4f84e6b15ebabbd767a6eccdd0d87186d7ae636142aa0e20540fd727102939",
+      "entry_point": "bin/sno-reach"
+    },
+    {
+      "name": "heartbeat",
+      "version": "1.0",
+      "path": "/home/lh/code/sno-station-core/apps/heartbeat/dist/heartbeat-1.0.tar.gz",
+      "sha256": "29d1eb773df780b0f85b935549b90d05de0856411e82144f0331de8defd0cb53",
+      "entry_point": "bin/heartbeat"
+    },
+    {
+      "name": "subscription-quota-check",
+      "version": "1.0",
+      "path": "/home/lh/code/sno-station-core/apps/subscription-quota-check/dist/subscription-quota-check-1.0.tar.gz",
+      "sha256": "b857aef24ffc1216c2818469d17175823f388e3c57a4abb67866e2f9e5375505",
+      "entry_point": "bin/subscription-quota-check"
+    },
+    {
+      "name": "skills",
+      "version": "staged-8474baf96195",
+      "path": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195.tar.gz",
+      "sha256": "857e2f29f11bcce208823adc0b1a6bac33db417e09581e59069d898ec4b94627",
+      "entry_point": ""
+    }
+  ],
+  "fixture_sha256": "17eb722714548f71492d89d40ba09764bd2a24053c1c67f6ef70039dc3785d69",
+  "contract_sha256": "5c29a218bd7c3d43003fad6f0e3939914a3f82ede18eb60f2e5f31a3b9a11b92",
+  "program_versions": {
+    "heartbeat": "1.0",
+    "reach": "2.0",
+    "subscription-quota-check": "1.0"
+  },
+  "checks": {
+    "real_installed_mapping_and_stamps": true,
+    "mapping_file_count": 20,
+    "reach_entry_works": true,
+    "reach_version_2_0": true,
+    "heartbeat_entry_works": true,
+    "heartbeat_help_identifies_program": true,
+    "subscription-quota-check_entry_works": true,
+    "subscription-quota-check_help_identifies_program": true,
+    "heartbeat_healthy_before_deletion": true,
+    "doctor_detects_missing_utility": true,
+    "same_real_release_restores_missing_owned_link": true,
+    "restored_utility_help_works": true,
+    "gate_accepts_real_reach": true,
+    "gate_accepts_real_handoff": true,
+    "gate_accepts_real_heartbeat": true,
+    "gate_accepts_real_subscription-quota-check": true,
+    "copied_fixture_hash_mutation_rejected": true,
+    "negative_preserves_committed_installation": true,
+    "original_artifact_hashes_preserved": true,
+    "original_fixture_and_contract_preserved": true
+  },
+  "installed_files": [
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/reach/skill/SKILL.md",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/SKILL.md",
+      "sha256": "2e1267568d85429f10e70ab6323cd0394d98b91cd1e298d2ef1cb78a4b11fd30"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/reach/skill/references/reach-contract.json",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/references/reach-contract.json",
+      "sha256": "686d9c7617663adcd42b35135f2e475ec62be9381f92d489813f094fef654529"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/reach/skill/scripts/selftest/run-selftest.sh",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/scripts/selftest/run-selftest.sh",
+      "sha256": "a8d7224a7ab70ea36d2d0d6d02639098094bd6e85dfecdf8153cca785fbd009f"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/reach/skill/scripts/selftest/text-check.py",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/scripts/selftest/text-check.py",
+      "sha256": "5fdb3b34590b16d0ff0efd0fedf47c5cb672b89c44c982a3aa4ad6cf472724e7"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/reach/PROMOTED.json",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/PROMOTED.json",
+      "sha256": "492a431921d4783af726db9b6f879ba7e80175db3325ee5b00e96c610201db1f"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/handoff/skill/SKILL.md",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/SKILL.md",
+      "sha256": "330cb85ea50552d899ac35ed2a07166613eae03b33984b28ded1641c342e284f"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/handoff/skill/references/reach-contract.json",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/references/reach-contract.json",
+      "sha256": "686d9c7617663adcd42b35135f2e475ec62be9381f92d489813f094fef654529"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/handoff/skill/scripts/selftest/run-selftest.sh",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/scripts/selftest/run-selftest.sh",
+      "sha256": "a8d7224a7ab70ea36d2d0d6d02639098094bd6e85dfecdf8153cca785fbd009f"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/handoff/skill/scripts/selftest/text-check.py",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/scripts/selftest/text-check.py",
+      "sha256": "5fdb3b34590b16d0ff0efd0fedf47c5cb672b89c44c982a3aa4ad6cf472724e7"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/handoff/PROMOTED.json",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/PROMOTED.json",
+      "sha256": "624620a32cb39d3e2de4f1becbb989bf52142e2a713fe6a0f9d2c4c9db847e42"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/reach/skill/SKILL.md",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/SKILL.md",
+      "sha256": "2e1267568d85429f10e70ab6323cd0394d98b91cd1e298d2ef1cb78a4b11fd30"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/reach/skill/references/reach-contract.json",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/references/reach-contract.json",
+      "sha256": "686d9c7617663adcd42b35135f2e475ec62be9381f92d489813f094fef654529"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/reach/skill/scripts/selftest/run-selftest.sh",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/scripts/selftest/run-selftest.sh",
+      "sha256": "a8d7224a7ab70ea36d2d0d6d02639098094bd6e85dfecdf8153cca785fbd009f"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/reach/skill/scripts/selftest/text-check.py",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/scripts/selftest/text-check.py",
+      "sha256": "5fdb3b34590b16d0ff0efd0fedf47c5cb672b89c44c982a3aa4ad6cf472724e7"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/reach/PROMOTED.json",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/PROMOTED.json",
+      "sha256": "492a431921d4783af726db9b6f879ba7e80175db3325ee5b00e96c610201db1f"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/handoff/skill/SKILL.md",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/SKILL.md",
+      "sha256": "330cb85ea50552d899ac35ed2a07166613eae03b33984b28ded1641c342e284f"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/handoff/skill/references/reach-contract.json",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/references/reach-contract.json",
+      "sha256": "686d9c7617663adcd42b35135f2e475ec62be9381f92d489813f094fef654529"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/handoff/skill/scripts/selftest/run-selftest.sh",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/scripts/selftest/run-selftest.sh",
+      "sha256": "a8d7224a7ab70ea36d2d0d6d02639098094bd6e85dfecdf8153cca785fbd009f"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/handoff/skill/scripts/selftest/text-check.py",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/scripts/selftest/text-check.py",
+      "sha256": "5fdb3b34590b16d0ff0efd0fedf47c5cb672b89c44c982a3aa4ad6cf472724e7"
+    },
+    {
+      "source": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/handoff/PROMOTED.json",
+      "destination": "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/PROMOTED.json",
+      "sha256": "624620a32cb39d3e2de4f1becbb989bf52142e2a713fe6a0f9d2c4c9db847e42"
+    }
+  ],
+  "events": [
+    {
+      "label": "reach-entry",
+      "command": [
+        "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/fixture-sno",
+        "reach",
+        "--version"
+      ],
+      "exit_code": 0,
+      "stdout": "2.0\n",
+      "stderr": ""
+    },
+    {
+      "label": "heartbeat-entry",
+      "command": [
+        "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.local/bin/heartbeat",
+        "--help"
+      ],
+      "exit_code": 0,
+      "stdout": "usage: heartbeat --label NAME [--interval MINUTES] [--log PATH] [--until-file PATH]\n                 [--max-ticks N] [--max-hours H] [-- COMMAND [ARG ...]]\n       heartbeat --stop NAME\n       heartbeat --list\n\nTwo shapes, and nothing else should ever be hand-written:\n\n  report every so often   heartbeat --interval 30 --label train --log L -- <hook command>\n  wait until it is done   heartbeat --label build --until-file out/result.json\n\n  --label       name for this heartbeat, written on every line (required)\n                (--name is accepted as the same flag)\n  --interval    time between ticks, in MINUTES (default: 10). A bare number is\n                minutes; a unit overrides it: 30s, 10m, 2h. A bare number above\n                120 is refused rather than guessed at \u2014 write 10 for ten minutes,\n                or 600s if you really mean seconds. (--every is accepted as the\n                same flag.) It does not change how fast --until-file is noticed;\n                that is checked every second either way\n  --log         file to append to (default: one under the heartbeat state directory,\n                whose path is printed when you arm)\n  --until-file  stop cleanly once this path holds content; checked every second. It must\n                NOT exist yet when you arm \u2014 an output file the job opens at the start is\n                not a completion marker. (--until is accepted as the same flag)\n  --max-ticks   stop after N ticks (default: unlimited)\n  --max-hours   stop after H hours (default: 24; 0 disables)\n  --            everything after this is the hook command, run once per tick. Optional when\n                --until-file is given: with no hook each tick writes \"waiting\"\n\n  --stop NAME   stop YOUR heartbeat with that label; another owner's is never reachable\n  --list        every heartbeat running on this machine, yours marked \"you\"\n\nEvery ending says on stdout WHICH ending it was \u2014 FINISHED, NOT FINISHED, or STOPPED \u2014 so\nthe notification that wakes you can never make \"the job is done\" look like \"I gave up\".\n\nThe hook's exit status is recorded and never acted on. A tick happens even when the hook\nfails, hangs, or writes nothing. A heartbeat's owner comes from the session environment, not\nfrom an argument, so one agent can neither stop nor collide with another agent's heartbeat.\n",
+      "stderr": ""
+    },
+    {
+      "label": "subscription-quota-check-entry",
+      "command": [
+        "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.local/bin/subscription-quota-check",
+        "--help"
+      ],
+      "exit_code": 0,
+      "stdout": "subscription-quota-check \u2014 read Codex / Claude Code subscription quota without\nspending anything. Reports whether work can start now.\n\nUsage:\n  subscription-quota-check [--vendor codex|claude|both] [--json|--human] [--quiet]\n\nOptions:\n  --vendor <v>   Which vendor to read. Default: both.\n  --json         One JSON object on stdout (default when stdout is not a terminal).\n  --human        One line per vendor on stdout (default when stdout is a terminal).\n  --quiet        Suppress the stderr progress note.\n  -h, --help     This text.\n\nExit codes:\n  0  all requested vendors usable now\n  1  at least one blocked by quota\n  2  usage or argument error\n  3  at least one unreadable (state unknown)\n  4  at least one needs credentials refreshed\n\nVerdict, per vendor and overall:\n  go          the tightest window still has headroom\n  short_only  usable, but the tightest window has less than the configured headroom left\n  wait        blocked now; seconds_to_reset says for how long\n  owner_action blocked by a workspace limit; contact the workspace owner\n  unknown     could not be read, or the numbers could not be shown to be current\n  needs_auth  credentials need refreshing\n  n/a         not a subscription-limited session (API key / Bedrock / Vertex)\n\nNotes:\n  Reads only. This never invokes a model and never redeems a rate-limit reset credit.\n  Run it when a decision needs it, or after something was actually blocked. It is not\n  built to be polled: the Claude usage endpoint is itself rate limited.\n  To wait for a reset, arm the `heartbeat` skill using seconds_to_reset of the BLOCKING\n  window and re-run this probe in the hook \u2014 the reset instant is the server's to move,\n  so only a fresh read proves a block is gone.\n  This reads the credentials the two CLIs own. It does not measure accounts behind\n  OPENAI_BASE_URL or on another machine.\n  using the harness's own endpoint; quota describes only the CLIs.\n",
+      "stderr": ""
+    },
+    {
+      "label": "doctor-before",
+      "command": [
+        "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/fixture-sno",
+        "doctor",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"acp\":[{\"target\":\"claude\",\"result\":\"warn\",\"detail\":\"built-in acpx adapter selected; live ACP handshake unverified\"},{\"target\":\"codex\",\"result\":\"warn\",\"detail\":\"built-in acpx adapter selected; live ACP handshake unverified\"}],\"hooks\":[{\"target\":\"claude configured\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"claude execution\",\"result\":\"warn\",\"detail\":\"seat address missing; no execution evidence\"},{\"target\":\"codex configured\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"codex trust\",\"result\":\"missing\",\"detail\":\"open Codex and press t to trust this hook\"},{\"target\":\"codex execution\",\"result\":\"warn\",\"detail\":\"seat address missing; no execution evidence\"}],\"reach\":[{\"target\":\"reach\",\"result\":\"ok\",\"detail\":\"2.0\"}],\"skills\":[{\"target\":\"heartbeat\",\"result\":\"ok\",\"detail\":\"1.0\"},{\"target\":\"subscription-quota-check\",\"result\":\"ok\",\"detail\":\"1.0\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/PROMOTED.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/SKILL.md\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/references/reach-contract.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/scripts/selftest/run-selftest.sh\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/scripts/selftest/text-check.py\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/PROMOTED.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/SKILL.md\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/references/reach-contract.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/scripts/selftest/run-selftest.sh\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/scripts/selftest/text-check.py\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/PROMOTED.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/SKILL.md\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/references/reach-contract.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/scripts/selftest/run-selftest.sh\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/scripts/selftest/text-check.py\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/PROMOTED.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/SKILL.md\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/references/reach-contract.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/scripts/selftest/run-selftest.sh\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/scripts/selftest/text-check.py\",\"result\":\"ok\",\"detail\":\"\"}],\"timer\":[{\"target\":\"timer\",\"result\":\"disabled\",\"detail\":\"\"}],\"station\":{\"identity\":{\"name\":\"identity\",\"status\":\"warn\",\"detail\":\"identity not bootstrapped - first SDK use or `sno account machine register` will create it automatically\",\"path\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/station-profile/identity.json\"},\"buffer\":{\"name\":\"buffer\",\"status\":\"warn\",\"detail\":\"buffer not initialized at /mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/station-profile/buffer.db\",\"path\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/station-profile/buffer.db\"},\"consent\":{\"name\":\"consent\",\"status\":\"ok\",\"detail\":\"consent metadata-only (default)\",\"path\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/station-profile/state/consent.json\"},\"last_ship\":{\"name\":\"last_ship\",\"status\":\"ok\",\"detail\":\"shipped event rows: 0 (destination and last-success time are not recorded)\"},\"lockfile\":{\"name\":\"lockfile\",\"status\":\"ok\",\"detail\":\"no identity lockfile present\",\"path\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/station-profile/identity.lock\"}}}\n",
+      "stderr": ""
+    },
+    {
+      "label": "doctor-missing-heartbeat",
+      "command": [
+        "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/fixture-sno",
+        "doctor",
+        "--json"
+      ],
+      "exit_code": 1,
+      "stdout": "{\"acp\":[{\"target\":\"claude\",\"result\":\"warn\",\"detail\":\"built-in acpx adapter selected; live ACP handshake unverified\"},{\"target\":\"codex\",\"result\":\"warn\",\"detail\":\"built-in acpx adapter selected; live ACP handshake unverified\"}],\"hooks\":[{\"target\":\"claude configured\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"claude execution\",\"result\":\"warn\",\"detail\":\"seat address missing; no execution evidence\"},{\"target\":\"codex configured\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"codex trust\",\"result\":\"missing\",\"detail\":\"open Codex and press t to trust this hook\"},{\"target\":\"codex execution\",\"result\":\"warn\",\"detail\":\"seat address missing; no execution evidence\"}],\"reach\":[{\"target\":\"reach\",\"result\":\"ok\",\"detail\":\"2.0\"}],\"skills\":[{\"target\":\"heartbeat\",\"result\":\"fail\",\"detail\":\"run: sno update\"},{\"target\":\"subscription-quota-check\",\"result\":\"ok\",\"detail\":\"1.0\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/PROMOTED.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/SKILL.md\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/references/reach-contract.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/scripts/selftest/run-selftest.sh\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/handoff/scripts/selftest/text-check.py\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/PROMOTED.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/SKILL.md\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/references/reach-contract.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/scripts/selftest/run-selftest.sh\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.claude/skills/reach/scripts/selftest/text-check.py\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/PROMOTED.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/SKILL.md\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/references/reach-contract.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/scripts/selftest/run-selftest.sh\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/handoff/scripts/selftest/text-check.py\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/PROMOTED.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/SKILL.md\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/references/reach-contract.json\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/scripts/selftest/run-selftest.sh\",\"result\":\"ok\",\"detail\":\"\"},{\"target\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.codex/skills/reach/scripts/selftest/text-check.py\",\"result\":\"ok\",\"detail\":\"\"}],\"timer\":[{\"target\":\"timer\",\"result\":\"disabled\",\"detail\":\"\"}],\"station\":{\"identity\":{\"name\":\"identity\",\"status\":\"warn\",\"detail\":\"identity not bootstrapped - first SDK use or `sno account machine register` will create it automatically\",\"path\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/station-profile/identity.json\"},\"buffer\":{\"name\":\"buffer\",\"status\":\"warn\",\"detail\":\"buffer not initialized at /mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/station-profile/buffer.db\",\"path\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/station-profile/buffer.db\"},\"consent\":{\"name\":\"consent\",\"status\":\"ok\",\"detail\":\"consent metadata-only (default)\",\"path\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/station-profile/state/consent.json\"},\"last_ship\":{\"name\":\"last_ship\",\"status\":\"ok\",\"detail\":\"shipped event rows: 0 (destination and last-success time are not recorded)\"},\"lockfile\":{\"name\":\"lockfile\",\"status\":\"ok\",\"detail\":\"no identity lockfile present\",\"path\":\"/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/station-profile/identity.lock\"}}}\n",
+      "stderr": ""
+    },
+    {
+      "label": "restore-heartbeat",
+      "command": [
+        "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/fixture-sno",
+        "update",
+        "--json"
+      ],
+      "exit_code": 0,
+      "stdout": "[{\"target\":\"reach\",\"result\":\"current\",\"detail\":\"2.0\"},{\"target\":\"heartbeat\",\"result\":\"current\",\"detail\":\"1.0\"},{\"target\":\"subscription-quota-check\",\"result\":\"current\",\"detail\":\"1.0\"},{\"target\":\"skill handoff claude\",\"result\":\"current\",\"detail\":\"\"},{\"target\":\"skill handoff codex\",\"result\":\"current\",\"detail\":\"\"},{\"target\":\"skill handoff hermes\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill handoff openclaw\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill heartbeat claude\",\"result\":\"skipped\",\"detail\":\"claude 3.reader-to-agent-delivery unsupported or unverified\"},{\"target\":\"skill heartbeat codex\",\"result\":\"skipped\",\"detail\":\"codex 3.reader-to-agent-delivery unsupported or unverified\"},{\"target\":\"skill heartbeat hermes\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill heartbeat openclaw\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill reach claude\",\"result\":\"current\",\"detail\":\"\"},{\"target\":\"skill reach codex\",\"result\":\"current\",\"detail\":\"\"},{\"target\":\"skill reach hermes\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill reach openclaw\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill subscription-quota-check claude\",\"result\":\"skipped\",\"detail\":\"claude 3.reader-to-agent-delivery unsupported or unverified\"},{\"target\":\"skill subscription-quota-check codex\",\"result\":\"skipped\",\"detail\":\"codex 3.reader-to-agent-delivery unsupported or unverified\"},{\"target\":\"skill subscription-quota-check hermes\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"skill subscription-quota-check openclaw\",\"result\":\"skipped\",\"detail\":\"harness not present\"},{\"target\":\"hooks claude\",\"result\":\"current\",\"detail\":\"\"},{\"target\":\"hooks codex\",\"result\":\"current\",\"detail\":\"open Codex and press t to trust the new hook\"}]\n",
+      "stderr": ""
+    },
+    {
+      "label": "restored-heartbeat-entry",
+      "command": [
+        "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/home/.local/bin/heartbeat",
+        "--help"
+      ],
+      "exit_code": 0,
+      "stdout": "usage: heartbeat --label NAME [--interval MINUTES] [--log PATH] [--until-file PATH]\n                 [--max-ticks N] [--max-hours H] [-- COMMAND [ARG ...]]\n       heartbeat --stop NAME\n       heartbeat --list\n\nTwo shapes, and nothing else should ever be hand-written:\n\n  report every so often   heartbeat --interval 30 --label train --log L -- <hook command>\n  wait until it is done   heartbeat --label build --until-file out/result.json\n\n  --label       name for this heartbeat, written on every line (required)\n                (--name is accepted as the same flag)\n  --interval    time between ticks, in MINUTES (default: 10). A bare number is\n                minutes; a unit overrides it: 30s, 10m, 2h. A bare number above\n                120 is refused rather than guessed at \u2014 write 10 for ten minutes,\n                or 600s if you really mean seconds. (--every is accepted as the\n                same flag.) It does not change how fast --until-file is noticed;\n                that is checked every second either way\n  --log         file to append to (default: one under the heartbeat state directory,\n                whose path is printed when you arm)\n  --until-file  stop cleanly once this path holds content; checked every second. It must\n                NOT exist yet when you arm \u2014 an output file the job opens at the start is\n                not a completion marker. (--until is accepted as the same flag)\n  --max-ticks   stop after N ticks (default: unlimited)\n  --max-hours   stop after H hours (default: 24; 0 disables)\n  --            everything after this is the hook command, run once per tick. Optional when\n                --until-file is given: with no hook each tick writes \"waiting\"\n\n  --stop NAME   stop YOUR heartbeat with that label; another owner's is never reachable\n  --list        every heartbeat running on this machine, yours marked \"you\"\n\nEvery ending says on stdout WHICH ending it was \u2014 FINISHED, NOT FINISHED, or STOPPED \u2014 so\nthe notification that wakes you can never make \"the job is done\" look like \"I gave up\".\n\nThe hook's exit status is recorded and never acted on. A tick happens even when the hook\nfails, hangs, or writes nothing. A heartbeat's owner comes from the session environment, not\nfrom an argument, so one agent can neither stop nor collide with another agent's heartbeat.\n",
+      "stderr": ""
+    },
+    {
+      "label": "gate-reach",
+      "command": [
+        "python3",
+        "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/scripts/validate-requirements.py",
+        "validate",
+        "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/scripts/requirements-contract.json",
+        "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/reach",
+        "S"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"contract_sha256\":\"5c29a218bd7c3d43003fad6f0e3939914a3f82ede18eb60f2e5f31a3b9a11b92\",\"payload_sha256\":\"7c1cec252d793cd7c4259f028ec5fc490012af5b5df6d5acebe2f3f97a647667\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "gate-handoff",
+      "command": [
+        "python3",
+        "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/scripts/validate-requirements.py",
+        "validate",
+        "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/scripts/requirements-contract.json",
+        "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/handoff",
+        "S"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"contract_sha256\":\"5c29a218bd7c3d43003fad6f0e3939914a3f82ede18eb60f2e5f31a3b9a11b92\",\"payload_sha256\":\"2b4f785171edffaf25fca8347cf838a17ca7e9092124d474caf5f431e918c5e0\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "gate-heartbeat",
+      "command": [
+        "python3",
+        "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/scripts/validate-requirements.py",
+        "validate",
+        "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/scripts/requirements-contract.json",
+        "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/heartbeat",
+        "S"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"contract_sha256\":\"5c29a218bd7c3d43003fad6f0e3939914a3f82ede18eb60f2e5f31a3b9a11b92\",\"payload_sha256\":\"5df5545b08ec543b8bcaf4665fd444f5738c4c4e89ec41a8ba527cacae657a58\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "gate-subscription-quota-check",
+      "command": [
+        "python3",
+        "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/scripts/validate-requirements.py",
+        "validate",
+        "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/scripts/requirements-contract.json",
+        "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195/skills/S-communication-and-handoff/subscription-quota-check",
+        "S"
+      ],
+      "exit_code": 0,
+      "stdout": "{\"contract_sha256\":\"5c29a218bd7c3d43003fad6f0e3939914a3f82ede18eb60f2e5f31a3b9a11b92\",\"payload_sha256\":\"b1ec499159a1a2918bab8d5e8e218be55e24cbfeb76224fbe3ac3ae7b316c2f7\"}\n",
+      "stderr": ""
+    },
+    {
+      "label": "bad-fixture-after-positive",
+      "command": [
+        "/mnt/ramdisk/tmp/sno-real-staged-29xmb7a5/fixture-sno",
+        "update",
+        "--json"
+      ],
+      "exit_code": 3,
+      "stdout": "{\"error\":\"source_error\",\"message\":\"fixture skill hash/declaration mismatch: reach\"}\n",
+      "stderr": ""
+    }
+  ],
+  "positive_half_proven": true,
+  "qcg2_complete": false,
+  "limits": [
+    "Actual staged gate declaration matrix not rerun: wrong types, duplicate keys, invalid need/version, unknown IDs, overlays and per-program version/capability variations remain separate synthetic evidence.",
+    "No second real utility version exists here; update proof is same-release missing-owned-link restoration, not a version upgrade.",
+    "Hermes/OpenClaw were absent in this initial real environment; aliases and custom-root discovery were not exercised in this continuation.",
+    "Heartbeat and quota skill text remains skipped for unverified reader-to-agent delivery; no fake capability was asserted.",
+    "Skills input remains a gate-produced candidate containing utility runtime copies, not final text-only publication acceptance.",
+    "All artifacts are local candidates, not published releases; no live adapter/seat/prompt-injection proof was performed."
+  ],
+  "reach_source_commit": "5eca401ea26763050c6abcc82cc68f74dc8ad48f",
+  "skills_source_commit": "8474baf96195bbf262adc261bb2c51cd74d7a631",
+  "skills_fixture_commit": "278dc6c4cf69abe7745b4b796229a97c6268c3a9"
+}

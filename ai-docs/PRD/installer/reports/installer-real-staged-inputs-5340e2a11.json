@@ -1,0 +1,37 @@
+{
+  "derived_from": "ai-docs/PRD/installer/reports/installer-real-staged-inputs-75fa8d21a.json",
+  "reach_source_commit": "5340e2a11b80f68b33066fade7196d9868e0e16f",
+  "skills_source_commit": "8474baf96195bbf262adc261bb2c51cd74d7a631",
+  "skills_fixture_commit": "278dc6c4cf69abe7745b4b796229a97c6268c3a9",
+  "artifacts": [
+    {
+      "name": "reach",
+      "version": "2.0",
+      "path": "/home/lh/code/sno-station-core/apps/reach/dist/candidates/5340e2a11b80f68b33066fade7196d9868e0e16f/reach-2.0.tar.gz",
+      "sha256": "f2b95f4574f503d2b6802d990210334eabf2675bd201ac2c4220f13ec9e84e1f",
+      "entry_point": "bin/sno-reach",
+      "source_commit": "5340e2a11b80f68b33066fade7196d9868e0e16f"
+    },
+    {
+      "name": "heartbeat",
+      "version": "1.0",
+      "path": "/home/lh/code/sno-station-core/apps/heartbeat/dist/heartbeat-1.0.tar.gz",
+      "sha256": "29d1eb773df780b0f85b935549b90d05de0856411e82144f0331de8defd0cb53",
+      "entry_point": "bin/heartbeat"
+    },
+    {
+      "name": "subscription-quota-check",
+      "version": "1.0",
+      "path": "/home/lh/code/sno-station-core/apps/subscription-quota-check/dist/subscription-quota-check-1.0.tar.gz",
+      "sha256": "b857aef24ffc1216c2818469d17175823f388e3c57a4abb67866e2f9e5375505",
+      "entry_point": "bin/subscription-quota-check"
+    },
+    {
+      "name": "skills",
+      "version": "staged-8474baf96195",
+      "path": "/home/lh/code/sno-station-skills/staging/s-category-8474baf96195.tar.gz",
+      "sha256": "857e2f29f11bcce208823adc0b1a6bac33db417e09581e59069d898ec4b94627",
+      "entry_point": ""
+    }
+  ]
+}

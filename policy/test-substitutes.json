@@ -42,6 +42,12 @@
       "purpose": "Real loopback HTTP server for the external SNO service",
       "required_bind_literals": ["127.0.0.1", "[::1]"],
       "forbidden_bind_literals": ["0.0.0.0"]
+    },
+    {
+      "path": "tests/rem_job_state_contract.rs",
+      "purpose": "Reserve and close real loopback endpoints to test unreachable external account service and stopped REM sidecar errors",
+      "required_bind_literals": ["127.0.0.1"],
+      "forbidden_bind_literals": ["0.0.0.0"]
     }
   ]
 }

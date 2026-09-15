@@ -1,0 +1,7 @@
+sno-assemble-PRD.md: E27: QCG-2 is not passing at delivery close
+    fix: run its verifier through prd-proof.py; if the criterion changed, revise the PRD first
+sno-assemble-PRD.md: E27: QCG-9 is not passing at delivery close
+    fix: run its verifier through prd-proof.py; if the criterion changed, revise the PRD first
+
+prd-lint: 2 error(s), 0 warning(s)
+prd-header: refused — delivery gate failed; ai-docs/PRD/installer/sno-assemble-PRD.md is unchanged

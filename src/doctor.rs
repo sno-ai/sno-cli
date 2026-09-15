@@ -35,7 +35,7 @@ enum CheckStatus {
     Fail,
 }
 
-pub fn run(json_enabled: bool) -> Result<i32, CliError> {
+fn inspect() -> Result<(DoctorReport, i32), CliError> {
     let paths = SnoPaths::from_environment()?;
     let (buffer, shipped_count) = check_buffer(&paths.buffer_path);
     let report = DoctorReport {
@@ -50,6 +50,16 @@ pub fn run(json_enabled: bool) -> Result<i32, CliError> {
         || report.consent.status != CheckStatus::Ok
         || report.last_ship.status != CheckStatus::Ok
         || report.lockfile.status != CheckStatus::Ok;
+    Ok((report, if has_issue { 1 } else { 0 }))
+}
+
+pub(crate) fn report() -> Result<(serde_json::Value, i32), CliError> {
+    let (report, exit) = inspect()?;
+    Ok((serde_json::to_value(report)?, exit))
+}
+
+pub fn run(json_enabled: bool) -> Result<i32, CliError> {
+    let (report, exit) = inspect()?;
     if json_enabled {
         print_json(&serde_json::to_value(&report)?)?;
     } else {
@@ -68,7 +78,7 @@ pub fn run(json_enabled: bool) -> Result<i32, CliError> {
             println!("{badge} {}", check.detail);
         }
     }
-    Ok(if has_issue { 1 } else { 0 })
+    Ok(exit)
 }
 
 fn check_identity(path: &Path) -> DoctorCheck {

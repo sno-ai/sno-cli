@@ -1,0 +1,27 @@
+{
+  "argv": [
+    "cargo",
+    "test",
+    "--test",
+    "assemble",
+    "--",
+    "--exact",
+    "install_repeat_update_remove_preserves_user_content",
+    "checksum_failure_preserves_the_committed_installation",
+    "archive_link_escaping_staging_is_refused_before_install",
+    "restrictive_umask_preserves_modes_across_update_and_rollback"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-09-13T06:44:03.236861+00:00",
+  "interrupted_by": null,
+  "prd": "sno-assemble-PRD.md",
+  "prd_body_sha256": "95cf60b9da9a29aa6a4b9208d44a3d8c273752b87b99bccd00994e1b8390cf99",
+  "qualified_id": "sno-assemble-PRD:QCG-1",
+  "scope_sha256": "16bc90b7a895448354b5d7171dce579d3b01aa6d24101aeaa855fd5ed2b3f98e",
+  "started_at": "2026-09-13T06:44:02.972632+00:00",
+  "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s\n     Running tests/assemble.rs (target/debug/deps/assemble-e94c45b372e470f4)\n",
+  "stderr_truncated": false,
+  "stdout": "\nrunning 4 tests\ntest archive_link_escaping_staging_is_refused_before_install ... ok\ntest checksum_failure_preserves_the_committed_installation ... ok\ntest install_repeat_update_remove_preserves_user_content ... ok\ntest restrictive_umask_preserves_modes_across_update_and_rollback ... ok\n\ntest result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 35 filtered out; finished in 0.14s\n\n",
+  "stdout_truncated": false,
+  "timed_out": false
+}

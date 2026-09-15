@@ -42,6 +42,46 @@ sno station rem-status <JOB_ID> [--wait [--timeout <SECONDS>]]
 
 Every built-in command accepts `--json`. Commands emit one JSON value except `sno account machine claim`, which emits newline-delimited JSON: an `authorization` record before waiting and a final `result` or `error` record. This lets users and automation receive the browser verification code before approval. Success is exit code `0`, runtime failure is `1`, and command-line usage errors exit with `2`.
 
+### Install and maintain a machine
+
+```sh
+sno assemble [--reach-version VERSION] [--skills-version TAG]
+sno update [--reach-version VERSION] [--skills-version TAG] [--quiet]
+sno update --auto on
+sno update --auto off
+sno doctor --json
+sno remove [--purge-state]
+```
+
+The installer supports Linux x86_64 and macOS aarch64. Other platform pairs are refused
+before downloads. For private repositories, set `GH_TOKEN` to a GitHub token with read
+access to both release repositories (for an existing GitHub CLI login, use
+`GH_TOKEN="$(gh auth token)" sno assemble`). The token is sent only to the GitHub API.
+For an explicitly staged first install before the skills release exists, use
+`--skills-archive /absolute/path/to/skills.tar.gz`. This conflicts with `--skills-version`,
+records a bootstrap archive digest, and still downloads published core programs. Normal
+archive, declaration, and ownership checks apply. Run `sno update` after the final skills
+release is published.
+
+Core programs are installed once per user; skill
+text goes to detected harness roots. Releases and the shared requirements contract are
+verified before placement. Unknown requirements reject the source; unavailable required
+programs or capabilities skip the dependent skill with a reason.
+
+The installation manifest is `~/.config/sno/assemble.json`. Updates refuse to overwrite
+user-owned or modified files. Interrupted changes retain a pending transaction; the next
+mutation recovers it first. Remove preserves unrelated files and Reach mail state. Use
+`--purge-state` only to delete that mail state too.
+
+Automatic updates use the user's system scheduler. `--auto off` works without downloading
+releases. Doctor reports installed files, hook configuration and trust, adapter readiness,
+timer state, and the existing station checks separately. A configured hook does not prove
+that a real prompt has received its reminder. Codex trust is completed in Codex itself.
+
+Installer exit codes are `0` on completion, `2` for usage, `3` for source/integrity errors,
+and `4` for filesystem, ownership, scheduler or recovery failures. Doctor exits `1` for
+unhealthy checks. Every installer verb accepts `--json`.
+
 ### Local REM jobs
 
 REM jobs use the local Sno Station sidecar and are asynchronous. Start returns immediately with a

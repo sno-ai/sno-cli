@@ -126,7 +126,7 @@ jobs:
           binary="$CARGO_HOME/bin/sno"
           "$binary" --version | grep -Eq '^sno [0-9]+\.[0-9]+\.[0-9]+'
           help="$($binary --help)"
-          for command in account station starport; do
+          for command in account station; do
             grep -Eq "^[[:space:]]+$command" <<<"$help"
           done
           profile="$(mktemp -d)"
@@ -154,7 +154,7 @@ jobs:
           $binary = Join-Path $env:CARGO_HOME 'bin/sno.exe'
           if ((& $binary --version) -notmatch '^sno \d+\.\d+\.\d+') { throw 'unexpected version output' }
           $help = (& $binary --help) -join "`n"
-          foreach ($command in @('account', 'station', 'starport')) {
+          foreach ($command in @('account', 'station')) {
             if ($help -notmatch "(?m)^\s+$command") { throw "missing command: $command" }
           }
           $profile = Join-Path $env:RUNNER_TEMP ([guid]::NewGuid().ToString())

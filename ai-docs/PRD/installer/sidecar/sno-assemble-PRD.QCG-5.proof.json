@@ -1,0 +1,28 @@
+{
+  "argv": [
+    "cargo",
+    "test",
+    "--test",
+    "assemble",
+    "--",
+    "--exact",
+    "handled_activation_failure_restores_first_install_and_update",
+    "killed_install_recovers_before_remove_and_refuses_concurrent_mutation",
+    "killed_after_manifest_commit_keeps_the_new_generation",
+    "recovery_conflict_keeps_pending_record_and_user_bytes",
+    "committed_remove_cleans_owned_directories_before_reassembly"
+  ],
+  "exit_code": 0,
+  "finished_at": "2026-09-13T06:44:09.669686+00:00",
+  "interrupted_by": null,
+  "prd": "sno-assemble-PRD.md",
+  "prd_body_sha256": "95cf60b9da9a29aa6a4b9208d44a3d8c273752b87b99bccd00994e1b8390cf99",
+  "qualified_id": "sno-assemble-PRD:QCG-5",
+  "scope_sha256": "7d03d6ab981ea9ba20187fd3c126c737503331b6ed27d444cfc69c9708153fa0",
+  "started_at": "2026-09-13T06:44:09.405477+00:00",
+  "stderr": "    Finished `test` profile [unoptimized + debuginfo] target(s) in 0.09s\n     Running tests/assemble.rs (target/debug/deps/assemble-e94c45b372e470f4)\n",
+  "stderr_truncated": false,
+  "stdout": "\nrunning 5 tests\ntest recovery_conflict_keeps_pending_record_and_user_bytes ... ok\ntest killed_install_recovers_before_remove_and_refuses_concurrent_mutation ... ok\ntest killed_after_manifest_commit_keeps_the_new_generation ... ok\ntest committed_remove_cleans_owned_directories_before_reassembly ... ok\ntest handled_activation_failure_restores_first_install_and_update ... ok\n\ntest result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 34 filtered out; finished in 0.13s\n\n",
+  "stdout_truncated": false,
+  "timed_out": false
+}

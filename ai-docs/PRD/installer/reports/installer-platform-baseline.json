@@ -1,0 +1,10 @@
+{
+  "head": "7e7ac954ed5ccbe233fef315f4db0c409f0ff061",
+  "status": "",
+  "sha256": {
+    "src/assemble.rs": "959a407b161cf648196f39d3a2b7c87ead0fbf99bb00b62cf17b8c3ba892b266",
+    "src/manifest.rs": "fbf1af283e21df84836c9c1cea2166ba988520a62ac247d484621983d43716d8",
+    "ai-docs/PRD/installer/sno-assemble-PRD.md": "b53fd7f775392c353f7e53a5bfd6f5521c7fb279d56ba393d0866bf5e0fdc833",
+    "ai-docs/PRD/installer/sidecar/sno-assemble-PRD.walk.json": "3cda0b32681d277ad2209664eb5a3bb40c47e78c82024b6fcd03aad3c0471b78"
+  }
+}
