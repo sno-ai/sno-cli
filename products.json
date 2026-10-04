@@ -1,0 +1,9 @@
+{
+  "defaultProduct": "sno-station",
+  "products": [{
+    "id": "sno-station", "name": "Sno Station", "description": "Utilities, shared memory and agent skills.",
+    "platforms": ["linux-x86_64", "linux-aarch64", "macos-aarch64", "macos-x86_64"],
+    "install": {"type": "builtin", "handler": "station"},
+    "update": {"type": "builtin", "handler": "station"}, "suggests": []
+  }]
+}

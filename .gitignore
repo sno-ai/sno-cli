@@ -1,0 +1,7 @@
+/release-staging/
+/*.tar.gz
+/*.zip
+/*.sha256
+/sha256.sum
+/sno-installer.sh
+/sno-installer.ps1
