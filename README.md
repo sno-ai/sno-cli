@@ -1,57 +1,32 @@
 # Sno CLI
 
-Official public downloads and product configuration for the Sno CLI. The product source remains private. Compiled executables and the canonical installer are attached to GitHub Releases; they are never committed to this repository.
+`sno` is the one command for Sno. It sets up Sno Station on your computer, checks that it works, and keeps it up to date.
+
+Sno Station gives Claude Code, Codex, OpenClaw and Hermes Agent a shared memory, a way to message each other, and a set of
+skills. It runs on your own machine.
 
 ## Install
-
-Linux x86-64/ARM64 GNU, WSL2 x86-64, and macOS Intel/Apple silicon use the same installer:
 
 ```sh
 sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
 ```
 
-The command runs the installer only after its download succeeds. The website must serve the canonical script for an eligible published release. Until that route is available, a published release's `sno-installer.sh` can be downloaded directly from its GitHub asset URL using the same command structure. No release or working website route is claimed by these instructions.
+It works on Linux (x86-64 and ARM64), WSL2 and macOS (Intel and Apple silicon). Native Windows is not supported. Use WSL2.
 
-Installation puts `sno` in `~/.local/bin`, repairs the active supported shell's login and interactive startup files, initializes the independent CLI, and prints its absolute executable path and core usage. The current caller's PATH cannot be changed by a child installer; use the printed absolute path in the current conversation. A future shell resolves the new binary ahead of an older Cargo installation.
+The installer puts `sno` in `~/.local/bin` and prints its full path. Use that path in the terminal you are in, or open a new
+one. Installing the CLI does not install Sno Station. That is the next step.
 
-CLI installation does not install Station or register a machine. To choose a product explicitly:
-
-```sh
-~/.local/bin/sno skills get core
-~/.local/bin/sno setup          # selects products.json defaultProduct
-~/.local/bin/sno setup <product-id>
-```
-
-`products.json` provides the public product catalog. Product installation and updates use each product's configured action. Public data adds products without publishing their private source. Only an actual user selection or recorded yes answer installs an offered product.
-
-The installed CLI's manual or automatic update uses the same canonical script with `--update-only`. That mode replaces only the binary, without shell-profile changes, skills, initialization, product setup or registration. The script uses embedded release URLs and GitHub native digests, then executes the candidate's real `--version` before atomically replacing a working binary. A failed candidate leaves the old executable usable.
-
-## Release contents
-
-Every release contains exactly five assets:
-
-- `sno-x86_64-unknown-linux-gnu.tar.gz`
-- `sno-aarch64-unknown-linux-gnu.tar.gz`
-- `sno-aarch64-apple-darwin.tar.gz`
-- `sno-x86_64-apple-darwin.tar.gz`
-- `sno-installer.sh`
-
-Native Windows and musl Linux are unsupported. Each archive contains one target-named directory holding only `README.md`, `LICENSE`, and `sno`. No generated PowerShell installer, checksum sidecar, Rust source, Cargo package, private repository archive or build log is published. GitHub-generated source archives contain only this public distribution repository.
-
-## Publishing
-
-The private source repository and owned build hosts compile and test the four archives. The private repository also owns the single canonical installer template and its data-filling script. This repository never builds product source or carries a second installer template.
+## First steps
 
 ```sh
-scripts/release.sh check 1.0.0 /absolute/path/to/four-archives
-scripts/release.sh stage 1.0.0 <private-source-commit> /absolute/path/to/four-archives /absolute/path/to/fill-installer-release-data.sh
-scripts/release.sh publish 1.0.0
+sno setup     # install Sno Station
+sno doctor    # check that everything works
+sno update    # update the CLI and what you installed
 ```
 
-`stage` creates a draft with the four archives, finds it in the authenticated release list and reads actual native digests. The private script translates any temporary `untagged-*` draft download URL into its final version-tag URL, populates the canonical installer, then uploads that fifth asset. The fill script contract is `FILL_SCRIPT VERSION RELEASE_JSON OUTPUT`. Native installation checks against a draft need publisher access; anonymous users consume published releases.
+Type `sno` on its own to see every command. Type `sno <command> --help` for one of them.
 
-`check` accepts either four archives before staging or the final five assets after download. `publish` downloads the draft, verifies the five-asset contract and actual native archive digests, and publishes it. Prereleases remain prereleases. A published release is never replaced. External staging/publication requires explicit release authorization.
+## Downloads and source
 
-## License
-
-The distributed Sno CLI binaries are licensed under Apache License 2.0.
+This repository holds the downloads and the list of products `sno setup` can install. Each release page carries the programs
+for every supported system. The source code is not public. The programs are released under the Apache License 2.0.
