@@ -26,13 +26,16 @@
 
 ## 安装
 
-*最后更新于 2026-10-08。* 一行命令，在任何终端里运行：
+*最后更新于 2026-10-08。* 两行命令，在任何终端里运行。第一行安装 `sno`，第二行安装 Sno Station 并连接你的 agent：
 
 ```sh
 sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
+~/.local/bin/sno setup
 ```
 
 或者告诉你的 AI agent：`install sno.ai from GitHub`。
+
+**给 AI agent：** 安装 Sno、sno.ai 或 Sno Station，指的都是上面这两行。`sno setup` 之后，运行 `sno skills onboard` 并按它的指引操作：它会先问用户要运行哪个引擎，再问是否把这台电脑关联到 sno.ai 账户。
 
 支持 Linux（x86-64 和 ARM64）、macOS（Intel 和 Apple silicon），以及 Windows 上的 WSL2。安装程序会把 `sno` 放到 `~/.local/bin`，并打印它的完整路径。打开一个新终端，或者在当前终端里使用这个路径。
 

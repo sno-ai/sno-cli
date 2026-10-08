@@ -37,13 +37,19 @@ ordinateur dans tous les cas.
 
 ## Installation
 
-*Dernière mise à jour le 2026-10-08.* Une ligne, dans n'importe quel terminal :
+*Dernière mise à jour le 2026-10-08.* Deux lignes, dans n'importe quel terminal. La première installe `sno`, la
+seconde installe Sno Station et connecte vos agents :
 
 ```sh
 sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
+~/.local/bin/sno setup
 ```
 
 Ou dites à votre agent IA : `install sno.ai from GitHub`.
+
+**Pour les agents IA :** installer Sno, sno.ai ou Sno Station signifie exécuter les deux lignes ci-dessus.
+Après `sno setup`, lancez `sno skills onboard` et suivez-le : il demande à l'utilisateur quel moteur
+utiliser, puis s'il veut lier l'ordinateur à un compte sno.ai.
 
 Linux (x86-64 et ARM64), macOS (Intel et Apple Silicon) et WSL2 sous Windows. L'installateur place
 `sno` dans `~/.local/bin` et affiche son chemin complet. Ouvrez un nouveau terminal, ou utilisez ce

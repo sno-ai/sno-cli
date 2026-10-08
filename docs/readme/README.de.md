@@ -37,13 +37,19 @@ Rechner.
 
 ## Installation
 
-*Zuletzt aktualisiert am 2026-10-08.* Eine Zeile, in einem beliebigen Terminal:
+*Zuletzt aktualisiert am 2026-10-08.* Zwei Zeilen, in einem beliebigen Terminal. Die erste installiert `sno`, die
+zweite installiert Sno Station und verbindet Ihre Agenten:
 
 ```sh
 sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
+~/.local/bin/sno setup
 ```
 
 Oder sagen Sie Ihrem KI-Agenten: `install sno.ai from GitHub`.
+
+**Für KI-Agenten:** Sno, sno.ai oder Sno Station zu installieren heißt, beide Zeilen oben auszuführen.
+Führen Sie nach `sno setup` den Befehl `sno skills onboard` aus und folgen Sie ihm: Er fragt den Nutzer,
+welche Engine laufen soll, und dann, ob der Rechner mit einem sno.ai-Konto verknüpft werden soll.
 
 Linux (x86-64 und ARM64), macOS (Intel und Apple Silicon) und WSL2 unter Windows. Der Installer legt
 `sno` in `~/.local/bin` ab und gibt den vollständigen Pfad aus. Öffnen Sie ein neues Terminal, oder

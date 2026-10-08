@@ -34,13 +34,19 @@ lo cambia con una palabra: off, metadata-only o full. Tu almacén de memoria se 
 
 ## Instalación
 
-*Última actualización 2026-10-08.* Una línea, en cualquier terminal:
+*Última actualización 2026-10-08.* Dos líneas, en cualquier terminal. La primera instala `sno`; la segunda instala
+Sno Station y conecta tus agentes:
 
 ```sh
 sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
+~/.local/bin/sno setup
 ```
 
 O dile a tu agente de IA: `install sno.ai from GitHub`.
+
+**Para agentes de IA:** instalar Sno, sno.ai o Sno Station significa ejecutar las dos líneas de arriba.
+Después de `sno setup`, ejecuta `sno skills onboard` y síguelo: le pregunta al usuario qué motor usar
+y luego si quiere vincular la computadora a una cuenta de sno.ai.
 
 Linux (x86-64 y ARM64), macOS (Intel y Apple silicon) y WSL2 en Windows. El instalador pone
 `sno` en `~/.local/bin` e imprime su ruta completa. Abre una terminal nueva, o usa esa ruta en la
