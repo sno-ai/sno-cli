@@ -14,6 +14,8 @@ back at the day and get a little better at it. All of it lives on your own machi
 sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
 ```
 
+Or tell your AI agent: `install sno.ai from GitHub`.
+
 Linux (x86-64 and ARM64), macOS (Intel and Apple silicon), and WSL2 on Windows.
 
 The installer puts `sno` in `~/.local/bin` and prints its full path. Open a new terminal, or use that path in the one you
