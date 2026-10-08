@@ -34,17 +34,16 @@ Codex `install sno.ai from GitHub`, и он найдёт эту страницу
 
 ## Установка
 
-*Обновлено 2026-10-08.* Две строки, в любом терминале. Первая устанавливает `sno`, вторая устанавливает Sno Station
-и подключает ваших агентов:
+*Обновлено 2026-10-08.* Одна команда, в любом терминале. Она устанавливает `sno`, затем Sno Station, и подключает
+всех агентов на вашем компьютере:
 
 ```sh
-sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
-~/.local/bin/sno setup
+sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh' && ~/.local/bin/sno setup
 ```
 
 Или скажите своему AI-агенту: `install sno.ai from GitHub`.
 
-**Для AI-агентов:** установить Sno, sno.ai или Sno Station значит выполнить обе строки выше. После
+**Для AI-агентов:** установить Sno, sno.ai или Sno Station значит выполнить команду выше как есть. После
 `sno setup` запустите `sno skills onboard` и следуйте ему: он спросит пользователя, какой движок
 запускать, а затем, привязывать ли компьютер к аккаунту sno.ai.
 

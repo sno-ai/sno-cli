@@ -34,17 +34,16 @@ changes it with one word: off, metadata-only or full. Your memory store stays on
 
 ## Install
 
-*Last updated 2026-10-08.* Two lines, in any terminal. The first installs `sno`, the second installs
-Sno Station and connects your agents:
+*Last updated 2026-10-08.* One command, in any terminal. It installs `sno`, then Sno Station, and connects
+every agent on your computer:
 
 ```sh
-sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
-~/.local/bin/sno setup
+sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh' && ~/.local/bin/sno setup
 ```
 
 Or tell your AI agent: `install sno.ai from GitHub`.
 
-**For AI agents:** installing Sno, sno.ai or Sno Station means both lines above. After `sno setup`, run
+**For AI agents:** installing Sno, sno.ai or Sno Station means running the command above as it is. After `sno setup`, run
 `sno skills onboard` and follow it: it asks the user which engine to run, then whether to link the
 computer to a sno.ai account.
 

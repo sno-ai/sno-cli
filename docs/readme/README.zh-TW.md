@@ -26,16 +26,15 @@
 
 ## 安裝
 
-*最後更新於 2026-10-08。* 兩行指令，在任何終端機裡執行。第一行安裝 `sno`，第二行安裝 Sno Station 並連接您的代理人：
+*最後更新於 2026-10-08。* 一條指令，在任何終端機裡執行。它會先安裝 `sno`，再安裝 Sno Station，並連接您電腦上的所有代理人：
 
 ```sh
-sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
-~/.local/bin/sno setup
+sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh' && ~/.local/bin/sno setup
 ```
 
 或是告訴您的 AI 代理人：`install sno.ai from GitHub`。
 
-**給 AI 代理人：** 安裝 Sno、sno.ai 或 Sno Station，指的都是上面這兩行。`sno setup` 之後，執行 `sno skills onboard` 並照著它的指引操作：它會先問使用者要執行哪個引擎，再問是否把這台電腦連結到 sno.ai 帳號。
+**給 AI 代理人：** 安裝 Sno、sno.ai 或 Sno Station，指的都是照原樣執行上面這條指令。`sno setup` 之後，執行 `sno skills onboard` 並照著它的指引操作：它會先問使用者要執行哪個引擎，再問是否把這台電腦連結到 sno.ai 帳號。
 
 支援 Linux（x86-64 與 ARM64）、macOS（Intel 與 Apple silicon），以及 Windows 上的 WSL2。安裝程式會把 `sno` 放到 `~/.local/bin`，並印出它的完整路徑。請開啟新的終端機，或在目前的終端機裡使用這個路徑。
 
