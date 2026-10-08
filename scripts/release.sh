@@ -16,12 +16,13 @@ usage() {
   cat >&2 <<'HELP'
 Usage:
   scripts/release.sh check VERSION STAGING_DIR
-  scripts/release.sh stage VERSION SOURCE_COMMIT STAGING_DIR FILL_SCRIPT
+  scripts/release.sh stage VERSION SOURCE_COMMIT STAGING_DIR FILL_SCRIPT NOTES_TEMPLATE
   scripts/release.sh publish VERSION
 
 check accepts four compiled archives or the final five release assets.
 stage uploads four archives, then uses the private FILL_SCRIPT to populate the
 canonical installer from actual uploaded asset URLs and native GitHub digests.
+NOTES_TEMPLATE is the release page text; @VERSION@, @TAG@ and @REPOSITORY@ are filled in.
 publish downloads the draft's five assets, verifies native digests and publishes.
 HELP
 }
@@ -95,29 +96,18 @@ check_command() {
   printf 'release assets verified: version=%s stage=%s\n' "$version" "$phase"
 }
 stage_command() {
-  local version=$1 source_commit=$2 staging_dir=$3 fill_script=$4 tag="v$1" asset names
+  local version=$1 source_commit=$2 staging_dir=$3 fill_script=$4 notes_template=$5 tag="v$1" asset names
   local -a upload_paths=() release_flags=()
   require_command gh
   require_command jq
   validate_version "$version"
   [[ "$source_commit" =~ ^[0-9a-f]{40}$ ]] || fail 'SOURCE_COMMIT must be a 40-character lowercase Git commit'
   [[ -f "$fill_script" ]] || fail "private FILL_SCRIPT does not exist: $fill_script"
+  [[ -f "$notes_template" ]] || fail "NOTES_TEMPLATE does not exist: $notes_template"
   validate_staging_directory "$version" "$staging_dir" archives
   if gh release view "$tag" --repo "$REPOSITORY" >/dev/null 2>&1; then fail "release $tag already exists; existing releases are never replaced"; fi
   TEMP_DIR=$(mktemp -d)
-  cat > "$TEMP_DIR/notes.md" <<NOTES
-# Sno CLI $version
-
-Compiled Sno CLI executables and the canonical installer were built privately for version \`$version\`. The private source baseline reference is \`$source_commit\`.
-
-Install Linux x86-64/ARM64 GNU (including WSL2 x86-64) or macOS Intel/Apple silicon:
-
-\`\`\`sh
-sh -c 'sno_installer_body=\$(curl -fsSL https://github.com/$REPOSITORY/releases/download/$tag/sno-installer.sh) && printf "%s\n" "\$sno_installer_body" | sh'
-\`\`\`
-
-The product source remains private. GitHub-generated source archives contain only the public distribution repository.
-NOTES
+  sed -e "s|@VERSION@|$version|g" -e "s|@TAG@|$tag|g" -e "s|@REPOSITORY@|$REPOSITORY|g" "$notes_template" > "$TEMP_DIR/notes.md"
   for asset in "${ARCHIVE_ASSETS[@]}"; do upload_paths+=("$staging_dir/$asset"); done
   [[ "$version" != *-* ]] || release_flags+=(--prerelease)
   printf 'creating draft release %s in %s\n' "$tag" "$REPOSITORY" >&2
@@ -153,7 +143,7 @@ publish_command() {
 }
 case "${1:-}" in
   check) [[ $# -eq 3 ]] || { usage; exit 2; }; check_command "$2" "$3" ;;
-  stage) [[ $# -eq 5 ]] || { usage; exit 2; }; stage_command "$2" "$3" "$4" "$5" ;;
+  stage) [[ $# -eq 6 ]] || { usage; exit 2; }; stage_command "$2" "$3" "$4" "$5" "$6" ;;
   publish) [[ $# -eq 2 ]] || { usage; exit 2; }; publish_command "$2" ;;
   -h|--help) usage ;;
   *) usage; exit 2 ;;
