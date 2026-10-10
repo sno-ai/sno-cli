@@ -15,9 +15,11 @@ fn main() {
     let sno = PathBuf::from(home).join(".local/bin/sno");
     if !is_executable(&sno) {
         eprintln!("sno launcher: installing the official sno from {INSTALLER}");
-        let script = format!("body=$(curl -fsSL {INSTALLER}) && printf '%s\\n' \"$body\" | sh");
+        // The installer talks on stderr, so the first `sno ... --json` still prints only JSON.
+        let script = format!("body=$(curl -fsSL {INSTALLER}) && printf '%s\\n' \"$body\" | sh >&2");
         match Command::new("sh").args(["-c", &script]).status() {
-            Ok(status) if status.success() && is_executable(&sno) => {}
+            // A partial install (a PATH line it could not write) still leaves a working sno to run.
+            Ok(_) if is_executable(&sno) => {}
             Ok(status) => {
                 eprintln!(
                     "sno launcher: the installer ended with {status} and {} is missing; run: curl -fsSL {INSTALLER} | sh",

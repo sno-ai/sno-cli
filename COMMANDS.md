@@ -23,7 +23,7 @@ name works as the whole name: `sno stat cons` is `sno station consent`.
 | `sno doctor` | Check CLI updates, installed products, skills and Station state |  |
 | `sno usage` | Show remaining model allowance and purchased balance |  |
 | `sno stats` | Show allowance, review catches, nightly lessons and stored memories on one page |  |
-| `sno memory` | Use memory installed for Claude or Codex | `<ARGUMENTS>` |
+| `sno memory` | Use memory installed for Claude, Codex or Cursor | `<ARGUMENTS>` |
 | `sno observe` | Send observability events | `<ARGUMENTS>` |
 | `sno project` | Report local project memory and recursive self-improvement records |  |
 | `sno project status` | Show recorded current contexts, memory availability and improvement outcomes |  |
