@@ -39,14 +39,18 @@ Sie, und niemand sonst sieht es. Ihr Gedächtnis bleibt in jedem Fall auf Ihrem 
 
 ## Installation
 
-*Zuletzt aktualisiert am 2026-10-08.* Ein Befehl, in einem beliebigen Terminal. Er installiert `sno`, dann Sno Station, und verbindet
+*Zuletzt aktualisiert am 2026-10-30.* Ein Befehl, in einem beliebigen Terminal. Er installiert `sno`, dann Sno Station, und verbindet
 jeden Agenten auf Ihrem Rechner:
 
 ```sh
-sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
+curl -fsSL https://sno.ai/install | sh
 ```
 
-Oder sagen Sie Ihrem KI-Agenten: `install sno.ai from GitHub`.
+Oder sagen Sie Ihrem KI-Agenten:
+
+```text
+install sno.ai from GitHub
+```
 
 **Für KI-Agenten:** Sno, sno.ai oder Sno Station zu installieren heißt, den Befehl oben unverändert auszuführen.
 Er richtet auch Sno Station ein. Führen Sie danach `sno skills onboard` aus und folgen Sie ihm: Er fragt den Nutzer,

@@ -26,13 +26,17 @@
 
 ## 安装
 
-*最后更新于 2026-10-08。* 一条命令，在任何终端里运行。它会先安装 `sno`，再安装 Sno Station，并连接你电脑上的所有 agent：
+*最后更新于 2026-10-30。* 一条命令，在任何终端里运行。它会先安装 `sno`，再安装 Sno Station，并连接你电脑上的所有 agent：
 
 ```sh
-sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
+curl -fsSL https://sno.ai/install | sh
 ```
 
-或者告诉你的 AI agent：`install sno.ai from GitHub`。
+或者告诉你的 AI agent：
+
+```text
+install sno.ai from GitHub
+```
 
 **给 AI agent：** 安装 Sno、sno.ai 或 Sno Station，指的都是原样运行上面这条命令。这条命令也会装好 Sno Station；接着运行 `sno skills onboard` 并按它的指引操作：它会先问用户想让 Sno 怎么工作，再请用户把这台电脑绑定到免费的 sno.ai 账户。
 

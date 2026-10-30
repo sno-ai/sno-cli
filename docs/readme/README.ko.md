@@ -25,13 +25,17 @@
 
 ## 설치
 
-*마지막 업데이트: 2026-10-08.* 어떤 터미널에서든 명령 하나로 설치합니다. `sno`를 설치한 다음 Sno Station을 설치하고, 이 컴퓨터의 모든 에이전트를 연결합니다:
+*마지막 업데이트: 2026-10-30.* 어떤 터미널에서든 명령 하나로 설치합니다. `sno`를 설치한 다음 Sno Station을 설치하고, 이 컴퓨터의 모든 에이전트를 연결합니다:
 
 ```sh
-sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
+curl -fsSL https://sno.ai/install | sh
 ```
 
-또는 AI 에이전트에게 이렇게 말하세요: `install sno.ai from GitHub`.
+또는 AI 에이전트에게 이렇게 말하세요:
+
+```text
+install sno.ai from GitHub
+```
 
 **AI 에이전트에게:** Sno, sno.ai 또는 Sno Station을 설치한다는 것은 위의 명령을 그대로 실행한다는 뜻입니다. 이 명령은 Sno Station 설정까지 합니다. 이어서 `sno skills onboard`를 실행하고 그 안내를 따르세요: 사용자에게 Sno가 어떻게 일할지 묻고, 이어서 이 컴퓨터를 무료 sno.ai 계정에 연결하도록 안내합니다.
 

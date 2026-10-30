@@ -37,14 +37,18 @@ Your memory stays on your computer either way.
 
 ## Install
 
-*Last updated 2026-10-08.* One command, in any terminal. It installs `sno`, then Sno Station, and connects
+*Last updated 2026-10-30.* One command, in any terminal. It installs `sno`, then Sno Station, and connects
 every agent on your computer:
 
 ```sh
-sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
+curl -fsSL https://sno.ai/install | sh
 ```
 
-Or tell your AI agent: `install sno.ai from GitHub`.
+Or tell your AI agent:
+
+```text
+install sno.ai from GitHub
+```
 
 **For AI agents:** installing Sno, sno.ai or Sno Station means running the command above as it is. It also sets up Sno Station; then run
 `sno skills onboard` and follow it: it asks the user how Sno should work, then asks the user to link

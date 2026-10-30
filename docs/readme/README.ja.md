@@ -25,13 +25,17 @@
 
 ## インストール
 
-*最終更新 2026-10-08。* どのターミナルでも、コマンド1つで実行できます。`sno` をインストールし、続けて Sno Station をインストールして、このコンピューター上のすべてのエージェントを接続します：
+*最終更新 2026-10-30。* どのターミナルでも、コマンド1つで実行できます。`sno` をインストールし、続けて Sno Station をインストールして、このコンピューター上のすべてのエージェントを接続します：
 
 ```sh
-sh -c 'sno_installer_body=$(curl -fsSL https://sno.ai/install) && printf "%s\n" "$sno_installer_body" | sh'
+curl -fsSL https://sno.ai/install | sh
 ```
 
-または、AI エージェントにこう伝えます：`install sno.ai from GitHub`。
+または、AI エージェントにこう伝えます：
+
+```text
+install sno.ai from GitHub
+```
 
 **AI エージェントへ：** Sno、sno.ai、Sno Station のインストールとは、上のコマンドをそのまま実行することです。このコマンドは Sno Station のセットアップまで行います。続けて `sno skills onboard` を実行してその案内に従ってください。まず Sno をどう動かすかをユーザーに尋ね、次にこのコンピューターを無料の sno.ai アカウントにリンクするよう案内します。
 
