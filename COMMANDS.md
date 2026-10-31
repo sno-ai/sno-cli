@@ -53,7 +53,7 @@ name works as the whole name: `sno stati cons` is `sno station consent`.
 
 | Command | What it does |
 |---|---|
-| `sno memory remember --harness claude|codex TEXT` | Store a project memory and print its id |
+| `sno memory remember --harness claude|codex|cursor TEXT` | Store a project memory and print its id |
 | `sno memory recall --harness H QUERY` | Search project and global memory |
 | `sno memory get --harness H ID` | Print one full memory |
 | `sno memory correct --harness H ID TEXT` | Store a corrected memory and retire the old one |
