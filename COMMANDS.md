@@ -23,6 +23,7 @@ name works as the whole name: `sno stati cons` is `sno station consent`.
 | `sno doctor` | Check CLI updates, installed products, skills and Station state |  |
 | `sno usage` | Show the remaining weekly allowance and your balance |  |
 | `sno stats` | Show allowance, review catches, Self Learning lessons and stored memories on one page |  |
+| `sno squad` | See which agents need you, are working or have finished |  |
 | `sno memory` | Use memory installed for Claude, Codex or Cursor | `<ARGUMENTS>` |
 | `sno observe` | Record agent activity (used by agent hooks) | `<ARGUMENTS>` |
 | `sno project` | Show memories and Self Learning lessons for each project |  |
