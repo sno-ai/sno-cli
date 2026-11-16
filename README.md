@@ -67,8 +67,8 @@ again and it finds and connects that agent too:
 sno setup
 ```
 
-It installs the shared memory, the skills, Self Learning, and the messaging your agents use to
-pass work to each other. It wires all of them into every agent it finds. Then say this inside Claude
+It installs the shared memory, the skills, Self Learning, timed tasks, and the messaging your
+agents use to pass work to each other. It wires all of them into every agent it finds. Then say this inside Claude
 Code or Codex:
 
 ```text

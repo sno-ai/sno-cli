@@ -72,7 +72,7 @@ name works as the whole name: `sno stati cons` is `sno station consent`.
 | Command | What it does |
 |---|---|
 | `sno reach` | Contact another agent, exchange work cards, read the inbox, wait for a reply, manage seats |
-| `sno heartbeat` | Report every so often, or wait until a file appears, for long jobs |
+| `sno heartbeat` | Report every so often, wait until a file appears, or run timed tasks kept in progress records |
 | `sno report-time` | Print a clock time for the user in their own time zone |
 | `sno subscription-quota-check` | Read Codex and Claude Code subscription quota without spending any |
 | `sno away-brief` | One page of what is done, stuck, needs the owner, and spend |
